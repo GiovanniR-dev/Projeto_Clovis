@@ -303,7 +303,7 @@ Decisões da imobiliária que o sistema precisa respeitar. Os limites (10% e 5 d
 
 ## 10. Fluxogramas
 
-Cada fluxograma tem início, fim, atividades e decisões. O arquivo completo está em [`docs/fluxogramas/CRMoveis-fluxogramas.pdf`](CRMoveis/docs/fluxogramas/CRMoveis-fluxogramas.pdf).
+Cada fluxograma tem início, fim, atividades e decisões. O arquivo completo está em [`docs/fluxogramas/CRMoveis-fluxogramas.pdf`](docs/fluxogramas/CRMoveis-fluxogramas.pdf).
 
 | Fluxo | Processo | Requisitos atendidos | Regras respeitadas |
 |---|---|---|---|
@@ -315,23 +315,23 @@ Cada fluxograma tem início, fim, atividades e decisões. O arquivo completo est
 
 ### F1 — Atendimento de um novo contato pelo WhatsApp
 
-![F1 — Atendimento de um novo contato pelo WhatsApp](CRMoveis/docs/fluxogramas/fluxo-1.png)
+![F1 — Atendimento de um novo contato pelo WhatsApp](docs/fluxogramas/fluxo-1.png)
 
 ### F2 — Captação de imóvel
 
-![F2 — Captação de imóvel](CRMoveis/docs/fluxogramas/fluxo-2.png)
+![F2 — Captação de imóvel](docs/fluxogramas/fluxo-2.png)
 
 ### F3 — Visita e proposta
 
-![F3 — Visita e proposta](CRMoveis/docs/fluxogramas/fluxo-3.png)
+![F3 — Visita e proposta](docs/fluxogramas/fluxo-3.png)
 
 ### F4 — Venda: contrato, financiamento e comissão
 
-![F4 — Venda: contrato, financiamento e comissão](CRMoveis/docs/fluxogramas/fluxo-4.png)
+![F4 — Venda: contrato, financiamento e comissão](docs/fluxogramas/fluxo-4.png)
 
 ### F5 — Locação: ciclo mensal do aluguel
 
-![F5 — Locação: ciclo mensal do aluguel](CRMoveis/docs/fluxogramas/fluxo-5.png)
+![F5 — Locação: ciclo mensal do aluguel](docs/fluxogramas/fluxo-5.png)
 
 ## 11. Entidades
 
@@ -790,13 +790,13 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 
 Modelo conceitual em notação de Chen. O DER foi desenhado em seis folhas, uma por domínio, para que nenhuma linha cruze outra e a letra seja legível. Quando uma entidade detalhada em outra folha participa de um relacionamento, ela aparece como **atalho** (caixa tracejada com a folha indicada).
 
-Arquivo para impressão (A3): [`docs/der/CRMoveis-DER-conceitual.pdf`](CRMoveis/docs/der/CRMoveis-DER-conceitual.pdf)
+Arquivo para impressão (A3): [`docs/der/CRMoveis-DER-conceitual.pdf`](docs/der/CRMoveis-DER-conceitual.pdf)
 
 ### Visão geral
 
 Todas as folhas juntas, para ver a integração entre os domínios. Para leitura, use as folhas abaixo ou o PDF.
 
-![DER — visão geral](CRMoveis/docs/der/visao-geral.png)
+![DER — visão geral](docs/der/visao-geral.png)
 
 | Símbolo | Significado |
 |---|---|
@@ -812,27 +812,27 @@ Todas as folhas juntas, para ver a integração entre os domínios. Para leitura
 
 ### Folha 1 — Identificação, legenda e índice das entidades
 
-![DER folha 1 — Identificação, legenda e índice das entidades](CRMoveis/docs/der/folha-1.png)
+![DER folha 1 — Identificação, legenda e índice das entidades](docs/der/folha-1.png)
 
 ### Folha 2 — Pessoas e Imóveis
 
-![DER folha 2 — Pessoas e Imóveis](CRMoveis/docs/der/folha-2.png)
+![DER folha 2 — Pessoas e Imóveis](docs/der/folha-2.png)
 
 ### Folha 3 — Funil / CRM
 
-![DER folha 3 — Funil / CRM](CRMoveis/docs/der/folha-3.png)
+![DER folha 3 — Funil / CRM](docs/der/folha-3.png)
 
 ### Folha 4 — Negociação
 
-![DER folha 4 — Negociação](CRMoveis/docs/der/folha-4.png)
+![DER folha 4 — Negociação](docs/der/folha-4.png)
 
 ### Folha 5 — Financeiro · contas a receber
 
-![DER folha 5 — Financeiro · contas a receber](CRMoveis/docs/der/folha-5.png)
+![DER folha 5 — Financeiro · contas a receber](docs/der/folha-5.png)
 
 ### Folha 6 — Financeiro · contas a pagar e Integração N8N
 
-![DER folha 6 — Financeiro · contas a pagar e Integração N8N](CRMoveis/docs/der/folha-6.png)
+![DER folha 6 — Financeiro · contas a pagar e Integração N8N](docs/der/folha-6.png)
 
 ## 17. Justificativas técnicas
 
@@ -962,7 +962,7 @@ As principais decisões de modelagem, no formato pedido pelo manual.
 
 O modelo conceitual do CRMoveis foi construído na ordem pedida pelo manual: a caracterização da imobiliária levou aos processos, os processos revelaram os problemas, os problemas viraram requisitos e regras, e as regras definiram as entidades, os relacionamentos e as cardinalidades do DER. Cada decisão aponta para o requisito ou a regra que a sustenta.
 
-O modelo já integra atendimento, imóveis, negociação e financeiro, e foi pensado para evoluir: a próxima etapa é o modelo lógico, que já tem uma prévia em [`docs/modelo-logico/`](CRMoveis/docs/modelo-logico/) com as tabelas, chaves primárias e estrangeiras.
+O modelo já integra atendimento, imóveis, negociação e financeiro, e foi pensado para evoluir: a próxima etapa é o modelo lógico, que já tem uma prévia em [`docs/modelo-logico/`](docs/modelo-logico/) com as tabelas, chaves primárias e estrangeiras.
 
 ## Arquivos do repositório
 
