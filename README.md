@@ -147,7 +147,7 @@ O que o sistema deve fazer. A coluna *Fluxo* indica em qual fluxograma o requisi
 | Código | Requisito | Fluxo | Entidades |
 |---|---|---|---|
 | RF01 | O sistema deverá cadastrar usuários com nome, documento (CPF/CNPJ), e-mail e origem do contato. | F1, F2 | USUARIO |
-| RF02 | O sistema deverá permitir que um mesmo usuário exerça mais de um papel: cliente, proprietário, corretor, fornecedor ou administrador. | F1, F2 | USUARIO (papel) |
+| RF02 | O sistema deverá permitir que um mesmo usuário exerça mais de um papel: cliente, proprietário, corretor, financeiro, fornecedor ou administrador. | F1, F2 | USUARIO (papel) |
 | RF03 | O sistema deverá registrar um ou mais telefones por usuário e identificar o usuário pelo número do WhatsApp. | F1 | TELEFONE |
 | RF04 | O sistema deverá registrar os perfis de interesse do cliente: finalidade, tipo de imóvel, cidade, bairro, faixa de valor e quartos. | F1 | PERFIL_INTERESSE |
 
@@ -180,9 +180,9 @@ O que o sistema deve fazer. A coluna *Fluxo* indica em qual fluxograma o requisi
 |---|---|---|---|
 | RF18 | O sistema deverá agendar, registrar a realização e cancelar visitas, guardando o feedback do cliente. | F3 | VISITA |
 | RF19 | O sistema deverá registrar propostas e contrapropostas, ligadas ou não a uma visita. | F3 | PROPOSTA |
-| RF20 | O sistema deverá gerar o contrato de venda ou de locação a partir de uma proposta aceita. | F3, F4 | CONTRATO |
+| RF20 | O sistema deverá gerar o contrato de venda ou de locação a partir de uma proposta aceita, com percentual de corretagem ou taxa de administração. | F3, F4 | CONTRATO |
 | RF21 | O sistema deverá anexar documentos ao contrato. | F4 | DOCUMENTO |
-| RF22 | O sistema deverá registrar a comissão de cada corretor no contrato, com percentual e regra de pagamento. | F4 | COMISSAO |
+| RF22 | O sistema deverá registrar a comissão de cada corretor no contrato, com percentual, regra de pagamento e aprovação do administrador. | F4 | COMISSAO |
 
 ### Financeiro
 
@@ -243,7 +243,7 @@ O que pode ou não pode acontecer. A última coluna mostra onde a regra aparece 
 |---|---|---|
 | RN06 | Todo imóvel tem exatamente um proprietário, e um proprietário pode ter vários imóveis. | USUARIO (1,1) — ANUNCIA — IMOVEL (0,n) |
 | RN07 | Um imóvel pode ter nenhum ou um corretor responsável, e um corretor pode ser responsável por vários imóveis. | USUARIO (0,1) — RESPONSÁVEL — IMOVEL (0,n) |
-| RN08 | Um imóvel pode ter várias características, e uma característica pode estar em vários imóveis. | IMOVEL (0,n) — POSSUI — CARACTERISTICA (0,n) |
+| RN08 | Um imóvel pode ter várias características, e uma característica pode estar em vários imóveis. | IMOVEL (0,n) — APRESENTA — CARACTERISTICA (0,n) |
 | RN09 | Uma foto só existe vinculada a um imóvel. | FOTO · entidade fraca |
 | RN10 | Imóvel vendido, alugado ou inativo não pode receber novas visitas nem propostas. | IMOVEL.st_imovel |
 
@@ -255,7 +255,7 @@ O que pode ou não pode acontecer. A última coluna mostra onde a regra aparece 
 | RN12 | A conversa pode ficar sem corretor no início do atendimento, mas nunca terá mais de um corretor responsável. | USUARIO (0,1) — ATENDE — CONVERSA (0,n) |
 | RN13 | Toda conversa está em exatamente um estágio do funil por vez. | CONVERSA (0,n) — ESTÁ EM — FUNIL_ESTAGIO (1,1) |
 | RN14 | Toda mudança de estágio deve gerar um registro no histórico, com data e hora. | HISTORICO_ESTAGIO |
-| RN15 | Toda tarefa tem um corretor responsável e pode ou não estar ligada a uma conversa. | EXECUTA (1,1) · GERA (0,1) |
+| RN15 | Toda tarefa tem um corretor responsável e pode ou não estar ligada a uma conversa. | EXECUTA (1,1) · GERA TAREFA (0,1) |
 
 ### Negociação
 
@@ -264,7 +264,7 @@ O que pode ou não pode acontecer. A última coluna mostra onde a regra aparece 
 | RN16 | Uma visita envolve exatamente um cliente, um imóvel e um corretor; o mesmo cliente pode visitar o mesmo imóvel mais de uma vez, em datas diferentes. | VISITA · associativa · único (imóvel, cliente, data e hora) |
 | RN17 | Uma proposta pode ou não ter origem em uma visita. | VISITA (0,1) — ORIGINA — PROPOSTA (0,n) |
 | RN18 | Uma proposta aceita gera no máximo um contrato, e todo contrato nasce de exatamente uma proposta. | PROPOSTA (1,1) — FECHA — CONTRATO (0,1) |
-| RN19 | Todo contrato é de venda ou de locação, e o contrato de locação deve ter data de término. | CONTRATO.tipo_contrato, dt_fim |
+| RN19 | Todo contrato é de venda ou de locação, e o contrato de locação deve ter data de término, taxa de administração e dia de vencimento do aluguel. | CONTRATO.tipo_contrato, dt_fim, taxa_administracao, dia_vencimento |
 | RN20 | A comissão de um contrato pode ser dividida entre vários corretores, e a soma dos percentuais não pode passar de 100%. | CONTRATO (0,n) — COMISSAO — USUARIO (0,n) |
 | RN21 | O valor da comissão é o percentual aplicado sobre o valor final do contrato. | COMISSAO.valor · derivado |
 
@@ -275,18 +275,18 @@ O que pode ou não pode acontecer. A última coluna mostra onde a regra aparece 
 | RN22 | Um contrato pode ter no máximo um financiamento. | CONTRATO (1,1) — FINANCIA — FINANCIAMENTO (0,1) |
 | RN23 | Na venda financiada, a corretagem só é considerada recebida depois que o banco libera o crédito. | FINANCIAMENTO (0,1) — LIBERA — CONTA_RECEBER (0,n) |
 | RN24 | A comissão só é liberada para pagamento quando a condição da regra de pagamento é atendida: na assinatura, na liberação do crédito ou no recebimento. | COMISSAO.regra_pagamento |
-| RN25 | Cada comissão liberada gera no máximo uma conta a pagar ao corretor. | COMISSAO (0,1) — GERA — CONTA_PAGAR (0,1) |
-| RN26 | Toda conta a receber e toda conta a pagar deve ter uma categoria financeira e um responsável pelo pagamento. | CLASSIFICA (1,1) · responsavel obrigatório |
+| RN25 | Cada comissão liberada gera no máximo uma conta a pagar ao corretor. | COMISSAO (0,1) — LANÇA — CONTA_PAGAR (0,1) |
+| RN26 | Toda conta a receber e toda conta a pagar deve ter uma categoria financeira e um responsável pelo pagamento. | CLASSIFICA e CATEGORIZA (1,1) · responsavel obrigatório |
 | RN27 | Na conta a receber, quem paga pode ser o cliente, o inquilino, o proprietário ou o banco; quando for o banco, a conta deve estar ligada a um financiamento. | CONTA_RECEBER.responsavel |
-| RN28 | Na conta a pagar, quem paga pode ser a imobiliária, o proprietário ou o inquilino; quando não for a imobiliária, o pagador deve ser informado. | CONTA_PAGAR.responsavel · USUARIO (0,1) — PAGA |
-| RN29 | Uma conta pode ser quitada em vários recebimentos ou pagamentos parciais, e cada um deve indicar a conta bancária movimentada. | BAIXA (1,1)–(0,n) · CREDITA / DEBITA (1,1) |
-| RN30 | Na locação, o aluguel recebido do inquilino gera, no mesmo mês, o repasse ao proprietário, descontada a taxa de administração. | CONTA_RECEBER → CONTA_PAGAR |
+| RN28 | Na conta a pagar, quem paga pode ser a imobiliária, o proprietário ou o inquilino; quando não for a imobiliária, o pagador deve ser informado. | CONTA_PAGAR.responsavel · USUARIO (0,1) — CUSTEIA |
+| RN29 | Uma conta pode ser quitada em vários recebimentos ou pagamentos parciais, e cada um deve indicar a conta bancária movimentada. | QUITA e LIQUIDA (1,1)–(0,n) · CREDITA e DEBITA (1,1) |
+| RN30 | Na locação, o aluguel recebido do inquilino gera, no mesmo mês, o repasse ao proprietário, descontada a taxa de administração. | CONTRATO.taxa_administracao · CONTA_RECEBER → CONTA_PAGAR |
 
 ### Automação
 
 | Código | Regra | Onde aparece no modelo |
 |---|---|---|
-| RN31 | A mesma demanda de uma conversa não pode ser processada duas vezes pela automação. | AUTOMACAO_EXECUCAO · único (conversa, demand_hash) |
+| RN31 | A mesma demanda de uma conversa não pode ser processada duas vezes pela automação. | AUTOMACAO_EXECUCAO · único (conversa, chave_demanda) |
 
 ## 9. Restrições e políticas organizacionais
 
@@ -294,10 +294,10 @@ Decisões da imobiliária que o sistema precisa respeitar. Os limites (10% e 5 d
 
 | Código | Tipo | Descrição | Área |
 |---|---|---|---|
-| PO01 | Política | Somente o administrador pode aprovar e pagar comissões. | Financeiro |
+| PO01 | Política | Somente o administrador pode aprovar e pagar comissões (relacionamento APROVA). | Financeiro |
 | PO02 | Política | O corretor só pode alterar as conversas, visitas e propostas sob sua responsabilidade. | Atendimento e negociação |
-| PO03 | Restrição | Proposta com desconto acima de 10% do valor anunciado exige aprovação do administrador. | Negociação |
-| PO04 | Restrição | Contrato assinado não pode ser excluído; apenas cancelado, com registro do motivo. | Negociação |
+| PO03 | Restrição | Proposta com desconto acima de 10% do valor anunciado exige autorização do administrador (relacionamento AUTORIZA). | Negociação |
+| PO04 | Restrição | Contrato assinado não pode ser excluído; apenas cancelado, com data e motivo do cancelamento. | Negociação |
 | PO05 | Restrição | O repasse ao proprietário deve ser pago em até 5 dias úteis após o recebimento do aluguel. | Financeiro |
 | PO06 | Política | Dados financeiros e documentos pessoais só podem ser consultados pelos perfis administrador e financeiro. | Acesso à informação |
 
@@ -339,7 +339,7 @@ O modelo tem **27 entidades**. Cada uma existe porque um requisito ou regra prec
 
 | Entidade | Tipo | Por que existe | Requisito · regra | Folha do DER |
 |---|---|---|---|---|
-| **USUARIO** | forte | Toda pessoa que circula no CRM: cliente, proprietário, corretor, fornecedor e administrador. Uma entidade só evita cadastro duplicado. | RF01, RF02 · RN01, RN02 | 2 |
+| **USUARIO** | forte | Toda pessoa que circula no CRM: cliente, proprietário, corretor, financeiro, fornecedor e administrador. Uma entidade só evita cadastro duplicado. | RF01, RF02 · RN01, RN02 | 2 |
 | **TELEFONE** | fraca | A pessoa pode ter vários telefones, e é pelo número do WhatsApp que o sistema a identifica. Só existe ligado a um usuário. | RF03 · RN03 | 2 |
 | **PERFIL_INTERESSE** | fraca | Guarda o que o cliente procura, para a automação sugerir imóveis. Só existe ligado a um usuário. | RF04, RF11 · RN05 | 2 |
 | **IMOVEL** | forte | O produto da imobiliária, com endereço, características, valor e situação. | RF13, RF14 · RN06, RN10 | 2 |
@@ -353,10 +353,10 @@ O modelo tem **27 entidades**. Cada uma existe porque um requisito ou regra prec
 | **TAREFA** | forte | Pendências do corretor, com prazo, ligadas ou não a uma conversa. | RF10 · RN15 | 3 |
 | **TAG** | forte | Etiquetas livres para classificar conversas. | RF09 | 3 |
 | **VISITA** | associativa | O fato de um cliente visitar um imóvel com um corretor, com data, situação e feedback. | RF18 · RN16 | 4 |
-| **PROPOSTA** | associativa | A oferta de um cliente por um imóvel, com valor, condições e situação. | RF19 · RN17 | 4 |
-| **CONTRATO** | forte | O negócio fechado, de venda ou de locação, que dispara toda a parte financeira. | RF20 · RN18, RN19 | 4 |
+| **PROPOSTA** | associativa | A oferta de um cliente por um imóvel, com valor, condições, situação e a autorização quando há desconto alto. | RF19 · RN17 · PO03 | 4 |
+| **CONTRATO** | forte | O negócio fechado, de venda ou de locação, com os percentuais que definem a corretagem e o repasse. Dispara toda a parte financeira. | RF20 · RN18, RN19, RN30 · PO04 | 4 |
 | **DOCUMENTO** | fraca | Arquivos do contrato (escritura, vistoria, documentos pessoais). | RF21 | 4 |
-| **COMISSAO** | associativa | A parte de cada corretor em um contrato, com percentual e regra de pagamento. | RF22, RF28 · RN20, RN21, RN24 | 4 |
+| **COMISSAO** | associativa | A parte de cada corretor em um contrato, com percentual, regra de pagamento e data de aprovação. | RF22, RF28 · RN20, RN21, RN24 · PO01 | 4 |
 | **FINANCIAMENTO** | fraca | Os dados do crédito bancário de um contrato, principalmente a data de liberação, que define quando a corretagem cai. | RF23 · RN22, RN23 | 5 |
 | **CONTA_RECEBER** | forte | Tudo o que a imobiliária tem a receber, com quem paga e o vencimento. | RF24 · RN26, RN27 | 5 |
 | **RECEBIMENTO** | fraca | Cada baixa de uma conta a receber; permite recebimento parcial. | RF26 · RN29 | 5 |
@@ -391,12 +391,14 @@ Informações que descrevem a relação, e não uma das entidades (Etapa 15 do m
 | CONVERSA_IMOVEL | dt_interesse | A data de interesse descreve o vínculo entre aquela conversa e aquele imóvel |
 | HISTORICO_ESTAGIO | dt_alteracao | A data e hora descrevem a passagem da conversa por um estágio |
 | VISITA | id_visita, dt_hora, st_visita, feedback | Data, situação e feedback descrevem o encontro entre cliente e imóvel |
-| PROPOSTA | id_proposta, vl_proposto, condicoes, st_proposta, dt_proposta | Valor, condições e situação descrevem a oferta daquele cliente por aquele imóvel |
-| COMISSAO | percentual, valor, regra_pagamento, st_pagamento | Percentual e regra de pagamento descrevem a participação do corretor naquele contrato |
+| PROPOSTA | id_proposta, vl_proposto, condicoes, st_proposta, dt_proposta, dt_autorizacao | Valor, condições e situação descrevem a oferta daquele cliente por aquele imóvel |
+| COMISSAO | percentual, valor, regra_pagamento, st_pagamento, dt_aprovacao | Percentual e regra de pagamento descrevem a participação do corretor naquele contrato |
+| AUTORIZA (USUARIO–PROPOSTA) | dt_autorizacao | Descreve a autorização do administrador. Como o relacionamento é 1:N, o atributo fica guardado em PROPOSTA |
+| APROVA (USUARIO–COMISSAO) | dt_aprovacao | Descreve a aprovação do administrador. Como o relacionamento é 1:N, o atributo fica guardado em COMISSAO |
 
 ## 13. Relacionamentos
 
-São **40 relacionamentos**, contando os que foram representados por entidade associativa.
+São **42 relacionamentos**, contando os que foram representados por entidade associativa.
 
 | Relacionamento | Entre | Significado | Requisito · regra |
 |---|---|---|---|
@@ -405,13 +407,13 @@ São **40 relacionamentos**, contando os que foram representados por entidade as
 | **ANUNCIA** | USUARIO (proprietário) — IMOVEL | O proprietário anuncia o imóvel | RN06 |
 | **RESPONSÁVEL** | USUARIO (corretor) — IMOVEL | O corretor é responsável pelo imóvel | RN07 |
 | **TEM** | IMOVEL — FOTO | O imóvel tem fotos | RN09 |
-| **POSSUI** | IMOVEL — CARACTERISTICA | O imóvel possui características | RN08 |
+| **APRESENTA** | IMOVEL — CARACTERISTICA | O imóvel possui características | RN08 |
 | **INTERESSA (associativa CONVERSA_IMOVEL)** | IMOVEL — CONVERSA | A conversa se interessa por imóveis | RF17 |
 | **INICIA** | USUARIO (cliente) — CONVERSA | O cliente inicia a conversa | RN11 |
 | **ATENDE** | USUARIO (corretor) — CONVERSA | O corretor atende a conversa | RN12 |
 | **CONTÉM** | CONVERSA — MENSAGEM | A conversa contém mensagens | RF05 |
 | **MARCA** | CONVERSA — TAG | A conversa é marcada com tags | RF09 |
-| **GERA** | CONVERSA — TAREFA | A conversa gera tarefas | RN15 |
+| **GERA TAREFA** | CONVERSA — TAREFA | A conversa gera tarefas | RN15 |
 | **EXECUTA** | USUARIO (corretor) — TAREFA | O corretor executa a tarefa | RN15 |
 | **ESTÁ EM** | CONVERSA — FUNIL_ESTAGIO | A conversa está em um estágio do funil | RN13 |
 | **REGISTRA** | HISTORICO_ESTAGIO — USUARIO (responsável) | O usuário registra a mudança de estágio | RF08 |
@@ -421,25 +423,27 @@ São **40 relacionamentos**, contando os que foram representados por entidade as
 | **NEGOCIA** | PROPOSTA — USUARIO (corretor) | O corretor negocia a proposta | RF19 |
 | **FECHA** | PROPOSTA — CONTRATO | A proposta aceita fecha o contrato | RN18 |
 | **ANEXA** | CONTRATO — DOCUMENTO | O contrato tem documentos anexados | RF21 |
+| **AUTORIZA** | PROPOSTA — USUARIO (administrador) | O administrador autoriza a proposta com desconto acima do limite | PO03 |
+| **APROVA** | COMISSAO — USUARIO (administrador) | O administrador aprova a comissão antes do pagamento | PO01 |
 | **VISITA (associativa VISITA)** | USUARIO (cliente) — IMOVEL | O cliente visita o imóvel | RN16 |
 | **PROPOE (associativa PROPOSTA)** | USUARIO (cliente) — IMOVEL | O cliente faz proposta pelo imóvel | RF19 |
 | **RECEBE (associativa COMISSAO)** | CONTRATO — USUARIO (corretor) | O corretor recebe comissão do contrato | RN20 |
 | **FINANCIA** | CONTRATO — FINANCIAMENTO | O contrato é financiado | RN22 |
-| **GERA** | CONTRATO — CONTA_RECEBER | O contrato gera contas a receber | RF24 |
+| **GERA RECEITA** | CONTRATO — CONTA_RECEBER | O contrato gera contas a receber | RF24 |
 | **LIBERA** | FINANCIAMENTO — CONTA_RECEBER | A liberação do crédito gera a conta a receber da corretagem | RN23 |
 | **CLASSIFICA** | CATEGORIA_FINANCEIRA — CONTA_RECEBER | A categoria classifica a conta a receber | RN26 |
 | **PAGA** | USUARIO (pagador) — CONTA_RECEBER | A pessoa paga a conta a receber | RN27 |
-| **BAIXA** | CONTA_RECEBER — RECEBIMENTO | A conta a receber é baixada por recebimentos | RN29 |
+| **QUITA** | CONTA_RECEBER — RECEBIMENTO | A conta a receber é baixada por recebimentos | RN29 |
 | **CREDITA** | CONTA_BANCARIA — RECEBIMENTO | O recebimento entra em uma conta bancária | RN29 |
-| **ORIGINA** | CONTRATO — CONTA_PAGAR | O contrato origina contas a pagar | RF25 |
-| **CLASSIFICA** | CATEGORIA_FINANCEIRA — CONTA_PAGAR | A categoria classifica a conta a pagar | RN26 |
+| **GERA DESPESA** | CONTRATO — CONTA_PAGAR | O contrato origina contas a pagar | RF25 |
+| **CATEGORIZA** | CATEGORIA_FINANCEIRA — CONTA_PAGAR | A categoria classifica a conta a pagar | RN26 |
 | **FAVORECE** | USUARIO (favorecido) — CONTA_PAGAR | A conta a pagar favorece uma pessoa | RF25 |
-| **PAGA** | USUARIO (pagador) — CONTA_PAGAR | A pessoa paga a conta a pagar | RN28 |
-| **GERA** | COMISSAO — CONTA_PAGAR | A comissão liberada gera a conta a pagar ao corretor | RN25 |
-| **BAIXA** | CONTA_PAGAR — PAGAMENTO | A conta a pagar é baixada por pagamentos | RN29 |
+| **CUSTEIA** | USUARIO (pagador) — CONTA_PAGAR | A pessoa paga a conta a pagar | RN28 |
+| **LANÇA** | COMISSAO — CONTA_PAGAR | A comissão liberada lança a conta a pagar ao corretor | RN25 |
+| **LIQUIDA** | CONTA_PAGAR — PAGAMENTO | A conta a pagar é baixada por pagamentos | RN29 |
 | **DEBITA** | CONTA_BANCARIA — PAGAMENTO | O pagamento sai de uma conta bancária | RN29 |
 | **DISPARA** | CONVERSA — AUTOMACAO_EXECUCAO | A conversa dispara execuções da automação | RN31 |
-| **REGISTRA** | AUTOMACAO_EXECUCAO — AUTOMACAO_LOG | A execução registra eventos (logs) | RF12 |
+| **GRAVA** | AUTOMACAO_EXECUCAO — AUTOMACAO_LOG | A execução registra eventos (logs) | RF12 |
 
 ## 14. Cardinalidades
 
@@ -454,13 +458,13 @@ Cada cardinalidade foi definida pelo método **vá e volte** do manual: partindo
 | ANUNCIA | 1 USUARIO (proprietário) → nenhum ou vários IMOVEL | 1 IMOVEL → exatamente um USUARIO (proprietário) | USUARIO (proprietário) (1,1) — ANUNCIA — (0,n) IMOVEL | RN06 |
 | RESPONSÁVEL | 1 USUARIO (corretor) → nenhum ou vários IMOVEL | 1 IMOVEL → nenhum ou um USUARIO (corretor) | USUARIO (corretor) (0,1) — RESPONSÁVEL — (0,n) IMOVEL | RN07 |
 | TEM | 1 IMOVEL → nenhum ou vários FOTO | 1 FOTO → exatamente um IMOVEL | IMOVEL (1,1) — TEM — (0,n) FOTO | RN09 |
-| POSSUI | 1 IMOVEL → nenhum ou vários CARACTERISTICA | 1 CARACTERISTICA → nenhum ou vários IMOVEL | IMOVEL (0,n) — POSSUI — (0,n) CARACTERISTICA | RN08 |
+| APRESENTA | 1 IMOVEL → nenhum ou vários CARACTERISTICA | 1 CARACTERISTICA → nenhum ou vários IMOVEL | IMOVEL (0,n) — APRESENTA — (0,n) CARACTERISTICA | RN08 |
 | INTERESSA | 1 IMOVEL → nenhum ou vários CONVERSA | 1 CONVERSA → nenhum ou vários IMOVEL | IMOVEL (0,n) — INTERESSA — (0,n) CONVERSA · N:N | RF17 |
 | INICIA | 1 USUARIO (cliente) → nenhum ou vários CONVERSA | 1 CONVERSA → exatamente um USUARIO (cliente) | USUARIO (cliente) (1,1) — INICIA — (0,n) CONVERSA | RN11 |
 | ATENDE | 1 USUARIO (corretor) → nenhum ou vários CONVERSA | 1 CONVERSA → nenhum ou um USUARIO (corretor) | USUARIO (corretor) (0,1) — ATENDE — (0,n) CONVERSA | RN12 |
 | CONTÉM | 1 CONVERSA → nenhum ou vários MENSAGEM | 1 MENSAGEM → exatamente um CONVERSA | CONVERSA (1,1) — CONTÉM — (0,n) MENSAGEM | RF05 |
 | MARCA | 1 CONVERSA → nenhum ou vários TAG | 1 TAG → nenhum ou vários CONVERSA | CONVERSA (0,n) — MARCA — (0,n) TAG | RF09 |
-| GERA | 1 CONVERSA → nenhum ou vários TAREFA | 1 TAREFA → nenhum ou um CONVERSA | CONVERSA (0,1) — GERA — (0,n) TAREFA | RN15 |
+| GERA TAREFA | 1 CONVERSA → nenhum ou vários TAREFA | 1 TAREFA → nenhum ou um CONVERSA | CONVERSA (0,1) — GERA TAREFA — (0,n) TAREFA | RN15 |
 | EXECUTA | 1 USUARIO (corretor) → nenhum ou vários TAREFA | 1 TAREFA → exatamente um USUARIO (corretor) | USUARIO (corretor) (1,1) — EXECUTA — (0,n) TAREFA | RN15 |
 | ESTÁ EM | 1 CONVERSA → exatamente um FUNIL_ESTAGIO | 1 FUNIL_ESTAGIO → nenhum ou vários CONVERSA | CONVERSA (0,n) — ESTÁ EM — (1,1) FUNIL_ESTAGIO | RN13 |
 | REGISTRA | 1 HISTORICO_ESTAGIO → nenhum ou um USUARIO (responsável) | 1 USUARIO (responsável) → nenhum ou vários HISTORICO_ESTAGIO | HISTORICO_ESTAGIO (0,n) — REGISTRA — (0,1) USUARIO (responsável) | RF08 |
@@ -470,25 +474,27 @@ Cada cardinalidade foi definida pelo método **vá e volte** do manual: partindo
 | NEGOCIA | 1 PROPOSTA → exatamente um USUARIO (corretor) | 1 USUARIO (corretor) → nenhum ou vários PROPOSTA | PROPOSTA (0,n) — NEGOCIA — (1,1) USUARIO (corretor) | RF19 |
 | FECHA | 1 PROPOSTA → nenhum ou um CONTRATO | 1 CONTRATO → exatamente um PROPOSTA | PROPOSTA (1,1) — FECHA — (0,1) CONTRATO | RN18 |
 | ANEXA | 1 CONTRATO → nenhum ou vários DOCUMENTO | 1 DOCUMENTO → exatamente um CONTRATO | CONTRATO (1,1) — ANEXA — (0,n) DOCUMENTO | RF21 |
+| AUTORIZA | 1 PROPOSTA → nenhum ou um USUARIO (administrador) | 1 USUARIO (administrador) → nenhum ou vários PROPOSTA | PROPOSTA (0,n) — AUTORIZA — (0,1) USUARIO (administrador) | PO03 |
+| APROVA | 1 COMISSAO → nenhum ou um USUARIO (administrador) | 1 USUARIO (administrador) → nenhum ou vários COMISSAO | COMISSAO (0,n) — APROVA — (0,1) USUARIO (administrador) | PO01 |
 | VISITA | 1 USUARIO (cliente) → nenhum ou vários IMOVEL | 1 IMOVEL → nenhum ou vários USUARIO (cliente) | USUARIO (cliente) (0,n) — VISITA — (0,n) IMOVEL · N:N | RN16 |
 | PROPOE | 1 USUARIO (cliente) → nenhum ou vários IMOVEL | 1 IMOVEL → nenhum ou vários USUARIO (cliente) | USUARIO (cliente) (0,n) — PROPOE — (0,n) IMOVEL · N:N | RF19 |
 | RECEBE | 1 CONTRATO → nenhum ou vários USUARIO (corretor) | 1 USUARIO (corretor) → nenhum ou vários CONTRATO | CONTRATO (0,n) — RECEBE — (0,n) USUARIO (corretor) · N:N | RN20 |
 | FINANCIA | 1 CONTRATO → nenhum ou um FINANCIAMENTO | 1 FINANCIAMENTO → exatamente um CONTRATO | CONTRATO (1,1) — FINANCIA — (0,1) FINANCIAMENTO | RN22 |
-| GERA | 1 CONTRATO → nenhum ou vários CONTA_RECEBER | 1 CONTA_RECEBER → nenhum ou um CONTRATO | CONTRATO (0,1) — GERA — (0,n) CONTA_RECEBER | RF24 |
+| GERA RECEITA | 1 CONTRATO → nenhum ou vários CONTA_RECEBER | 1 CONTA_RECEBER → nenhum ou um CONTRATO | CONTRATO (0,1) — GERA RECEITA — (0,n) CONTA_RECEBER | RF24 |
 | LIBERA | 1 FINANCIAMENTO → nenhum ou vários CONTA_RECEBER | 1 CONTA_RECEBER → nenhum ou um FINANCIAMENTO | FINANCIAMENTO (0,1) — LIBERA — (0,n) CONTA_RECEBER | RN23 |
 | CLASSIFICA | 1 CATEGORIA_FINANCEIRA → nenhum ou vários CONTA_RECEBER | 1 CONTA_RECEBER → exatamente um CATEGORIA_FINANCEIRA | CATEGORIA_FINANCEIRA (1,1) — CLASSIFICA — (0,n) CONTA_RECEBER | RN26 |
 | PAGA | 1 USUARIO (pagador) → nenhum ou vários CONTA_RECEBER | 1 CONTA_RECEBER → nenhum ou um USUARIO (pagador) | USUARIO (pagador) (0,1) — PAGA — (0,n) CONTA_RECEBER | RN27 |
-| BAIXA | 1 CONTA_RECEBER → nenhum ou vários RECEBIMENTO | 1 RECEBIMENTO → exatamente um CONTA_RECEBER | CONTA_RECEBER (1,1) — BAIXA — (0,n) RECEBIMENTO | RN29 |
+| QUITA | 1 CONTA_RECEBER → nenhum ou vários RECEBIMENTO | 1 RECEBIMENTO → exatamente um CONTA_RECEBER | CONTA_RECEBER (1,1) — QUITA — (0,n) RECEBIMENTO | RN29 |
 | CREDITA | 1 CONTA_BANCARIA → nenhum ou vários RECEBIMENTO | 1 RECEBIMENTO → exatamente um CONTA_BANCARIA | CONTA_BANCARIA (1,1) — CREDITA — (0,n) RECEBIMENTO | RN29 |
-| ORIGINA | 1 CONTRATO → nenhum ou vários CONTA_PAGAR | 1 CONTA_PAGAR → nenhum ou um CONTRATO | CONTRATO (0,1) — ORIGINA — (0,n) CONTA_PAGAR | RF25 |
-| CLASSIFICA | 1 CATEGORIA_FINANCEIRA → nenhum ou vários CONTA_PAGAR | 1 CONTA_PAGAR → exatamente um CATEGORIA_FINANCEIRA | CATEGORIA_FINANCEIRA (1,1) — CLASSIFICA — (0,n) CONTA_PAGAR | RN26 |
+| GERA DESPESA | 1 CONTRATO → nenhum ou vários CONTA_PAGAR | 1 CONTA_PAGAR → nenhum ou um CONTRATO | CONTRATO (0,1) — GERA DESPESA — (0,n) CONTA_PAGAR | RF25 |
+| CATEGORIZA | 1 CATEGORIA_FINANCEIRA → nenhum ou vários CONTA_PAGAR | 1 CONTA_PAGAR → exatamente um CATEGORIA_FINANCEIRA | CATEGORIA_FINANCEIRA (1,1) — CATEGORIZA — (0,n) CONTA_PAGAR | RN26 |
 | FAVORECE | 1 USUARIO (favorecido) → nenhum ou vários CONTA_PAGAR | 1 CONTA_PAGAR → nenhum ou um USUARIO (favorecido) | USUARIO (favorecido) (0,1) — FAVORECE — (0,n) CONTA_PAGAR | RF25 |
-| PAGA | 1 USUARIO (pagador) → nenhum ou vários CONTA_PAGAR | 1 CONTA_PAGAR → nenhum ou um USUARIO (pagador) | USUARIO (pagador) (0,1) — PAGA — (0,n) CONTA_PAGAR | RN28 |
-| GERA | 1 COMISSAO → nenhum ou um CONTA_PAGAR | 1 CONTA_PAGAR → nenhum ou um COMISSAO | COMISSAO (0,1) — GERA — (0,1) CONTA_PAGAR | RN25 |
-| BAIXA | 1 CONTA_PAGAR → nenhum ou vários PAGAMENTO | 1 PAGAMENTO → exatamente um CONTA_PAGAR | CONTA_PAGAR (1,1) — BAIXA — (0,n) PAGAMENTO | RN29 |
+| CUSTEIA | 1 USUARIO (pagador) → nenhum ou vários CONTA_PAGAR | 1 CONTA_PAGAR → nenhum ou um USUARIO (pagador) | USUARIO (pagador) (0,1) — CUSTEIA — (0,n) CONTA_PAGAR | RN28 |
+| LANÇA | 1 COMISSAO → nenhum ou um CONTA_PAGAR | 1 CONTA_PAGAR → nenhum ou um COMISSAO | COMISSAO (0,1) — LANÇA — (0,1) CONTA_PAGAR | RN25 |
+| LIQUIDA | 1 CONTA_PAGAR → nenhum ou vários PAGAMENTO | 1 PAGAMENTO → exatamente um CONTA_PAGAR | CONTA_PAGAR (1,1) — LIQUIDA — (0,n) PAGAMENTO | RN29 |
 | DEBITA | 1 CONTA_BANCARIA → nenhum ou vários PAGAMENTO | 1 PAGAMENTO → exatamente um CONTA_BANCARIA | CONTA_BANCARIA (1,1) — DEBITA — (0,n) PAGAMENTO | RN29 |
 | DISPARA | 1 CONVERSA → nenhum ou vários AUTOMACAO_EXECUCAO | 1 AUTOMACAO_EXECUCAO → exatamente um CONVERSA | CONVERSA (1,1) — DISPARA — (0,n) AUTOMACAO_EXECUCAO | RN31 |
-| REGISTRA | 1 AUTOMACAO_EXECUCAO → nenhum ou vários AUTOMACAO_LOG | 1 AUTOMACAO_LOG → exatamente um AUTOMACAO_EXECUCAO | AUTOMACAO_EXECUCAO (1,1) — REGISTRA — (0,n) AUTOMACAO_LOG | RF12 |
+| GRAVA | 1 AUTOMACAO_EXECUCAO → nenhum ou vários AUTOMACAO_LOG | 1 AUTOMACAO_LOG → exatamente um AUTOMACAO_EXECUCAO | AUTOMACAO_EXECUCAO (1,1) — GRAVA — (0,n) AUTOMACAO_LOG | RF12 |
 
 **Relacionamentos N:N verificados (Etapa 14):** imóvel × característica e conversa × tag ficaram como losango, porque não têm informação própria; conversa × imóvel, conversa × estágio, cliente × imóvel (visita e proposta) e contrato × corretor viraram entidades associativas, porque têm.
 
@@ -504,10 +510,10 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 | nome | Nome completo ou razão social | Obrigatório |
 | documento | CPF ou CNPJ | Não pode se repetir; obrigatório para proprietário e para quem assina contrato (RN04) |
 | email | E-mail de contato e de acesso | Não pode se repetir; obrigatório para quem acessa o sistema |
-| senha_hash | Senha de acesso ao sistema | Só para quem acessa o sistema; guardada protegida (RNF02) |
+| senha | Senha de acesso ao sistema | Só para quem acessa o sistema; armazenada de forma protegida (RNF02) |
 | creci | Registro do corretor no CRECI | Obrigatório para quem tem o papel corretor |
 | origem | Canal pelo qual a pessoa chegou | Site, indicação, portal, Instagram, WhatsApp ou interno |
-| papel | Papéis que a pessoa exerce | Multivalorado: cliente, proprietário, corretor, fornecedor, administrador; pelo menos um (RN01, RN02) |
+| papel | Papéis que a pessoa exerce | Multivalorado: cliente, proprietário, corretor, financeiro, fornecedor, administrador; pelo menos um (RN01, RN02) |
 | ativo | Indica se o cadastro está ativo | Cadastro inativo não acessa o sistema |
 | dt_cadastro | Data do cadastro | Preenchida automaticamente |
 
@@ -641,6 +647,7 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 | condicoes | Forma de pagamento, prazos e financiamento | — |
 | st_proposta | Situação | Pendente, aceita, recusada ou contraproposta |
 | dt_proposta | Data da proposta | Obrigatória |
+| dt_autorizacao | Data da autorização do administrador | Obrigatória quando o desconto passa de 10% (PO03); atributo do relacionamento AUTORIZA |
 
 ### CONTRATO · forte
 
@@ -650,9 +657,14 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 | tipo_contrato | Venda ou locação | Obrigatório (RN19) |
 | forma_pagamento | Como o comprador paga | À vista, financiado ou parcelado direto |
 | vl_final | Valor fechado; na locação, o aluguel mensal | Obrigatório |
+| percentual_corretagem | Percentual de corretagem da venda | Obrigatório na venda; base da conta a receber da corretagem (RF24) |
+| taxa_administracao | Percentual retido do aluguel pela imobiliária | Obrigatório na locação; define o repasse ao proprietário (RN30) |
+| dia_vencimento | Dia do mês em que vence o aluguel | Obrigatório na locação (RF27) |
 | dt_assinatura | Data da assinatura | — |
 | dt_fim | Data de término | Obrigatória na locação (RN19) |
 | st_contrato | Situação | Vigente, encerrado ou cancelado; contrato assinado não é excluído, só cancelado (PO04) |
+| dt_cancelamento | Data do cancelamento | Obrigatória quando cancelado (PO04) |
+| motivo_cancelamento | Motivo do cancelamento | Obrigatório quando cancelado (PO04) |
 
 ### DOCUMENTO · fraca
 
@@ -669,13 +681,16 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 | percentual | Percentual do corretor sobre o valor do contrato | Obrigatório; a soma no contrato não passa de 100% (RN20) |
 | valor | Valor da comissão | Derivado: percentual × valor final do contrato (RN21) |
 | regra_pagamento | Quando a comissão pode ser paga | Na assinatura, na liberação do crédito ou no recebimento (RN24) |
-| st_pagamento | Situação | Pendente, liberada, paga ou cancelada; só o administrador aprova e paga (PO01) |
+| st_pagamento | Situação | Pendente, liberada, paga ou cancelada |
+| dt_aprovacao | Data da aprovação do administrador | Obrigatória antes do pagamento (PO01); atributo do relacionamento APROVA |
 
 ### FINANCIAMENTO · fraca
 
+*Identificação: identificado pelo contrato (entidade fraca, relação 1:1).*
+
 | Atributo | Descrição | Regra / observação |
 |---|---|---|
-| instituicao | Banco que concede o crédito | Obrigatório; a identificação vem do contrato (entidade fraca) |
+| instituicao | Banco que concede o crédito | Obrigatório |
 | vl_financiado | Valor financiado | Obrigatório |
 | vl_entrada | Valor de entrada | — |
 | nr_parcelas | Quantidade de parcelas | — |
@@ -751,11 +766,11 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 | Atributo | Descrição | Regra / observação |
 |---|---|---|
 | nr_execucao | Número da execução dentro da conversa | Identificador parcial |
-| demand_hash | Resumo que identifica a demanda | Não se repete na mesma conversa (RN31) |
+| chave_demanda | Resumo que identifica a demanda | Não se repete na mesma conversa (RN31) |
 | st_execucao | Situação da execução | — |
-| demanda_json | Demanda interpretada a partir da mensagem | — |
-| seletor_json | Critérios usados para escolher os imóveis | — |
-| envio_json | Conteúdo enviado ao cliente | — |
+| demanda_interpretada | O que o cliente pediu, extraído da mensagem | — |
+| criterios_selecao | Critérios usados para escolher os imóveis | — |
+| conteudo_enviado | Conteúdo enviado ao cliente | — |
 | mensagem | Resumo da execução | — |
 | erro | Erro ocorrido, se houver | — |
 | dt_execucao | Data e hora da execução | Obrigatória |
@@ -768,7 +783,7 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 | nr_log | Número do evento dentro da execução | Identificador parcial |
 | evento | Nome do evento | Obrigatório |
 | mensagem | Descrição do evento | — |
-| payload_json | Dados técnicos do evento | — |
+| dados_evento | Dados técnicos do evento | — |
 | dt_log | Data e hora do evento | Obrigatória |
 
 ## 16. DER
@@ -776,6 +791,12 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 Modelo conceitual em notação de Chen. O DER foi desenhado em seis folhas, uma por domínio, para que nenhuma linha cruze outra e a letra seja legível. Quando uma entidade detalhada em outra folha participa de um relacionamento, ela aparece como **atalho** (caixa tracejada com a folha indicada).
 
 Arquivo para impressão (A3): [`docs/der/CRMoveis-DER-conceitual.pdf`](docs/der/CRMoveis-DER-conceitual.pdf)
+
+### Visão geral
+
+Todas as folhas juntas, para ver a integração entre os domínios. Para leitura, use as folhas abaixo ou o PDF.
+
+![DER — visão geral](docs/der/visao-geral.png)
 
 | Símbolo | Significado |
 |---|---|
@@ -893,7 +914,7 @@ As principais decisões de modelagem, no formato pedido pelo manual.
 
 | | |
 |---|---|
-| **O que decidimos** | As duas contas têm o atributo responsável e o relacionamento PAGA com o usuário. |
+| **O que decidimos** | As duas contas têm o atributo responsável e um relacionamento com a pessoa que paga: PAGA (conta a receber) e CUSTEIA (conta a pagar). |
 | **Por que decidimos assim** | Quem paga varia: na venda costuma ser o vendedor; no financiamento, o banco; na locação, o inquilino. Quando é a imobiliária, não há pessoa a ligar. |
 | **Qual regra sustenta** | RN27, RN28 |
 
@@ -913,7 +934,23 @@ As principais decisões de modelagem, no formato pedido pelo manual.
 | **Por que decidimos assim** | São necessários para a resposta automática e para garantir que a mesma demanda não seja processada duas vezes. |
 | **Qual regra sustenta** | RF11, RF12 · RN31 |
 
-### 17.13 DER dividido em folhas com atalhos
+### 17.13 Aprovações como relacionamentos 1:N
+
+| | |
+|---|---|
+| **O que decidimos** | AUTORIZA liga o administrador à proposta e APROVA liga o administrador à comissão, ambos (0,1)–(0,n). As datas ficam na proposta e na comissão. |
+| **Por que decidimos assim** | As políticas exigem saber quem aprovou. Como cada proposta ou comissão tem no máximo um aprovador, a data da aprovação migra para o lado N do relacionamento. |
+| **Qual regra sustenta** | PO01, PO03 |
+
+### 17.14 Nomes únicos para os relacionamentos
+
+| | |
+|---|---|
+| **O que decidimos** | Cada relacionamento tem um nome próprio (GERA TAREFA, GERA RECEITA, GERA DESPESA, QUITA, LIQUIDA, CLASSIFICA, CATEGORIZA…). |
+| **Por que decidimos assim** | Com nomes repetidos, uma pergunta como “por que existe o GERA?” ficaria ambígua. O nome passa a identificar a relação sem precisar citar as entidades. |
+| **Qual regra sustenta** | Clareza das justificativas |
+
+### 17.15 DER dividido em folhas com atalhos
 
 | | |
 |---|---|
@@ -935,6 +972,7 @@ CRMoveis/
 └── docs/
     ├── der/
     │   ├── CRMoveis-DER-conceitual.pdf     # DER em 6 folhas A3
+    │   ├── visao-geral.png                  # todas as folhas numa imagem
     │   └── folha-1.png … folha-6.png        # imagens usadas neste README
     ├── fluxogramas/
     │   ├── CRMoveis-fluxogramas.pdf        # 5 fluxogramas em A4
