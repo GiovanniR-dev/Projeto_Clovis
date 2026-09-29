@@ -1,0 +1,698 @@
+// SP_Imoveis_CRM — modelo lógico revisado
+// Cole em https://dbdiagram.io/d
+// Legenda das Refs:  >  muitos-para-um   |   -  um-para-um
+
+// ===== Enums =====
+Enum usuarios_origem {
+  site
+  indicacao
+  portal
+  instagram
+  whatsapp
+  interno
+}
+
+Enum usuario_telefones_tipo {
+  celular
+  whatsapp
+  fixo
+}
+
+Enum perfis_interesse_finalidade {
+  venda
+  locacao
+}
+
+Enum mensagens_direcao {
+  entrada
+  saida
+}
+
+Enum mensagens_canal {
+  whatsapp
+  email
+  nota_interna
+}
+
+Enum tarefas_status {
+  pendente
+  concluida
+  cancelada
+}
+
+Enum imoveis_tipo {
+  apartamento
+  casa
+  terreno
+  comercial
+  rural
+}
+
+Enum imoveis_finalidade {
+  venda
+  locacao
+}
+
+Enum imoveis_status {
+  disponivel
+  reservado
+  vendido
+  alugado
+  inativo
+}
+
+Enum visitas_status {
+  agendada
+  realizada
+  cancelada
+}
+
+Enum propostas_status {
+  pendente
+  aceita
+  recusada
+  contraproposta
+}
+
+Enum contratos_tipo {
+  venda
+  locacao
+}
+
+Enum contratos_forma_pagamento {
+  a_vista
+  financiado
+  parcelado_direto
+}
+
+Enum contratos_status {
+  vigente
+  encerrado
+  cancelado
+}
+
+Enum comissoes_regra_pagamento {
+  na_assinatura
+  na_liberacao_credito
+  no_recebimento
+}
+
+Enum comissoes_status_pagamento {
+  pendente
+  liberada
+  paga
+  cancelada
+}
+
+Enum financiamentos_status {
+  em_analise
+  aprovado
+  reprovado
+  liberado
+  cancelado
+}
+
+Enum categorias_financeiras_tipo {
+  receita
+  despesa
+}
+
+Enum contas_bancarias_tipo {
+  corrente
+  poupanca
+  caixa
+}
+
+Enum contas_receber_responsavel {
+  cliente
+  inquilino
+  proprietario
+  banco
+}
+
+Enum contas_receber_origem {
+  corretagem
+  intermediacao
+  administracao
+  aluguel
+  servico
+}
+
+Enum contas_receber_status {
+  previsto
+  parcial
+  recebido
+  atrasado
+  cancelado
+}
+
+Enum recebimentos_forma {
+  pix
+  ted
+  boleto
+  dinheiro
+  cartao
+}
+
+Enum contas_pagar_responsavel {
+  imobiliaria
+  proprietario
+  inquilino
+}
+
+Enum contas_pagar_tipo {
+  comissao
+  repasse_proprietario
+  despesa
+  imposto
+}
+
+Enum contas_pagar_status {
+  previsto
+  parcial
+  pago
+  atrasado
+  cancelado
+}
+
+Enum pagamentos_forma {
+  pix
+  ted
+  boleto
+  dinheiro
+  cartao
+}
+
+// ===== Tabelas =====
+Table usuarios [headercolor: #2F6DB5] {
+  id integer [pk, increment, not null]
+  nome varchar(255) [not null]
+  documento varchar(255) [unique]
+  email varchar(255) [unique]
+  senha_hash varchar(255)
+  creci varchar(255) [unique]
+  origem usuarios_origem
+  e_cliente boolean [not null, default: 0]
+  e_proprietario boolean [not null, default: 0]
+  e_corretor boolean [not null, default: 0]
+  e_fornecedor boolean [not null, default: 0]
+  e_admin boolean [not null, default: 0]
+  observacoes text
+  ativo boolean [default: 1]
+  created_at datetime
+
+  Note: 'Classe única de pessoas do CRM: cliente, proprietário, corretor, fornecedor e admin. O papel é marcado nos campos e_* e a pessoa pode acumular mais de um. Regra: CHECK(e_cliente OR e_proprietario OR e_corretor OR e_fornecedor OR e_admin)'
+}
+
+Table usuario_telefones [headercolor: #2F6DB5] {
+  usuario_id integer [not null]
+  nr_telefone integer [not null]
+  numero varchar(255) [unique, not null]
+  tipo usuario_telefones_tipo
+  principal boolean [default: 0]
+
+  indexes {
+    (usuario_id, nr_telefone) [pk]
+  }
+
+  Note: 'Telefones da pessoa (atributo multivalorado); o número é único para identificar no WhatsApp'
+}
+
+Table perfis_interesse [headercolor: #2F6DB5] {
+  usuario_id integer [not null]
+  nr_perfil integer [not null]
+  finalidade perfis_interesse_finalidade
+  tipo_imovel varchar(30)
+  cidade varchar(255)
+  bairro varchar(255)
+  valor_min decimal(12,2)
+  valor_max decimal(12,2)
+  quartos_min integer
+  created_at datetime
+
+  indexes {
+    (usuario_id, nr_perfil) [pk]
+  }
+
+  Note: 'O que o cliente procura (base para o matching com IA)'
+}
+
+Table conversas [headercolor: #B7860B] {
+  id integer [pk, increment, not null]
+  cliente_id integer [not null]
+  corretor_id integer
+  estagio_id integer [not null]
+  notas text
+  created_at datetime
+  updated_at datetime
+
+  Note: 'Atendimento de um contato no funil'
+}
+
+Table mensagens [headercolor: #B7860B] {
+  id integer [pk, increment, not null]
+  conversa_id integer [not null]
+  direcao mensagens_direcao
+  canal mensagens_canal
+  corpo text
+  created_at datetime
+
+  Note: 'Entidade fraca: mensagens da conversa'
+}
+
+Table tags [headercolor: #B7860B] {
+  id integer [pk, increment, not null]
+  nome varchar(255) [unique, not null]
+
+  Note: 'Etiquetas'
+}
+
+Table conversa_tags [headercolor: #B7860B] {
+  conversa_id integer [not null]
+  tag_id integer [not null]
+
+  indexes {
+    (conversa_id, tag_id) [pk]
+  }
+
+  Note: 'Associativa: resolve N:N conversa x tag'
+}
+
+Table funil_estagios [headercolor: #B7860B] {
+  id integer [pk, increment, not null]
+  nome varchar(255) [unique, not null]
+  ordem integer [not null]
+  cor varchar(255)
+  created_at datetime
+
+  Note: 'Etapas do funil'
+}
+
+Table historico_estagios [headercolor: #B7860B] {
+  conversa_id integer [not null]
+  alterado_em datetime [not null]
+  estagio_anterior_id integer
+  estagio_novo_id integer [not null]
+  usuario_id integer
+
+  indexes {
+    (conversa_id, alterado_em) [pk]
+  }
+
+  Note: 'Entidade fraca: histórico de mudanças de estágio'
+}
+
+Table tarefas [headercolor: #B7860B] {
+  id integer [pk, increment, not null]
+  conversa_id integer
+  corretor_id integer [not null]
+  titulo varchar(255) [not null]
+  descricao text
+  data_vencimento datetime
+  status tarefas_status
+  created_at datetime
+
+  Note: 'Pendências do corretor'
+}
+
+Table imoveis [headercolor: #2E8B47] {
+  id integer [pk, increment, not null]
+  codigo_imobizi varchar(255) [unique]
+  proprietario_id integer [not null]
+  corretor_responsavel_id integer
+  tipo imoveis_tipo
+  finalidade imoveis_finalidade
+  logradouro varchar(255)
+  numero varchar(255)
+  complemento varchar(255)
+  bairro varchar(255)
+  cidade varchar(255)
+  uf char(2)
+  cep char(8)
+  area_util decimal(10,2)
+  area_total decimal(10,2)
+  quartos integer
+  banheiros integer
+  vagas_garagem integer
+  valor decimal(12,2)
+  status imoveis_status
+  descricao text
+  created_at datetime
+  updated_at datetime
+
+  Note: 'Imóvel importado do IMOBIZI'
+}
+
+Table imovel_fotos [headercolor: #2E8B47] {
+  imovel_id integer [not null]
+  ordem integer [not null]
+  url text [not null]
+  created_at datetime
+
+  indexes {
+    (imovel_id, ordem) [pk]
+  }
+
+  Note: 'Entidade fraca'
+}
+
+Table caracteristicas [headercolor: #2E8B47] {
+  id integer [pk, increment, not null]
+  nome varchar(255) [unique, not null]
+
+  Note: 'Catálogo de características'
+}
+
+Table imovel_caracteristicas [headercolor: #2E8B47] {
+  caracteristica_id integer [not null]
+  imovel_id integer [not null]
+
+  indexes {
+    (caracteristica_id, imovel_id) [pk]
+  }
+
+  Note: 'Associativa: resolve N:N imóvel x característica'
+}
+
+Table conversa_imoveis [headercolor: #2E8B47] {
+  imovel_id integer [not null]
+  conversa_id integer [not null]
+  created_at datetime
+
+  indexes {
+    (imovel_id, conversa_id) [pk]
+  }
+
+  Note: 'Associativa: resolve N:N conversa x imóvel'
+}
+
+Table visitas [headercolor: #C23B5E] {
+  id integer [pk, increment, not null]
+  imovel_id integer [not null]
+  cliente_id integer [not null]
+  corretor_id integer [not null]
+  data_hora datetime [not null]
+  status visitas_status
+  feedback text
+  created_at datetime
+
+  indexes {
+    (imovel_id, cliente_id, data_hora) [unique]
+  }
+
+  Note: 'Associativa com atributos: contato x imóvel'
+}
+
+Table propostas [headercolor: #C23B5E] {
+  id integer [pk, increment, not null]
+  imovel_id integer [not null]
+  cliente_id integer [not null]
+  corretor_id integer [not null]
+  visita_id integer
+  valor_proposto decimal(12,2) [not null]
+  condicoes text
+  status propostas_status
+  created_at datetime
+  updated_at datetime
+
+  Note: 'Associativa com atributos: contato x imóvel'
+}
+
+Table contratos [headercolor: #C23B5E] {
+  id integer [pk, increment, not null]
+  proposta_id integer [unique, not null]
+  tipo contratos_tipo
+  forma_pagamento contratos_forma_pagamento [note: 'campo novo na revisão']
+  valor_final decimal(12,2) [not null]
+  data_assinatura date
+  data_fim date
+  status contratos_status
+  created_at datetime
+
+  Note: 'Venda ou locação fechada'
+}
+
+Table contrato_documentos [headercolor: #C23B5E] {
+  contrato_id integer [not null]
+  nr_documento integer [not null]
+  nome varchar(255)
+  url text [not null]
+  created_at datetime
+
+  indexes {
+    (contrato_id, nr_documento) [pk]
+  }
+
+  Note: 'Entidade fraca: arquivos do contrato'
+}
+
+Table comissoes [headercolor: #C23B5E] {
+  contrato_id integer [not null]
+  corretor_id integer [not null]
+  percentual decimal(5,2) [not null]
+  valor decimal(12,2) [note: 'derivado: percentual x contratos.valor_final']
+  regra_pagamento comissoes_regra_pagamento [note: 'campo novo na revisão']
+  status_pagamento comissoes_status_pagamento
+  conta_pagar_id integer [unique, note: 'campo novo na revisão']
+
+  indexes {
+    (contrato_id, corretor_id) [pk]
+  }
+
+  Note: 'Parte de cada corretor no contrato'
+}
+
+Table financiamentos [headercolor: #1E7D4F] {
+  contrato_id integer [pk, not null]
+  instituicao varchar(255) [not null]
+  valor_financiado decimal(12,2) [not null]
+  valor_entrada decimal(12,2)
+  nr_parcelas integer
+  taxa_juros_aa decimal(5,2)
+  status financiamentos_status
+  dt_aprovacao date
+  dt_liberacao date
+  created_at datetime
+
+  Note: 'Especialização do contrato: dados do financiamento bancário. PK herdada do contrato (NOVA)'
+}
+
+Table categorias_financeiras [headercolor: #1E7D4F] {
+  id integer [pk, increment, not null]
+  nome varchar(255) [unique, not null]
+  tipo categorias_financeiras_tipo [not null]
+
+  Note: 'Plano de contas simplificado (receita ou despesa) (NOVA)'
+}
+
+Table contas_bancarias [headercolor: #1E7D4F] {
+  id integer [pk, increment, not null]
+  apelido varchar(255) [unique, not null]
+  instituicao varchar(255)
+  tipo contas_bancarias_tipo
+  ativa boolean [default: 1]
+
+  Note: 'Contas e caixa onde o dinheiro entra e sai (NOVA)'
+}
+
+Table contas_receber [headercolor: #1E7D4F] {
+  id integer [pk, increment, not null]
+  financiamento_id integer
+  contrato_id integer
+  categoria_id integer [not null]
+  pagador_id integer
+  responsavel contas_receber_responsavel [not null, note: 'campo novo na revisão']
+  origem contas_receber_origem [not null]
+  descricao text
+  competencia date
+  valor decimal(12,2) [not null]
+  vencimento date [not null]
+  status contas_receber_status
+  created_at datetime
+
+  Note: 'O que a imobiliária tem a receber: corretagem, intermediação, taxa de administração, aluguel (NOVA)'
+}
+
+Table recebimentos [headercolor: #1E7D4F] {
+  conta_receber_id integer [not null]
+  nr_recebimento integer [not null]
+  conta_bancaria_id integer [not null]
+  data_recebimento date [not null]
+  valor decimal(12,2) [not null]
+  forma recebimentos_forma
+
+  indexes {
+    (conta_receber_id, nr_recebimento) [pk]
+  }
+
+  Note: 'Baixas de uma conta a receber (permite recebimento parcial). Entidade fraca (NOVA)'
+}
+
+Table contas_pagar [headercolor: #1E7D4F] {
+  id integer [pk, increment, not null]
+  contrato_id integer
+  categoria_id integer [not null]
+  favorecido_id integer
+  pagador_id integer [note: 'campo novo na revisão']
+  responsavel contas_pagar_responsavel [not null, note: 'campo novo na revisão']
+  tipo contas_pagar_tipo [not null]
+  descricao text
+  competencia date
+  valor decimal(12,2) [not null]
+  vencimento date [not null]
+  status contas_pagar_status
+  created_at datetime
+
+  Note: 'O que a imobiliária tem a pagar: comissão do corretor, repasse ao proprietário, despesas (NOVA)'
+}
+
+Table pagamentos [headercolor: #1E7D4F] {
+  conta_pagar_id integer [not null]
+  nr_pagamento integer [not null]
+  conta_bancaria_id integer [not null]
+  data_pagamento date [not null]
+  valor decimal(12,2) [not null]
+  forma pagamentos_forma
+
+  indexes {
+    (conta_pagar_id, nr_pagamento) [pk]
+  }
+
+  Note: 'Baixas de uma conta a pagar (permite pagamento parcial). Entidade fraca (NOVA)'
+}
+
+Table automation_runs [headercolor: #6A4FB6] {
+  conversa_id integer [not null]
+  nr_execucao integer [not null]
+  demand_hash varchar(255) [not null]
+  status varchar(255)
+  demand_json json
+  selector_json json
+  dispatch_json json
+  message text
+  error text
+  created_at datetime
+  updated_at datetime
+  sent_at datetime
+
+  indexes {
+    (conversa_id, nr_execucao) [pk]
+    (conversa_id, demand_hash) [unique]
+  }
+
+  Note: 'Execuções do N8N'
+}
+
+Table automation_logs [headercolor: #6A4FB6] {
+  conversa_id integer [not null]
+  nr_execucao integer [not null]
+  nr_log integer [not null]
+  event varchar(255)
+  message text
+  payload_json json
+  created_at datetime
+
+  indexes {
+    (conversa_id, nr_execucao, nr_log) [pk]
+  }
+
+  Note: 'Eventos técnicos de uma execução'
+}
+
+// Relacionamentos (FK filho > PK pai)
+Ref: usuario_telefones.usuario_id > usuarios.id  // usuarios (1,1) : usuario_telefones (0,N)
+Ref: perfis_interesse.usuario_id > usuarios.id  // usuarios (1,1) : perfis_interesse (0,N)
+Ref: imoveis.corretor_responsavel_id > usuarios.id  // usuarios (0,1) : imoveis (0,N)
+Ref: imoveis.proprietario_id > usuarios.id  // usuarios (1,1) : imoveis (0,N)
+Ref: imovel_fotos.imovel_id > imoveis.id  // imoveis (1,1) : imovel_fotos (0,N)
+Ref: imovel_caracteristicas.imovel_id > imoveis.id  // imoveis (1,1) : imovel_caracteristicas (0,N)
+Ref: imovel_caracteristicas.caracteristica_id > caracteristicas.id  // caracteristicas (1,1) : imovel_caracteristicas (0,N)
+Ref: conversa_imoveis.imovel_id > imoveis.id  // imoveis (1,1) : conversa_imoveis (0,N)
+Ref: conversa_imoveis.conversa_id > conversas.id  // conversas (1,1) : conversa_imoveis (0,N)
+Ref: visitas.imovel_id > imoveis.id  // imoveis (1,1) : visitas (0,N)
+Ref: visitas.cliente_id > usuarios.id  // usuarios (1,1) : visitas (0,N)
+Ref: visitas.corretor_id > usuarios.id  // usuarios (1,1) : visitas (0,N)
+Ref: propostas.imovel_id > imoveis.id  // imoveis (1,1) : propostas (0,N)
+Ref: propostas.cliente_id > usuarios.id  // usuarios (1,1) : propostas (0,N)
+Ref: propostas.corretor_id > usuarios.id  // usuarios (1,1) : propostas (0,N)
+Ref: propostas.visita_id > visitas.id  // visitas (0,1) : propostas (0,N)
+Ref: contratos.proposta_id - propostas.id  // propostas (1,1) : contratos (0,1)
+Ref: contrato_documentos.contrato_id > contratos.id  // contratos (1,1) : contrato_documentos (0,N)
+Ref: comissoes.contrato_id > contratos.id  // contratos (1,1) : comissoes (0,N)
+Ref: comissoes.corretor_id > usuarios.id  // usuarios (1,1) : comissoes (0,N)
+Ref: conversas.cliente_id > usuarios.id  // usuarios (1,1) : conversas (0,N)
+Ref: conversas.estagio_id > funil_estagios.id  // funil_estagios (1,1) : conversas (0,N)
+Ref: conversas.corretor_id > usuarios.id  // usuarios (0,1) : conversas (0,N)
+Ref: historico_estagios.conversa_id > conversas.id  // conversas (1,1) : historico_estagios (0,N)
+Ref: historico_estagios.estagio_novo_id > funil_estagios.id  // funil_estagios (1,1) : historico_estagios (0,N)
+Ref: historico_estagios.estagio_anterior_id > funil_estagios.id  // funil_estagios (0,1) : historico_estagios (0,N)
+Ref: historico_estagios.usuario_id > usuarios.id  // usuarios (0,1) : historico_estagios (0,N)
+Ref: mensagens.conversa_id > conversas.id  // conversas (1,1) : mensagens (0,N)
+Ref: tarefas.conversa_id > conversas.id  // conversas (0,1) : tarefas (0,N)
+Ref: tarefas.corretor_id > usuarios.id  // usuarios (1,1) : tarefas (0,N)
+Ref: conversa_tags.tag_id > tags.id  // tags (1,1) : conversa_tags (0,N)
+Ref: conversa_tags.conversa_id > conversas.id  // conversas (1,1) : conversa_tags (0,N)
+Ref: financiamentos.contrato_id - contratos.id  // contratos (1,1) : financiamentos (0,1)
+Ref: contas_receber.contrato_id > contratos.id  // contratos (0,1) : contas_receber (0,N)
+Ref: contas_receber.financiamento_id > financiamentos.contrato_id  // financiamentos (0,1) : contas_receber (0,N)
+Ref: contas_receber.categoria_id > categorias_financeiras.id  // categorias_financeiras (1,1) : contas_receber (0,N)
+Ref: contas_receber.pagador_id > usuarios.id  // usuarios (0,1) : contas_receber (0,N)
+Ref: contas_pagar.contrato_id > contratos.id  // contratos (0,1) : contas_pagar (0,N)
+Ref: contas_pagar.categoria_id > categorias_financeiras.id  // categorias_financeiras (1,1) : contas_pagar (0,N)
+Ref: contas_pagar.favorecido_id > usuarios.id  // usuarios (0,1) : contas_pagar (0,N)
+Ref: contas_pagar.pagador_id > usuarios.id  // usuarios (0,1) : contas_pagar (0,N)
+Ref: comissoes.conta_pagar_id - contas_pagar.id  // contas_pagar (0,1) : comissoes (0,1)
+Ref: recebimentos.conta_receber_id > contas_receber.id  // contas_receber (1,1) : recebimentos (0,N)
+Ref: recebimentos.conta_bancaria_id > contas_bancarias.id  // contas_bancarias (1,1) : recebimentos (0,N)
+Ref: pagamentos.conta_pagar_id > contas_pagar.id  // contas_pagar (1,1) : pagamentos (0,N)
+Ref: pagamentos.conta_bancaria_id > contas_bancarias.id  // contas_bancarias (1,1) : pagamentos (0,N)
+Ref: automation_runs.conversa_id > conversas.id  // conversas (1,1) : automation_runs (0,N)
+Ref: automation_logs.(conversa_id, nr_execucao) > automation_runs.(conversa_id, nr_execucao)  // FK composta
+
+// ===== Grupos (domínios) =====
+TableGroup financeiro {
+  financiamentos
+  categorias_financeiras
+  contas_bancarias
+  contas_receber
+  recebimentos
+  contas_pagar
+  pagamentos
+}
+
+TableGroup pessoas {
+  usuarios
+  usuario_telefones
+  perfis_interesse
+}
+
+TableGroup imoveis_dominio {
+  imoveis
+  imovel_fotos
+  caracteristicas
+  imovel_caracteristicas
+  conversa_imoveis
+}
+
+TableGroup funil_crm {
+  conversas
+  mensagens
+  tags
+  conversa_tags
+  funil_estagios
+  historico_estagios
+  tarefas
+}
+
+TableGroup negociacao {
+  visitas
+  propostas
+  contratos
+  contrato_documentos
+  comissoes
+}
+
+TableGroup integracao_n8n {
+  automation_runs
+  automation_logs
+}
