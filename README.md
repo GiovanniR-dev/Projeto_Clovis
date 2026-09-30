@@ -1110,10 +1110,6 @@ As principais decisões de modelagem, no formato pedido pelo manual.
 
 O modelo conceitual do CRMoveis foi construído na ordem pedida pelo manual: a caracterização da imobiliária levou aos processos, os processos revelaram os problemas, os problemas viraram requisitos e regras, e as regras definiram as entidades, os relacionamentos e as cardinalidades do DER. Cada decisão aponta para o requisito ou a regra que a sustenta.
 
-O modelo, com 28 entidades e 46 relacionamentos, integra atendimento, imóveis, negociação e financeiro, e foi pensado para evoluir: a próxima etapa é o modelo lógico, que já tem uma prévia em [`docs/modelo-logico/`](docs/modelo-logico/) com as tabelas, chaves primárias e estrangeiras.
-
-**Fora do escopo desta entrega:** copropriedade de imóveis (vários proprietários), fiador e caução, reajuste anual do aluguel e multa e juros por atraso. Essas situações não tiveram regra levantada nesta etapa e podem ser incorporadas nas próximas.
-
 ## Arquivos do repositório
 
 ```
