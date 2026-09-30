@@ -1121,17 +1121,17 @@ CRMoveis/
 ├── README.md
 └── docs/
     ├── der/
-    │   ├── CRMoveis-DER-conceitual.pdf     # DER em 6 folhas A3
-    │   ├── visao-geral.png                  # todas as folhas numa imagem
-    │   └── folha-1.png … folha-6.png        # imagens usadas neste README
+    │   ├── CRMoveis-DER-conceitual.pdf     
+    │   ├── visao-geral.png                  
+    │   └── folha-1.png … folha-6.png        
     ├── fluxogramas/
-    │   ├── CRMoveis-fluxogramas.pdf        # 5 fluxogramas em A4
+    │   ├── CRMoveis-fluxogramas.pdf        
     │   └── fluxo-1.png … fluxo-5.png
     ├── requisitos/
     │   ├── CRMoveis-requisitos-e-regras.pdf
     │   └── CRMoveis-requisitos-e-regras.md
-    └── modelo-logico/                       # prévia da próxima etapa
+    └── modelo-logico/                       
         ├── CRMoveis-modelo-logico-ampliado.pdf
-        ├── crmoveis.dbml                    # colar em dbdiagram.io
-        └── crmoveis.mmd                     # Mermaid, para Miro ou mermaid.live
+        ├── crmoveis.dbml                    
+        └── crmoveis.mmd                     
 ```
