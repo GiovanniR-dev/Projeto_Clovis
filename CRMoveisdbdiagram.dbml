@@ -1,0 +1,751 @@
+// CRMoveis - modelo logico (entrega final)
+// Derivado do DER conceitual de 28 entidades / 46 relacionamentos.
+// Cole em https://dbdiagram.io/d  (dbdiagram aceita DBML, nao Mermaid)
+// Legenda das Refs:  >  muitos-para-um   -  um-para-um
+
+// ===== Enums =====
+Enum tp_origem {
+  site
+  indicacao
+  portal
+  instagram
+  whatsapp
+  interno
+}
+
+Enum tp_papel {
+  cliente
+  proprietario
+  inquilino
+  corretor
+  financeiro
+  fornecedor
+  administrador
+  instituicao_financeira
+}
+
+Enum tp_telefone {
+  celular
+  whatsapp
+  fixo
+}
+
+Enum tp_finalidade_perfil {
+  venda
+  locacao
+}
+
+Enum tp_imovel {
+  apartamento
+  casa
+  terreno
+  comercial
+  rural
+}
+
+Enum tp_finalidade_imovel {
+  venda
+  locacao
+  ambas
+}
+
+Enum st_imovel {
+  disponivel
+  reservado
+  vendido
+  alugado
+  inativo
+}
+
+Enum st_conversa {
+  aberta
+  encerrada
+}
+
+Enum tp_direcao {
+  entrada
+  saida
+}
+
+Enum tp_canal {
+  whatsapp
+  email
+  nota_interna
+}
+
+Enum st_tarefa {
+  pendente
+  concluida
+  cancelada
+}
+
+Enum st_visita {
+  agendada
+  realizada
+  cancelada
+}
+
+Enum st_proposta {
+  pendente
+  aceita
+  recusada
+  substituida
+}
+
+Enum tp_contrato {
+  venda
+  locacao
+}
+
+Enum tp_forma_pagamento_contrato {
+  a_vista
+  financiado
+  parcelado_direto
+}
+
+Enum st_contrato {
+  rascunho
+  vigente
+  encerrado
+  cancelado
+}
+
+Enum tp_regra_pagamento {
+  na_assinatura
+  na_liberacao_credito
+  no_recebimento
+}
+
+Enum st_comissao {
+  pendente
+  liberada
+  cancelada
+}
+
+Enum st_financiamento {
+  em_analise
+  aprovado
+  reprovado
+  liberado
+  cancelado
+}
+
+Enum tp_categoria {
+  receita
+  despesa
+}
+
+Enum tp_conta_bancaria {
+  corrente
+  poupanca
+  caixa
+}
+
+Enum tp_papel_pagador {
+  cliente
+  inquilino
+  proprietario
+  banco
+}
+
+Enum tp_origem_receita {
+  corretagem
+  intermediacao
+  administracao
+  aluguel
+  servico
+}
+
+Enum tp_forma_pagamento {
+  pix
+  ted
+  boleto
+  dinheiro
+  cartao
+}
+
+Enum tp_papel_custeio {
+  imobiliaria
+  proprietario
+  inquilino
+}
+
+Enum tp_despesa {
+  comissao
+  repasse_proprietario
+  despesa
+  imposto
+}
+
+Enum nm_entidade_auditada {
+  contrato
+  proposta
+  comissao
+  conta_receber
+  conta_pagar
+  recebimento
+  pagamento
+}
+
+Enum tp_acao {
+  criacao
+  alteracao
+  cancelamento
+}
+
+// ===== Tabelas =====
+Table usuario [headercolor: #2F6DB5] {
+  id_usuario integer [pk, increment, not null]
+  nm_usuario varchar(255) [not null]
+  nr_cpf_cnpj varchar(14) [unique, note: 'somente digitos; obrigatorio para proprietario, instituicao financeira e quem assina contrato (RN04)']
+  ds_email varchar(255) [unique]
+  ds_senha_hash varchar(255)
+  nr_creci varchar(20) [unique, note: 'obrigatorio para corretor']
+  tp_origem tp_origem
+  fl_ativo boolean [not null, default: true]
+  dt_cadastro datetime [not null, default: `now()`]
+  dt_anonimizacao datetime
+
+  Note: 'Toda pessoa ou instituicao do CRM (cliente, proprietario, inquilino, corretor, financeiro, fornecedor, administrador, banco). tp_papel e multivalorado e virou a tabela usuario_papel. Na anonimizacao (PO07) limpar nm_usuario, nr_cpf_cnpj, ds_email e telefones e preencher dt_anonimizacao.'
+}
+
+Table usuario_papel [headercolor: #2F6DB5] {
+  id_usuario integer [not null]
+  tp_papel tp_papel [not null]
+
+  indexes {
+    (id_usuario, tp_papel) [pk]
+  }
+
+  Note: 'Atributo multivalorado tp_papel (RN01, RN02): uma pessoa pode ter varios papeis, no minimo um.'
+}
+
+Table telefone [headercolor: #2F6DB5] {
+  id_telefone integer [pk, increment, not null]
+  id_usuario integer [not null]
+  nr_telefone varchar(20) [not null]
+  tp_telefone tp_telefone [not null]
+  fl_principal boolean [not null, default: false]
+
+  Note: 'O numero de WhatsApp e unico no sistema (RN03); os demais tipos podem ser compartilhados. Indice unico parcial no fim do arquivo.'
+}
+
+Table perfil_interesse [headercolor: #2F6DB5] {
+  id_usuario integer [not null]
+  nr_perfil integer [not null]
+  tp_finalidade tp_finalidade_perfil [not null]
+  tp_imovel varchar(30)
+  nm_cidade varchar(255)
+  nm_bairro varchar(255)
+  vl_minimo decimal(12,2)
+  vl_maximo decimal(12,2)
+  qt_quartos_min integer
+
+  indexes {
+    (id_usuario, nr_perfil) [pk]
+  }
+
+  Note: 'Entidade fraca de usuario: o que o cliente procura (base para sugerir imoveis).'
+}
+
+Table imovel [headercolor: #2E8B47] {
+  id_imovel integer [pk, increment, not null]
+  id_proprietario integer [not null]
+  id_corretor_responsavel integer
+  cd_imobizi varchar(30) [unique]
+  tp_imovel tp_imovel [not null]
+  tp_finalidade tp_finalidade_imovel [not null]
+  nm_logradouro varchar(255) [not null]
+  nr_endereco varchar(20)
+  ds_complemento varchar(255)
+  nm_bairro varchar(255)
+  nm_cidade varchar(255) [not null]
+  sg_uf char(2) [not null]
+  nr_cep char(8)
+  vl_area_util decimal(10,2)
+  vl_area_total decimal(10,2)
+  qt_quartos integer
+  qt_banheiros integer
+  qt_vagas_garagem integer
+  vl_venda decimal(12,2)
+  vl_aluguel decimal(12,2)
+  st_imovel st_imovel [not null, default: 'disponivel']
+  ds_anuncio text
+  dt_cadastro datetime [not null, default: `now()`]
+
+  Note: 'Imovel (importado do IMOBIZI quando cd_imobizi existe). endereco e atributo composto e foi expandido em colunas. vl_venda e obrigatorio quando a finalidade e venda/ambas; vl_aluguel quando locacao/ambas.'
+}
+
+Table foto [headercolor: #2E8B47] {
+  id_imovel integer [not null]
+  nr_foto integer [not null]
+  nr_ordem integer [not null]
+  ds_url text [not null]
+
+  indexes {
+    (id_imovel, nr_foto) [pk]
+  }
+
+  Note: 'Entidade fraca de imovel. nr_foto identifica; nr_ordem e a posicao na galeria e pode mudar.'
+}
+
+Table caracteristica [headercolor: #2E8B47] {
+  id_caracteristica integer [pk, increment, not null]
+  nm_caracteristica varchar(100) [not null, unique]
+
+  Note: 'Catalogo de caracteristicas (piscina, elevador, aceita pet...).'
+}
+
+Table imovel_caracteristica [headercolor: #2E8B47] {
+  id_imovel integer [not null]
+  id_caracteristica integer [not null]
+
+  indexes {
+    (id_imovel, id_caracteristica) [pk]
+  }
+
+  Note: 'Resolve o N:N APRESENTA (imovel x caracteristica).'
+}
+
+Table conversa_imovel [headercolor: #2E8B47] {
+  id_conversa integer [not null]
+  id_imovel integer [not null]
+  dt_interesse datetime [not null, default: `now()`]
+
+  indexes {
+    (id_conversa, id_imovel) [pk]
+  }
+
+  Note: 'Entidade associativa INTERESSA (conversa x imovel), com dt_interesse.'
+}
+
+Table funil_estagio [headercolor: #B7860B] {
+  id_estagio integer [pk, increment, not null]
+  nm_estagio varchar(255) [not null, unique]
+  nr_ordem integer [not null]
+  ds_cor varchar(20)
+
+  Note: 'Estagios do funil de vendas.'
+}
+
+Table conversa [headercolor: #B7860B] {
+  id_conversa integer [pk, increment, not null]
+  id_cliente integer [not null]
+  id_corretor integer
+  id_estagio integer [not null]
+  st_conversa st_conversa [not null, default: 'aberta']
+  ds_notas text
+  dt_inicio datetime [not null, default: `now()`]
+
+  Note: 'Atendimento de um cliente. O estagio atual (PERTENCE A) e sempre o do registro mais recente de historico_estagio (RN14). dt_atualizacao e derivado (data da ultima mensagem) e nao e armazenado.'
+}
+
+Table mensagem [headercolor: #B7860B] {
+  id_conversa integer [not null]
+  nr_mensagem integer [not null]
+  cd_externo varchar(100)
+  tp_direcao tp_direcao [note: 'vazio quando for nota interna']
+  tp_canal tp_canal [not null]
+  ds_corpo text [not null]
+  dt_mensagem datetime [not null]
+
+  indexes {
+    (id_conversa, nr_mensagem) [pk]
+    (id_conversa, cd_externo) [unique]
+  }
+
+  Note: 'Entidade fraca de conversa. cd_externo (codigo da mensagem no WhatsApp) nao se repete na conversa (RN31); vazio nas notas internas.'
+}
+
+Table tag [headercolor: #B7860B] {
+  id_tag integer [pk, increment, not null]
+  nm_tag varchar(100) [not null, unique]
+
+  Note: 'Etiquetas de conversa.'
+}
+
+Table conversa_tag [headercolor: #B7860B] {
+  id_conversa integer [not null]
+  id_tag integer [not null]
+
+  indexes {
+    (id_conversa, id_tag) [pk]
+  }
+
+  Note: 'Resolve o N:N MARCA (conversa x tag).'
+}
+
+Table historico_estagio [headercolor: #B7860B] {
+  id_conversa integer [not null]
+  dt_alteracao datetime [not null]
+  id_estagio integer [not null]
+  id_usuario_responsavel integer
+
+  indexes {
+    (id_conversa, dt_alteracao) [pk]
+  }
+
+  Note: 'Entidade associativa MOVE (conversa x estagio). Toda mudanca de estagio gera um registro, inclusive o estagio inicial (RN14).'
+}
+
+Table tarefa [headercolor: #B7860B] {
+  id_tarefa integer [pk, increment, not null]
+  id_conversa integer
+  id_corretor integer [not null]
+  ds_titulo varchar(255) [not null]
+  ds_tarefa text
+  dt_vencimento datetime [not null]
+  st_tarefa st_tarefa [not null, default: 'pendente']
+
+  Note: 'Pendencia do corretor, ligada ou nao a uma conversa. A situacao atrasada e calculada a partir de dt_vencimento.'
+}
+
+Table visita [headercolor: #C23B5E] {
+  id_visita integer [pk, increment, not null]
+  id_cliente integer [not null]
+  id_imovel integer [not null]
+  id_corretor integer [not null]
+  dt_visita datetime [not null]
+  st_visita st_visita [not null, default: 'agendada']
+  ds_feedback text
+
+  indexes {
+    (id_cliente, id_imovel, dt_visita) [unique]
+  }
+
+  Note: 'Entidade associativa VISITA (cliente x imovel). O mesmo cliente nao visita o mesmo imovel duas vezes no mesmo horario (RN16).'
+}
+
+Table proposta [headercolor: #C23B5E] {
+  id_proposta integer [pk, increment, not null]
+  id_cliente integer [not null]
+  id_imovel integer [not null]
+  id_corretor integer [not null]
+  id_visita integer
+  id_proposta_anterior integer [unique]
+  id_administrador_autorizador integer
+  vl_proposto decimal(12,2) [not null]
+  vl_anunciado decimal(12,2) [not null]
+  ds_condicoes text
+  st_proposta st_proposta [not null, default: 'pendente']
+  dt_proposta datetime [not null]
+  dt_autorizacao datetime
+
+  Note: 'Entidade associativa PROPOE (cliente x imovel). Contraproposta = nova proposta ligada a anterior por id_proposta_anterior (RESPONDE, RN35); a respondida vira substituida. Desconto acima de 10% sobre vl_anunciado exige autorizacao do administrador (PO03).'
+}
+
+Table contrato [headercolor: #C23B5E] {
+  id_contrato integer [pk, increment, not null]
+  id_proposta integer [not null, unique]
+  tp_contrato tp_contrato [not null]
+  tp_forma_pagamento tp_forma_pagamento_contrato [not null]
+  vl_final decimal(12,2) [not null, note: 'na locacao, o aluguel mensal']
+  pc_corretagem decimal(5,2) [not null]
+  pc_administracao decimal(5,2) [note: 'obrigatorio na locacao']
+  nr_dia_vencimento integer [note: 'obrigatorio na locacao']
+  dt_assinatura date
+  dt_inicio date [note: 'obrigatorio na locacao']
+  dt_fim date [note: 'obrigatorio na locacao']
+  st_contrato st_contrato [not null, default: 'rascunho']
+  dt_cancelamento date
+  ds_motivo_cancelamento text
+
+  Note: 'Venda ou locacao. Nasce como rascunho; so e assinado quando dt_assinatura e preenchida (RN36). Nunca e excluido, apenas cancelado (PO04). vl_corretagem e derivado (vl_final x pc_corretagem) e nao e armazenado.'
+}
+
+Table documento [headercolor: #C23B5E] {
+  id_contrato integer [not null]
+  nr_documento integer [not null]
+  nm_documento varchar(255) [not null]
+  ds_url text [not null]
+
+  indexes {
+    (id_contrato, nr_documento) [pk]
+  }
+
+  Note: 'Entidade fraca de contrato.'
+}
+
+Table comissao [headercolor: #C23B5E] {
+  id_contrato integer [not null]
+  id_corretor integer [not null]
+  id_administrador_aprovador integer
+  id_conta_pagar integer [unique]
+  pc_comissao decimal(5,2) [not null]
+  tp_regra_pagamento tp_regra_pagamento [not null]
+  st_comissao st_comissao [not null, default: 'pendente']
+  dt_aprovacao datetime
+
+  indexes {
+    (id_contrato, id_corretor) [pk]
+  }
+
+  Note: 'Entidade associativa RECEBE (contrato x corretor). vl_comissao e derivado (pc_comissao x vl_corretagem do contrato) e nao e armazenado. A soma de pc_comissao por contrato nao passa de 100% (RN20). Situacao paga deriva da conta a pagar ligada (LANCA).'
+}
+
+Table categoria_financeira [headercolor: #1E7D4F] {
+  id_categoria integer [pk, increment, not null]
+  nm_categoria varchar(255) [not null, unique]
+  tp_categoria tp_categoria [not null]
+
+  Note: 'Plano de contas simplificado. O tipo deve ser compativel com a conta classificada (RN26).'
+}
+
+Table conta_bancaria [headercolor: #1E7D4F] {
+  id_conta integer [pk, increment, not null]
+  nm_apelido varchar(255) [not null, unique]
+  nm_instituicao varchar(255)
+  tp_conta_bancaria tp_conta_bancaria [not null]
+  fl_ativa boolean [not null, default: true]
+
+  Note: 'Contas e caixa onde o dinheiro entra e sai.'
+}
+
+Table financiamento [headercolor: #1E7D4F] {
+  id_contrato integer [pk, not null]
+  id_instituicao_financeira integer [not null]
+  vl_financiado decimal(12,2) [not null]
+  vl_entrada decimal(12,2)
+  nr_parcelas integer
+  pc_juros_aa decimal(5,2)
+  st_financiamento st_financiamento [not null, default: 'em_analise']
+  dt_aprovacao date
+  dt_liberacao date
+
+  Note: 'Entidade fraca de contrato (1:1 opcional); a PK e o proprio id_contrato. O banco e o usuario com papel instituicao_financeira (CONCEDE).'
+}
+
+Table conta_receber [headercolor: #1E7D4F] {
+  id_conta_receber integer [pk, increment, not null]
+  id_contrato integer
+  id_financiamento integer
+  id_categoria integer [not null]
+  id_pagador integer [not null]
+  tp_papel_pagador tp_papel_pagador [not null]
+  tp_origem_receita tp_origem_receita [not null]
+  ds_conta text
+  dt_competencia date [note: 'obrigatorio na locacao']
+  vl_receber decimal(12,2) [not null]
+  dt_vencimento date [not null]
+  fl_cancelada boolean [not null, default: false]
+
+  Note: 'O que a imobiliaria tem a receber. st_conta (prevista, parcial, recebida, atrasada) e derivado das baixas e do vencimento (RN38); so fl_cancelada e armazenado. Se tp_papel_pagador = banco, id_financiamento e obrigatorio (RN27).'
+}
+
+Table recebimento [headercolor: #1E7D4F] {
+  id_conta_receber integer [not null]
+  nr_recebimento integer [not null]
+  id_conta_bancaria integer [not null]
+  dt_recebimento date [not null]
+  vl_recebido decimal(12,2) [not null]
+  tp_forma_pagamento tp_forma_pagamento [not null]
+
+  indexes {
+    (id_conta_receber, nr_recebimento) [pk]
+  }
+
+  Note: 'Baixa da conta a receber (permite recebimento parcial). A soma nao passa do valor da conta (RN29).'
+}
+
+Table conta_pagar [headercolor: #1E7D4F] {
+  id_conta_pagar integer [pk, increment, not null]
+  id_contrato integer
+  id_categoria integer [not null]
+  id_favorecido integer
+  id_usuario_custeio integer
+  tp_papel_custeio tp_papel_custeio [not null]
+  tp_despesa tp_despesa [not null]
+  ds_conta text
+  dt_competencia date [note: 'obrigatorio no repasse de aluguel']
+  vl_pagar decimal(12,2) [not null]
+  dt_vencimento date [not null, note: 'repasse: ate 5 dias uteis apos o recebimento do aluguel (PO05)']
+  fl_cancelada boolean [not null, default: false]
+
+  Note: 'O que a imobiliaria tem a pagar (comissao, repasse, despesas, impostos). st_conta e derivado (RN38); so fl_cancelada e armazenado. Quem paga e sempre a imobiliaria; tp_papel_custeio diz quem arca com o custo (RN28).'
+}
+
+Table pagamento [headercolor: #1E7D4F] {
+  id_conta_pagar integer [not null]
+  nr_pagamento integer [not null]
+  id_conta_bancaria integer [not null]
+  id_usuario_efetivou integer [not null]
+  dt_pagamento date [not null]
+  vl_pago decimal(12,2) [not null]
+  tp_forma_pagamento tp_forma_pagamento [not null]
+
+  indexes {
+    (id_conta_pagar, nr_pagamento) [pk]
+  }
+
+  Note: 'Baixa da conta a pagar (permite pagamento parcial). id_usuario_efetivou registra quem pagou; comissao so pelo administrador (PO01, RN39).'
+}
+
+Table auditoria [headercolor: #6A4FB6] {
+  id_auditoria integer [pk, increment, not null]
+  id_usuario_autor integer [not null]
+  nm_entidade nm_entidade_auditada [not null]
+  cd_registro varchar(100) [not null]
+  tp_acao tp_acao [not null]
+  ds_valores text
+  dt_acao datetime [not null, default: `now()`]
+
+  Note: 'Registro somente de insercao (RNF04, RN40). Aponta para o registro afetado por nm_entidade + cd_registro, sem FK para cada entidade (justificativa 17.22).'
+}
+
+Table automacao_execucao [headercolor: #6A4FB6] {
+  id_conversa integer [not null]
+  nr_execucao integer [not null]
+  cd_demanda varchar(255) [not null]
+  st_execucao varchar(30) [not null]
+  ds_demanda text
+  ds_criterios text
+  ds_conteudo_enviado text
+  ds_resumo text
+  ds_erro text
+  dt_execucao datetime [not null]
+  dt_envio datetime
+
+  indexes {
+    (id_conversa, nr_execucao) [pk]
+    (id_conversa, cd_demanda) [unique]
+  }
+
+  Note: 'Execucoes do N8N. A mesma demanda nao e processada duas vezes na conversa (RN31).'
+}
+
+Table automacao_log [headercolor: #6A4FB6] {
+  id_conversa integer [not null]
+  nr_execucao integer [not null]
+  nr_log integer [not null]
+  nm_evento varchar(255) [not null]
+  ds_evento text
+  ds_dados json
+  dt_log datetime [not null]
+
+  indexes {
+    (id_conversa, nr_execucao, nr_log) [pk]
+  }
+
+  Note: 'Eventos tecnicos de uma execucao.'
+}
+
+// ===== Relacionamentos (FK filho > PK pai) =====
+Ref: usuario_papel.id_usuario > usuario.id_usuario  // tp_papel
+Ref: telefone.id_usuario > usuario.id_usuario  // POSSUI
+Ref: perfil_interesse.id_usuario > usuario.id_usuario  // BUSCA
+Ref: imovel.id_proprietario > usuario.id_usuario  // ANUNCIA
+Ref: imovel.id_corretor_responsavel > usuario.id_usuario  // RESPONSAVEL (opcional)
+Ref: foto.id_imovel > imovel.id_imovel  // TEM
+Ref: imovel_caracteristica.id_imovel > imovel.id_imovel  // APRESENTA
+Ref: imovel_caracteristica.id_caracteristica > caracteristica.id_caracteristica  // APRESENTA
+Ref: conversa_imovel.id_conversa > conversa.id_conversa  // INTERESSA
+Ref: conversa_imovel.id_imovel > imovel.id_imovel  // INTERESSA
+Ref: conversa.id_cliente > usuario.id_usuario  // INICIA
+Ref: conversa.id_corretor > usuario.id_usuario  // ATENDE (opcional)
+Ref: conversa.id_estagio > funil_estagio.id_estagio  // PERTENCE A
+Ref: mensagem.id_conversa > conversa.id_conversa  // CONTEM
+Ref: conversa_tag.id_conversa > conversa.id_conversa  // MARCA
+Ref: conversa_tag.id_tag > tag.id_tag  // MARCA
+Ref: historico_estagio.id_conversa > conversa.id_conversa  // MOVE
+Ref: historico_estagio.id_estagio > funil_estagio.id_estagio  // MOVE
+Ref: historico_estagio.id_usuario_responsavel > usuario.id_usuario  // REGISTRA (opcional)
+Ref: tarefa.id_conversa > conversa.id_conversa  // GERA TAREFA (opcional)
+Ref: tarefa.id_corretor > usuario.id_usuario  // EXECUTA
+Ref: visita.id_cliente > usuario.id_usuario  // VISITA
+Ref: visita.id_imovel > imovel.id_imovel  // VISITA
+Ref: visita.id_corretor > usuario.id_usuario  // ACOMPANHA
+Ref: proposta.id_cliente > usuario.id_usuario  // PROPOE
+Ref: proposta.id_imovel > imovel.id_imovel  // PROPOE
+Ref: proposta.id_corretor > usuario.id_usuario  // NEGOCIA
+Ref: proposta.id_visita > visita.id_visita  // ORIGINA (opcional)
+Ref: proposta.id_proposta_anterior - proposta.id_proposta  // RESPONDE (opcional)
+Ref: proposta.id_administrador_autorizador > usuario.id_usuario  // AUTORIZA (opcional)
+Ref: contrato.id_proposta - proposta.id_proposta  // FECHA
+Ref: documento.id_contrato > contrato.id_contrato  // ANEXA
+Ref: comissao.id_contrato > contrato.id_contrato  // RECEBE
+Ref: comissao.id_corretor > usuario.id_usuario  // RECEBE
+Ref: comissao.id_administrador_aprovador > usuario.id_usuario  // APROVA (opcional)
+Ref: comissao.id_conta_pagar - conta_pagar.id_conta_pagar  // LANCA (opcional)
+Ref: financiamento.id_contrato - contrato.id_contrato  // FINANCIA
+Ref: financiamento.id_instituicao_financeira > usuario.id_usuario  // CONCEDE
+Ref: conta_receber.id_contrato > contrato.id_contrato  // GERA RECEITA (opcional)
+Ref: conta_receber.id_financiamento > financiamento.id_contrato  // LIBERA (opcional)
+Ref: conta_receber.id_categoria > categoria_financeira.id_categoria  // CLASSIFICA
+Ref: conta_receber.id_pagador > usuario.id_usuario  // PAGA
+Ref: recebimento.id_conta_receber > conta_receber.id_conta_receber  // QUITA
+Ref: recebimento.id_conta_bancaria > conta_bancaria.id_conta  // CREDITA
+Ref: conta_pagar.id_contrato > contrato.id_contrato  // GERA DESPESA (opcional)
+Ref: conta_pagar.id_categoria > categoria_financeira.id_categoria  // CATEGORIZA
+Ref: conta_pagar.id_favorecido > usuario.id_usuario  // FAVORECE (opcional)
+Ref: conta_pagar.id_usuario_custeio > usuario.id_usuario  // CUSTEIA (opcional)
+Ref: pagamento.id_conta_pagar > conta_pagar.id_conta_pagar  // LIQUIDA
+Ref: pagamento.id_conta_bancaria > conta_bancaria.id_conta  // DEBITA
+Ref: pagamento.id_usuario_efetivou > usuario.id_usuario  // EFETIVA
+Ref: auditoria.id_usuario_autor > usuario.id_usuario  // PRATICA
+Ref: automacao_execucao.id_conversa > conversa.id_conversa  // DISPARA
+Ref: automacao_log.(id_conversa, nr_execucao) > automacao_execucao.(id_conversa, nr_execucao)  // GRAVA
+
+// ===== Grupos (um por folha do DER) =====
+TableGroup pessoas {
+  usuario
+  usuario_papel
+  telefone
+  perfil_interesse
+}
+
+TableGroup imoveis_dominio {
+  imovel
+  foto
+  caracteristica
+  imovel_caracteristica
+  conversa_imovel
+}
+
+TableGroup funil_crm {
+  funil_estagio
+  conversa
+  mensagem
+  tag
+  conversa_tag
+  historico_estagio
+  tarefa
+}
+
+TableGroup negociacao {
+  visita
+  proposta
+  contrato
+  documento
+  comissao
+}
+
+TableGroup financeiro {
+  categoria_financeira
+  conta_bancaria
+  financiamento
+  conta_receber
+  recebimento
+  conta_pagar
+  pagamento
+}
+
+TableGroup auditoria_e_integracao_n8n {
+  auditoria
+  automacao_execucao
+  automacao_log
+}
+
+// ===== O que o DBML nao expressa (implementar no banco) =====
+// 1. RN03  indice unico parcial: CREATE UNIQUE INDEX ux_telefone_whatsapp ON telefone (nr_telefone) WHERE tp_telefone = 'whatsapp';
+// 2. RN04  nr_cpf_cnpj obrigatorio para proprietario, instituicao financeira e quem assina contrato.
+// 3. RN19  contrato de locacao exige dt_inicio, dt_fim, pc_administracao e nr_dia_vencimento.
+// 4. RN20  soma de comissao.pc_comissao por contrato <= 100.
+// 5. RN22  contrato.tp_forma_pagamento = 'financiado' se, e somente se, existir financiamento.
+// 6. RN26  tp_categoria compativel: receita em conta_receber, despesa em conta_pagar.
+// 7. RN27  conta_receber.tp_papel_pagador = 'banco' exige id_financiamento.
+// 8. RN29  soma de recebimento.vl_recebido <= conta_receber.vl_receber; idem pagamento.vl_pago <= conta_pagar.vl_pagar.
+// 9. RN32  papel exigido em cada relacionamento (usuario_papel): proprietario em ANUNCIA, corretor em RESPONSAVEL/ATENDE/EXECUTA/ACOMPANHA/NEGOCIA/RECEBE, cliente em INICIA/VISITA/PROPOE, administrador em AUTORIZA/APROVA, instituicao_financeira em CONCEDE.
+// 10. RN36/RN37  so contrato assinado gera comissao e contas; cancelar contrato cancela contas sem baixa e comissoes nao pagas.
+// 11. RN40/RNF04 auditoria somente insercao (sem UPDATE/DELETE).
+// 12. PO01 comissao so e aprovada e paga pelo administrador; PO03 desconto > 10% sobre vl_anunciado exige id_administrador_autorizador.
+// 13. Dados derivados (criar como VIEW/coluna calculada): conversa.dt_atualizacao, contrato.vl_corretagem, comissao.vl_comissao, conta_receber.st_conta, conta_pagar.st_conta.
