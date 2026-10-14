@@ -1,0 +1,351 @@
+erDiagram
+    direction LR
+    usuario {
+        integer id_usuario PK
+        varchar(150) nm_usuario
+        varchar(14) nr_cpf_cnpj UK
+        varchar(150) ds_email UK
+        varchar(255) ds_senha_hash
+        varchar(20) nr_creci
+        varchar(20) tp_origem
+        boolean fl_ativo
+        timestamp dt_cadastro
+        timestamp dt_anonimizacao
+    }
+    usuario_papel {
+        integer id_usuario PK, FK
+        varchar(25) tp_papel PK
+    }
+    telefone {
+        integer id_telefone PK
+        integer id_usuario FK
+        varchar(20) nr_telefone
+        varchar(10) tp_telefone
+        boolean fl_principal
+    }
+    cidade {
+        integer id_cidade PK
+        varchar(100) nm_cidade
+        char(2) sg_uf
+    }
+    cep {
+        char(8) nr_cep PK
+        integer id_cidade FK
+        varchar(15) tp_cep
+    }
+    perfil_interesse {
+        integer id_usuario PK, FK
+        smallint nr_perfil PK
+        integer id_cidade FK
+        varchar(10) tp_finalidade
+        varchar(20) tp_imovel
+        varchar(100) nm_bairro
+        numeric vl_minimo
+        numeric vl_maximo
+        smallint qt_quartos_min
+    }
+    imovel {
+        integer id_imovel PK
+        varchar(30) cd_imobizi UK
+        integer id_proprietario FK
+        integer id_corretor_responsavel FK
+        char(8) nr_cep FK
+        varchar(20) tp_imovel
+        varchar(15) tp_finalidade
+        varchar(150) nm_logradouro
+        varchar(10) nr_endereco
+        varchar(60) ds_complemento
+        varchar(100) nm_bairro
+        numeric vl_area_util
+        numeric vl_area_total
+        smallint qt_quartos
+        smallint qt_banheiros
+        smallint qt_vagas_garagem
+        numeric vl_venda
+        numeric vl_aluguel
+        varchar(15) st_imovel
+        text ds_anuncio
+        timestamp dt_cadastro
+    }
+    foto {
+        integer id_imovel PK, FK
+        smallint nr_foto PK
+        smallint nr_ordem
+        varchar(500) ds_url
+    }
+    caracteristica {
+        integer id_caracteristica PK
+        varchar(60) nm_caracteristica UK
+    }
+    imovel_caracteristica {
+        integer id_caracteristica PK, FK
+        integer id_imovel PK, FK
+    }
+    funil_estagio {
+        integer id_estagio PK
+        varchar(40) nm_estagio UK
+        smallint nr_ordem UK
+        char(7) ds_cor
+    }
+    conversa {
+        integer id_conversa PK
+        integer id_cliente FK
+        integer id_corretor FK
+        integer id_estagio FK
+        varchar(10) st_conversa
+        text ds_notas
+        timestamp dt_inicio
+    }
+    conversa_imovel {
+        integer id_imovel PK, FK
+        integer id_conversa PK, FK
+        timestamp dt_interesse
+    }
+    mensagem {
+        integer id_conversa PK, FK
+        integer nr_mensagem PK
+        varchar(64) cd_externo
+        varchar(10) tp_direcao
+        varchar(15) tp_canal
+        text ds_corpo
+        timestamp dt_mensagem
+    }
+    historico_estagio {
+        integer id_conversa PK, FK
+        timestamp dt_alteracao PK
+        integer id_estagio FK
+        integer id_usuario FK
+    }
+    tarefa {
+        integer id_tarefa PK
+        integer id_conversa FK
+        integer id_corretor FK
+        varchar(120) ds_titulo
+        text ds_tarefa
+        timestamp dt_vencimento
+        varchar(15) st_tarefa
+    }
+    tag {
+        integer id_tag PK
+        varchar(40) nm_tag UK
+    }
+    conversa_tag {
+        integer id_conversa PK, FK
+        integer id_tag PK, FK
+    }
+    visita {
+        integer id_visita PK
+        integer id_imovel FK
+        integer id_cliente FK
+        integer id_corretor FK
+        timestamp dt_visita
+        varchar(15) st_visita
+        text ds_feedback
+    }
+    proposta {
+        integer id_proposta PK
+        integer id_imovel FK
+        integer id_cliente FK
+        integer id_corretor FK
+        integer id_autorizador FK
+        integer id_proposta_respondida FK, UK
+        integer id_visita FK
+        numeric vl_proposto
+        numeric vl_anunciado
+        text ds_condicoes
+        varchar(15) st_proposta
+        timestamp dt_proposta
+        timestamp dt_autorizacao
+    }
+    contrato {
+        integer id_contrato PK
+        integer id_proposta FK, UK
+        varchar(10) tp_contrato
+        varchar(15) tp_forma_pagamento
+        numeric vl_final
+        numeric pc_corretagem
+        numeric pc_administracao
+        smallint nr_dia_vencimento
+        date dt_assinatura
+        date dt_inicio
+        date dt_fim
+        varchar(15) st_contrato
+        date dt_cancelamento
+        text ds_motivo_cancelamento
+    }
+    documento {
+        integer id_contrato PK, FK
+        smallint nr_documento PK
+        varchar(120) nm_documento
+        varchar(500) ds_url
+    }
+    comissao {
+        integer id_contrato PK, FK
+        integer id_corretor PK, FK
+        numeric pc_comissao
+        varchar(20) tp_regra_pagamento
+        varchar(15) st_comissao
+        integer id_aprovador FK
+        timestamp dt_aprovacao
+        integer id_conta_pagar FK, UK
+    }
+    financiamento {
+        integer id_contrato PK, FK
+        integer id_instituicao FK
+        numeric vl_financiado
+        numeric vl_entrada
+        smallint nr_parcelas
+        numeric pc_juros_aa
+        varchar(15) st_financiamento
+        date dt_aprovacao
+        date dt_liberacao
+    }
+    categoria_financeira {
+        integer id_categoria PK
+        varchar(60) nm_categoria UK
+        varchar(10) tp_categoria
+    }
+    conta_bancaria {
+        integer id_conta PK
+        varchar(60) nm_apelido UK
+        varchar(100) nm_instituicao
+        varchar(15) tp_conta_bancaria
+        boolean fl_ativa
+    }
+    conta_receber {
+        integer id_conta_receber PK
+        integer id_contrato FK
+        integer id_categoria FK
+        integer id_pagador FK
+        varchar(15) tp_papel_pagador
+        varchar(20) tp_origem_receita
+        varchar(200) ds_conta
+        date dt_competencia
+        numeric vl_receber
+        date dt_vencimento
+        boolean fl_cancelada
+    }
+    recebimento {
+        integer id_conta_receber PK, FK
+        smallint nr_recebimento PK
+        integer id_conta FK
+        date dt_recebimento
+        numeric vl_recebido
+        varchar(15) tp_forma_pagamento
+    }
+    conta_pagar {
+        integer id_conta_pagar PK
+        integer id_contrato FK
+        integer id_categoria FK
+        integer id_favorecido FK
+        integer id_custeador FK
+        varchar(15) tp_papel_custeio
+        varchar(20) tp_despesa
+        varchar(200) ds_conta
+        date dt_competencia
+        numeric vl_pagar
+        date dt_vencimento
+        boolean fl_cancelada
+    }
+    pagamento {
+        integer id_conta_pagar PK, FK
+        smallint nr_pagamento PK
+        integer id_conta FK
+        integer id_usuario FK
+        date dt_pagamento
+        numeric vl_pago
+        varchar(15) tp_forma_pagamento
+    }
+    automacao_execucao {
+        integer id_conversa PK, FK
+        integer nr_execucao PK
+        varchar(64) cd_demanda
+        varchar(15) st_execucao
+        text ds_demanda
+        text ds_criterios
+        text ds_conteudo_enviado
+        text ds_resumo
+        text ds_erro
+        timestamp dt_execucao
+        timestamp dt_envio
+    }
+    automacao_log {
+        integer id_conversa PK, FK
+        integer nr_execucao PK, FK
+        integer nr_log PK
+        varchar(60) nm_evento
+        text ds_evento
+        text ds_dados
+        timestamp dt_log
+    }
+    auditoria {
+        integer id_auditoria PK
+        integer id_usuario FK
+        varchar(40) nm_entidade
+        varchar(60) cd_registro
+        varchar(15) tp_acao
+        timestamp dt_acao
+    }
+    auditoria_campo {
+        integer id_auditoria PK, FK
+        varchar(60) nm_campo PK
+        text ds_valor_anterior
+        text ds_valor_novo
+    }
+    usuario ||--o{ usuario_papel : "multivalorado tp_papel"
+    usuario ||--o{ telefone : "possui"
+    cidade ||--o{ cep : "agrupa"
+    usuario ||--o{ perfil_interesse : "busca"
+    cidade |o--o{ perfil_interesse : "prefere"
+    usuario ||--o{ imovel : "anuncia"
+    usuario |o--o{ imovel : "responsavel"
+    cep ||--o{ imovel : "localiza"
+    imovel ||--o{ foto : "tem"
+    caracteristica ||--o{ imovel_caracteristica : "apresenta"
+    imovel ||--o{ imovel_caracteristica : "apresenta"
+    usuario ||--o{ conversa : "inicia"
+    usuario |o--o{ conversa : "atende"
+    funil_estagio ||--o{ conversa : "pertence a"
+    imovel ||--o{ conversa_imovel : "interessa"
+    conversa ||--o{ conversa_imovel : "interessa"
+    conversa ||--o{ mensagem : "contem"
+    conversa ||--o{ historico_estagio : "move"
+    funil_estagio ||--o{ historico_estagio : "move"
+    usuario |o--o{ historico_estagio : "registra"
+    conversa |o--o{ tarefa : "gera tarefa"
+    usuario ||--o{ tarefa : "executa"
+    conversa ||--o{ conversa_tag : "marca"
+    tag ||--o{ conversa_tag : "marca"
+    imovel ||--o{ visita : "visita"
+    usuario ||--o{ visita : "visita"
+    usuario ||--o{ visita : "acompanha"
+    imovel ||--o{ proposta : "propoe"
+    usuario ||--o{ proposta : "propoe"
+    usuario ||--o{ proposta : "negocia"
+    usuario |o--o{ proposta : "autoriza"
+    proposta |o--o| proposta : "responde"
+    visita |o--o{ proposta : "origina"
+    proposta ||--o| contrato : "fecha"
+    contrato ||--o{ documento : "anexa"
+    contrato ||--o{ comissao : "recebe"
+    usuario ||--o{ comissao : "recebe"
+    usuario |o--o{ comissao : "aprova"
+    conta_pagar |o--o| comissao : "lanca"
+    contrato ||--o| financiamento : "financia"
+    usuario ||--o{ financiamento : "concede"
+    contrato |o--o{ conta_receber : "gera receita"
+    categoria_financeira ||--o{ conta_receber : "classifica"
+    usuario ||--o{ conta_receber : "paga"
+    conta_receber ||--o{ recebimento : "quita"
+    conta_bancaria ||--o{ recebimento : "credita"
+    contrato |o--o{ conta_pagar : "gera despesa"
+    categoria_financeira ||--o{ conta_pagar : "categoriza"
+    usuario |o--o{ conta_pagar : "favorece"
+    usuario |o--o{ conta_pagar : "custeia"
+    conta_pagar ||--o{ pagamento : "liquida"
+    conta_bancaria ||--o{ pagamento : "debita"
+    usuario ||--o{ pagamento : "efetiva"
+    conversa ||--o{ automacao_execucao : "dispara"
+    automacao_execucao ||--o{ automacao_log : "grava"
+    usuario ||--o{ auditoria : "pratica"
+    auditoria ||--o{ auditoria_campo : "detalha"

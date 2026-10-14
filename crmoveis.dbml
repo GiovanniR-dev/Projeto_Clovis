@@ -1,0 +1,524 @@
+// CRMoveis — modelo lógico normalizado (3FN)
+// Cole este arquivo em https://dbdiagram.io
+
+Table usuario {
+  id_usuario integer [pk, not null, note: 'Identificador do usuário']
+  nm_usuario varchar(150) [not null, note: 'Nome completo ou razão social']
+  nr_cpf_cnpj varchar(14) [unique, note: 'CPF ou CNPJ']
+  ds_email varchar(150) [unique, note: 'E-mail de contato e de acesso']
+  ds_senha_hash varchar(255) [note: 'Senha de acesso, guardada como hash']
+  nr_creci varchar(20) [note: 'Registro do corretor no CRECI']
+  tp_origem varchar(20) [note: 'Canal pelo qual a pessoa chegou']
+  fl_ativo boolean [not null, note: 'Indica se o cadastro está ativo']
+  dt_cadastro timestamp [not null, note: 'Data do cadastro']
+  dt_anonimizacao timestamp [note: 'Data em que os dados pessoais foram anonimizados']
+
+  Note: 'Entidade USUARIO (forte) | Regras: tp_origem IN (\'site\',\'indicacao\',\'portal\',\'instagram\',\'whatsapp\',\'interno\')'
+}
+
+Table usuario_papel {
+  id_usuario integer [not null, note: 'Referência a usuario']
+  tp_papel varchar(25) [not null, note: 'Papel exercido pelo usuário (uma linha por papel)']
+
+  indexes {
+    (id_usuario, tp_papel) [pk]
+  }
+
+  Note: 'Atributo multivalorado USUARIO.tp_papel | 1FN: o atributo multivalorado tp_papel virou tabela própria, uma linha por papel. | Regras: tp_papel IN (\'cliente\',\'proprietario\',\'inquilino\',\'corretor\',\'financeiro\',\'fornecedor\',\'administrador\',\'instituicao_financeira\')'
+}
+
+Table telefone {
+  id_telefone integer [pk, not null, note: 'Identificador do telefone']
+  id_usuario integer [not null, note: 'Referência a usuario']
+  nr_telefone varchar(20) [not null, note: 'Número com DDD']
+  tp_telefone varchar(10) [not null, note: 'Tipo da linha']
+  fl_principal boolean [not null, note: 'Indica o telefone preferencial']
+
+  Note: 'Entidade TELEFONE (forte) | Regras: tp_telefone IN (\'celular\',\'whatsapp\',\'fixo\'); nr_telefone único quando tp_telefone = \'whatsapp\' (índice único parcial, RN03)'
+}
+
+Table cidade {
+  id_cidade integer [pk, not null, note: 'Identificador da cidade']
+  nm_cidade varchar(100) [not null, note: 'Nome da cidade']
+  sg_uf char(2) [not null, note: 'Sigla do estado']
+
+  indexes {
+    (nm_cidade, sg_uf) [unique]
+  }
+
+  Note: 'Entidade CIDADE (forte) | 3FN: cidade e UF saíram do imóvel e do perfil (dependiam do CEP, não da chave).'
+}
+
+Table cep {
+  nr_cep char(8) [pk, not null, note: 'CEP com 8 dígitos']
+  id_cidade integer [not null, note: 'Referência a cidade']
+  tp_cep varchar(15) [not null, note: 'Abrangência do CEP']
+
+  Note: 'Entidade CEP (forte) | 3FN: CEP → cidade e UF; o imóvel guarda só o CEP. | Regras: tp_cep IN (\'logradouro\',\'geral\',\'especial\')'
+}
+
+Table perfil_interesse {
+  id_usuario integer [not null, note: 'Referência a usuario']
+  nr_perfil smallint [not null, note: 'Número do perfil dentro do usuário']
+  id_cidade integer [note: 'Referência a cidade']
+  tp_finalidade varchar(10) [not null, note: 'Venda ou locação']
+  tp_imovel varchar(20) [note: 'Tipo de imóvel procurado']
+  nm_bairro varchar(100) [note: 'Bairro desejado']
+  vl_minimo numeric(12,2) [note: 'Valor mínimo aceito']
+  vl_maximo numeric(12,2) [note: 'Valor máximo aceito']
+  qt_quartos_min smallint [note: 'Quantidade mínima de quartos']
+
+  indexes {
+    (id_usuario, nr_perfil) [pk]
+  }
+
+  Note: 'Entidade PERFIL_INTERESSE (fraca) | Regras: tp_finalidade IN (\'venda\',\'locacao\'); vl_minimo <= vl_maximo'
+}
+
+Table imovel {
+  id_imovel integer [pk, not null, note: 'Identificador do imóvel']
+  cd_imobizi varchar(30) [unique, note: 'Código do imóvel no IMOBIZI']
+  id_proprietario integer [not null, note: 'Referência a usuario']
+  id_corretor_responsavel integer [note: 'Referência a usuario']
+  nr_cep char(8) [not null, note: 'Referência a cep']
+  tp_imovel varchar(20) [not null, note: 'Tipo do imóvel']
+  tp_finalidade varchar(15) [not null, note: 'Venda, locação ou ambas']
+  nm_logradouro varchar(150) [not null, note: 'Logradouro (rua, avenida etc.)']
+  nr_endereco varchar(10) [not null, note: 'Número do endereço']
+  ds_complemento varchar(60) [note: 'Complemento (apartamento, bloco, sala)']
+  nm_bairro varchar(100) [not null, note: 'Bairro']
+  vl_area_util numeric(10,2) [note: 'Área útil em m²']
+  vl_area_total numeric(10,2) [note: 'Área total em m²']
+  qt_quartos smallint [note: 'Quantidade de quartos']
+  qt_banheiros smallint [note: 'Quantidade de banheiros']
+  qt_vagas_garagem smallint [note: 'Quantidade de vagas de garagem']
+  vl_venda numeric(12,2) [note: 'Preço de venda']
+  vl_aluguel numeric(12,2) [note: 'Aluguel mensal pedido']
+  st_imovel varchar(15) [not null, note: 'Situação do imóvel']
+  ds_anuncio text [note: 'Texto do anúncio']
+  dt_cadastro timestamp [not null, note: 'Data do cadastro']
+
+  Note: 'Entidade IMOVEL (forte) | 1FN: o endereço composto virou colunas atômicas. 3FN: cidade e UF não ficam aqui; vêm de nr_cep → cep → cidade. | Regras: tp_finalidade IN (\'venda\',\'locacao\',\'venda_locacao\'); st_imovel IN (\'disponivel\',\'reservado\',\'vendido\',\'alugado\',\'inativo\'); vl_venda obrigatório se a finalidade inclui venda; vl_aluguel obrigatório se inclui locação'
+}
+
+Table foto {
+  id_imovel integer [not null, note: 'Referência a imovel']
+  nr_foto smallint [not null, note: 'Número da foto dentro do imóvel']
+  nr_ordem smallint [not null, note: 'Posição da foto na galeria']
+  ds_url varchar(500) [not null, note: 'Endereço do arquivo da foto']
+
+  indexes {
+    (id_imovel, nr_foto) [pk]
+  }
+
+  Note: 'Entidade FOTO (fraca)'
+}
+
+Table caracteristica {
+  id_caracteristica integer [pk, not null, note: 'Identificador da característica']
+  nm_caracteristica varchar(60) [unique, not null, note: 'Nome (piscina, elevador, aceita pet…)']
+
+  Note: 'Entidade CARACTERISTICA (forte)'
+}
+
+Table imovel_caracteristica {
+  id_caracteristica integer [not null, note: 'Referência a caracteristica']
+  id_imovel integer [not null, note: 'Referência a imovel']
+
+  indexes {
+    (id_caracteristica, id_imovel) [pk]
+  }
+
+  Note: 'Relacionamento N:N APRESENTA | Relacionamento N:N APRESENTA.'
+}
+
+Table funil_estagio {
+  id_estagio integer [pk, not null, note: 'Identificador do estágio']
+  nm_estagio varchar(40) [unique, not null, note: 'Nome do estágio']
+  nr_ordem smallint [unique, not null, note: 'Posição do estágio no funil']
+  ds_cor char(7) [note: 'Cor usada no quadro do funil']
+
+  Note: 'Entidade FUNIL_ESTAGIO (forte)'
+}
+
+Table conversa {
+  id_conversa integer [pk, not null, note: 'Identificador da conversa']
+  id_cliente integer [not null, note: 'Referência a usuario']
+  id_corretor integer [note: 'Referência a usuario']
+  id_estagio integer [not null, note: 'Referência a funil_estagio']
+  st_conversa varchar(10) [not null, note: 'Situação da conversa']
+  ds_notas text [note: 'Anotações do corretor sobre o atendimento']
+  dt_inicio timestamp [not null, note: 'Data de abertura da conversa']
+
+  Note: 'Entidade CONVERSA (forte) | dt_atualizacao é derivada (data da última mensagem) e não é armazenada. | Regras: st_conversa IN (\'aberta\',\'encerrada\')'
+}
+
+Table conversa_imovel {
+  id_imovel integer [not null, note: 'Referência a imovel']
+  id_conversa integer [not null, note: 'Referência a conversa']
+  dt_interesse timestamp [not null, note: 'Quando o imóvel passou a interessar na conversa']
+
+  indexes {
+    (id_imovel, id_conversa) [pk]
+  }
+
+  Note: 'Entidade CONVERSA_IMOVEL (associativa) | Entidade associativa CONVERSA_IMOVEL (INTERESSA).'
+}
+
+Table mensagem {
+  id_conversa integer [not null, note: 'Referência a conversa']
+  nr_mensagem integer [not null, note: 'Número da mensagem dentro da conversa']
+  cd_externo varchar(64) [note: 'Código da mensagem no WhatsApp']
+  tp_direcao varchar(10) [note: 'Entrada (cliente) ou saída (imobiliária)']
+  tp_canal varchar(15) [not null, note: 'Meio da mensagem']
+  ds_corpo text [not null, note: 'Conteúdo da mensagem']
+  dt_mensagem timestamp [not null, note: 'Data e hora da mensagem']
+
+  indexes {
+    (id_conversa, nr_mensagem) [pk]
+    (id_conversa, cd_externo) [unique]
+  }
+
+  Note: 'Entidade MENSAGEM (fraca) | Regras: tp_direcao IN (\'entrada\',\'saida\'); tp_canal IN (\'whatsapp\',\'nota_interna\')'
+}
+
+Table historico_estagio {
+  id_conversa integer [not null, note: 'Referência a conversa']
+  dt_alteracao timestamp [not null, note: 'Data e hora da mudança de estágio']
+  id_estagio integer [not null, note: 'Referência a funil_estagio']
+  id_usuario integer [note: 'Referência a usuario']
+
+  indexes {
+    (id_conversa, dt_alteracao) [pk]
+  }
+
+  Note: 'Entidade HISTORICO_ESTAGIO (associativa) | Entidade associativa HISTORICO_ESTAGIO (MOVE).'
+}
+
+Table tarefa {
+  id_tarefa integer [pk, not null, note: 'Identificador da tarefa']
+  id_conversa integer [note: 'Referência a conversa']
+  id_corretor integer [not null, note: 'Referência a usuario']
+  ds_titulo varchar(120) [not null, note: 'Resumo da tarefa']
+  ds_tarefa text [note: 'Detalhes']
+  dt_vencimento timestamp [not null, note: 'Prazo da tarefa']
+  st_tarefa varchar(15) [not null, note: 'Situação']
+
+  Note: 'Entidade TAREFA (forte) | Regras: st_tarefa IN (\'pendente\',\'concluida\',\'cancelada\')'
+}
+
+Table tag {
+  id_tag integer [pk, not null, note: 'Identificador da tag']
+  nm_tag varchar(40) [unique, not null, note: 'Texto da etiqueta']
+
+  Note: 'Entidade TAG (forte)'
+}
+
+Table conversa_tag {
+  id_conversa integer [not null, note: 'Referência a conversa']
+  id_tag integer [not null, note: 'Referência a tag']
+
+  indexes {
+    (id_conversa, id_tag) [pk]
+  }
+
+  Note: 'Relacionamento N:N MARCA | Relacionamento N:N MARCA.'
+}
+
+Table visita {
+  id_visita integer [pk, not null, note: 'Identificador da visita']
+  id_imovel integer [not null, note: 'Referência a imovel']
+  id_cliente integer [not null, note: 'Referência a usuario']
+  id_corretor integer [not null, note: 'Referência a usuario']
+  dt_visita timestamp [not null, note: 'Data e hora da visita']
+  st_visita varchar(15) [not null, note: 'Situação']
+  ds_feedback text [note: 'Impressão do cliente após a visita']
+
+  indexes {
+    (id_imovel, id_cliente, dt_visita) [unique]
+  }
+
+  Note: 'Entidade VISITA (associativa) | Entidade associativa VISITA (cliente × imóvel), com o corretor de ACOMPANHA. | Regras: st_visita IN (\'agendada\',\'realizada\',\'cancelada\')'
+}
+
+Table proposta {
+  id_proposta integer [pk, not null, note: 'Identificador da proposta']
+  id_imovel integer [not null, note: 'Referência a imovel']
+  id_cliente integer [not null, note: 'Referência a usuario']
+  id_corretor integer [not null, note: 'Referência a usuario']
+  id_autorizador integer [note: 'Referência a usuario']
+  id_proposta_respondida integer [unique, note: 'Referência a proposta']
+  id_visita integer [note: 'Referência a visita']
+  vl_proposto numeric(12,2) [not null, note: 'Valor oferecido']
+  vl_anunciado numeric(12,2) [not null, note: 'Valor anunciado do imóvel no momento da proposta']
+  ds_condicoes text [note: 'Forma de pagamento, prazos e financiamento']
+  st_proposta varchar(15) [not null, note: 'Situação']
+  dt_proposta timestamp [not null, note: 'Data da proposta']
+  dt_autorizacao timestamp [note: 'Data da autorização do administrador']
+
+  Note: 'Entidade PROPOSTA (associativa) | Entidade associativa PROPOSTA (cliente × imóvel). vl_anunciado é o valor congelado no momento da proposta, e não uma cópia de imovel.vl_venda. | Regras: st_proposta IN (\'aberta\',\'aceita\',\'recusada\',\'substituida\'); id_autorizador e dt_autorizacao obrigatórios quando vl_proposto < 0,9 × vl_anunciado (PO03)'
+}
+
+Table contrato {
+  id_contrato integer [pk, not null, note: 'Identificador do contrato']
+  id_proposta integer [unique, not null, note: 'Referência a proposta']
+  tp_contrato varchar(10) [not null, note: 'Venda ou locação']
+  tp_forma_pagamento varchar(15) [not null, note: 'Como o comprador paga']
+  vl_final numeric(12,2) [not null, note: 'Valor fechado; na locação, o aluguel mensal']
+  pc_corretagem numeric(5,2) [not null, note: 'Percentual de corretagem sobre o valor final']
+  pc_administracao numeric(5,2) [note: 'Percentual retido do aluguel pela imobiliária']
+  nr_dia_vencimento smallint [note: 'Dia do mês em que vence o aluguel']
+  dt_assinatura date [note: 'Data da assinatura']
+  dt_inicio date [note: 'Início da vigência']
+  dt_fim date [note: 'Data de término']
+  st_contrato varchar(15) [not null, note: 'Situação']
+  dt_cancelamento date [note: 'Data do cancelamento']
+  ds_motivo_cancelamento text [note: 'Motivo do cancelamento']
+
+  Note: 'Entidade CONTRATO (forte) | vl_corretagem = vl_final × pc_corretagem é derivado e não é armazenado (evita dependência entre colunas não chave). | Regras: tp_contrato IN (\'venda\',\'locacao\'); tp_forma_pagamento IN (\'a_vista\',\'financiado\',\'mensal\'); st_contrato IN (\'rascunho\',\'assinado\',\'encerrado\',\'cancelado\'); locação exige dt_inicio, dt_fim, pc_administracao e nr_dia_vencimento (RN19)'
+}
+
+Table documento {
+  id_contrato integer [not null, note: 'Referência a contrato']
+  nr_documento smallint [not null, note: 'Número do documento dentro do contrato']
+  nm_documento varchar(120) [not null, note: 'Nome do documento']
+  ds_url varchar(500) [not null, note: 'Endereço do arquivo']
+
+  indexes {
+    (id_contrato, nr_documento) [pk]
+  }
+
+  Note: 'Entidade DOCUMENTO (fraca)'
+}
+
+Table comissao {
+  id_contrato integer [not null, note: 'Referência a contrato']
+  id_corretor integer [not null, note: 'Referência a usuario']
+  pc_comissao numeric(5,2) [not null, note: 'Percentual do corretor sobre a corretagem do contrato']
+  tp_regra_pagamento varchar(20) [not null, note: 'Quando a comissão pode ser paga']
+  st_comissao varchar(15) [not null, note: 'Situação']
+  id_aprovador integer [note: 'Referência a usuario']
+  dt_aprovacao timestamp [note: 'Data da aprovação do administrador']
+  id_conta_pagar integer [unique, note: 'Referência a conta_pagar']
+
+  indexes {
+    (id_contrato, id_corretor) [pk]
+  }
+
+  Note: 'Entidade COMISSAO (associativa) | Entidade associativa COMISSAO (RECEBE). vl_comissao é derivado de pc_comissao e da corretagem do contrato e não é armazenado. | Regras: tp_regra_pagamento IN (\'assinatura\',\'liberacao_credito\',\'recebimento\'); st_comissao IN (\'prevista\',\'liberada\',\'aprovada\',\'paga\',\'cancelada\')'
+}
+
+Table financiamento {
+  id_contrato integer [pk, not null, note: 'Referência a contrato']
+  id_instituicao integer [not null, note: 'Referência a usuario']
+  vl_financiado numeric(12,2) [not null, note: 'Valor financiado']
+  vl_entrada numeric(12,2) [note: 'Valor de entrada']
+  nr_parcelas smallint [note: 'Quantidade de parcelas']
+  pc_juros_aa numeric(5,2) [note: 'Taxa de juros ao ano']
+  st_financiamento varchar(15) [not null, note: 'Situação']
+  dt_aprovacao date [note: 'Data da aprovação do crédito']
+  dt_liberacao date [note: 'Data em que o banco libera o crédito']
+
+  Note: 'Entidade FINANCIAMENTO (fraca) | Identificado pelo próprio contrato (1:1). 3FN: o antigo LIBERA foi removido, porque a referência da conta a receber ao financiamento repetia o contrato da conta. | Regras: st_financiamento IN (\'em_analise\',\'aprovado\',\'liberado\',\'recusado\')'
+}
+
+Table categoria_financeira {
+  id_categoria integer [pk, not null, note: 'Identificador da categoria']
+  nm_categoria varchar(60) [unique, not null, note: 'Nome da categoria']
+  tp_categoria varchar(10) [not null, note: 'Receita ou despesa']
+
+  Note: 'Entidade CATEGORIA_FINANCEIRA (forte) | Regras: tp_categoria IN (\'receita\',\'despesa\')'
+}
+
+Table conta_bancaria {
+  id_conta integer [pk, not null, note: 'Identificador da conta']
+  nm_apelido varchar(60) [unique, not null, note: 'Nome de referência da conta']
+  nm_instituicao varchar(100) [note: 'Banco']
+  tp_conta_bancaria varchar(15) [not null, note: 'Tipo']
+  fl_ativa boolean [not null, note: 'Indica se a conta está em uso']
+
+  Note: 'Entidade CONTA_BANCARIA (forte) | Regras: tp_conta_bancaria IN (\'corrente\',\'poupanca\',\'caixa\')'
+}
+
+Table conta_receber {
+  id_conta_receber integer [pk, not null, note: 'Identificador da conta a receber']
+  id_contrato integer [note: 'Referência a contrato']
+  id_categoria integer [not null, note: 'Referência a categoria_financeira']
+  id_pagador integer [not null, note: 'Referência a usuario']
+  tp_papel_pagador varchar(15) [not null, note: 'Papel exercido por quem paga']
+  tp_origem_receita varchar(20) [not null, note: 'Natureza da receita']
+  ds_conta varchar(200) [note: 'Descrição']
+  dt_competencia date [note: 'Mês de referência']
+  vl_receber numeric(12,2) [not null, note: 'Valor a receber']
+  dt_vencimento date [not null, note: 'Data de vencimento']
+  fl_cancelada boolean [not null, note: 'Indica conta cancelada']
+
+  Note: 'Entidade CONTA_RECEBER (forte) | st_conta é derivada das baixas e do vencimento e não é armazenada (RN38). | Regras: tp_papel_pagador IN (\'cliente\',\'inquilino\',\'proprietario\',\'banco\'); tp_origem_receita IN (\'corretagem\',\'aluguel\',\'taxa\',\'outra\')'
+}
+
+Table recebimento {
+  id_conta_receber integer [not null, note: 'Referência a conta_receber']
+  nr_recebimento smallint [not null, note: 'Número do recebimento dentro da conta']
+  id_conta integer [not null, note: 'Referência a conta_bancaria']
+  dt_recebimento date [not null, note: 'Data do recebimento']
+  vl_recebido numeric(12,2) [not null, note: 'Valor recebido']
+  tp_forma_pagamento varchar(15) [not null, note: 'Forma de pagamento']
+
+  indexes {
+    (id_conta_receber, nr_recebimento) [pk]
+  }
+
+  Note: 'Entidade RECEBIMENTO (fraca) | Regras: vl_recebido > 0; soma das baixas ≤ vl_receber (RN29)'
+}
+
+Table conta_pagar {
+  id_conta_pagar integer [pk, not null, note: 'Identificador da conta a pagar']
+  id_contrato integer [note: 'Referência a contrato']
+  id_categoria integer [not null, note: 'Referência a categoria_financeira']
+  id_favorecido integer [note: 'Referência a usuario']
+  id_custeador integer [note: 'Referência a usuario']
+  tp_papel_custeio varchar(15) [not null, note: 'Papel de quem arca com o custo final']
+  tp_despesa varchar(20) [not null, note: 'Natureza da despesa']
+  ds_conta varchar(200) [note: 'Descrição']
+  dt_competencia date [note: 'Mês de referência']
+  vl_pagar numeric(12,2) [not null, note: 'Valor a pagar']
+  dt_vencimento date [not null, note: 'Data de vencimento']
+  fl_cancelada boolean [not null, note: 'Indica conta cancelada']
+
+  Note: 'Entidade CONTA_PAGAR (forte) | st_conta é derivada e não é armazenada (RN38). | Regras: tp_papel_custeio IN (\'imobiliaria\',\'proprietario\',\'inquilino\'); id_custeador obrigatório quando tp_papel_custeio ≠ \'imobiliaria\' (RN28)'
+}
+
+Table pagamento {
+  id_conta_pagar integer [not null, note: 'Referência a conta_pagar']
+  nr_pagamento smallint [not null, note: 'Número do pagamento dentro da conta']
+  id_conta integer [not null, note: 'Referência a conta_bancaria']
+  id_usuario integer [not null, note: 'Referência a usuario']
+  dt_pagamento date [not null, note: 'Data do pagamento']
+  vl_pago numeric(12,2) [not null, note: 'Valor pago']
+  tp_forma_pagamento varchar(15) [not null, note: 'Forma de pagamento']
+
+  indexes {
+    (id_conta_pagar, nr_pagamento) [pk]
+  }
+
+  Note: 'Entidade PAGAMENTO (fraca) | Regras: vl_pago > 0; soma das baixas ≤ vl_pagar (RN29)'
+}
+
+Table automacao_execucao {
+  id_conversa integer [not null, note: 'Referência a conversa']
+  nr_execucao integer [not null, note: 'Número da execução dentro da conversa']
+  cd_demanda varchar(64) [not null, note: 'Resumo que identifica a demanda']
+  st_execucao varchar(15) [not null, note: 'Situação da execução']
+  ds_demanda text [note: 'O que o cliente pediu, extraído da mensagem']
+  ds_criterios text [note: 'Critérios usados para escolher os imóveis']
+  ds_conteudo_enviado text [note: 'Conteúdo enviado ao cliente']
+  ds_resumo text [note: 'Resumo da execução']
+  ds_erro text [note: 'Erro ocorrido']
+  dt_execucao timestamp [not null, note: 'Data e hora da execução']
+  dt_envio timestamp [note: 'Data e hora do envio ao cliente']
+
+  indexes {
+    (id_conversa, nr_execucao) [pk]
+    (id_conversa, cd_demanda) [unique]
+  }
+
+  Note: 'Entidade AUTOMACAO_EXECUCAO (fraca) | Regras: st_execucao IN (\'recebida\',\'processada\',\'enviada\',\'erro\')'
+}
+
+Table automacao_log {
+  id_conversa integer [not null, note: 'Referência a automacao_execucao']
+  nr_execucao integer [not null, note: 'Referência a automacao_execucao']
+  nr_log integer [not null, note: 'Número do evento dentro da execução']
+  nm_evento varchar(60) [not null, note: 'Nome do evento']
+  ds_evento text [note: 'Descrição do evento']
+  ds_dados text [note: 'Dados técnicos do evento']
+  dt_log timestamp [not null, note: 'Data e hora do evento']
+
+  indexes {
+    (id_conversa, nr_execucao, nr_log) [pk]
+  }
+
+  Note: 'Entidade AUTOMACAO_LOG (fraca) | FK composta (id_conversa, nr_execucao) → automacao_execucao.'
+}
+
+Table auditoria {
+  id_auditoria integer [pk, not null, note: 'Identificador do registro de auditoria']
+  id_usuario integer [not null, note: 'Referência a usuario']
+  nm_entidade varchar(40) [not null, note: 'Entidade afetada']
+  cd_registro varchar(60) [not null, note: 'Identificação do registro afetado']
+  tp_acao varchar(15) [not null, note: 'Ação praticada']
+  dt_acao timestamp [not null, note: 'Data e hora da ação']
+
+  Note: 'Entidade AUDITORIA (forte) | Registro imutável (RN40). | Regras: tp_acao IN (\'criacao\',\'alteracao\',\'cancelamento\')'
+}
+
+Table auditoria_campo {
+  id_auditoria integer [not null, note: 'Referência a auditoria']
+  nm_campo varchar(60) [not null, note: 'Nome do campo alterado']
+  ds_valor_anterior text [note: 'Valor do campo antes da ação']
+  ds_valor_novo text [note: 'Valor do campo depois da ação']
+
+  indexes {
+    (id_auditoria, nm_campo) [pk]
+  }
+
+  Note: 'Entidade AUDITORIA_CAMPO (fraca) | 1FN: o antigo ds_valores (vários campos num texto) virou uma linha por campo alterado.'
+}
+
+Ref: usuario_papel.id_usuario > usuario.id_usuario // multivalorado tp_papel
+Ref: telefone.id_usuario > usuario.id_usuario // POSSUI
+Ref: cep.id_cidade > cidade.id_cidade // AGRUPA
+Ref: perfil_interesse.id_usuario > usuario.id_usuario // BUSCA
+Ref: perfil_interesse.id_cidade > cidade.id_cidade // PREFERE
+Ref: imovel.id_proprietario > usuario.id_usuario // ANUNCIA
+Ref: imovel.id_corretor_responsavel > usuario.id_usuario // RESPONSAVEL
+Ref: imovel.nr_cep > cep.nr_cep // LOCALIZA
+Ref: foto.id_imovel > imovel.id_imovel // TEM
+Ref: imovel_caracteristica.id_caracteristica > caracteristica.id_caracteristica // APRESENTA
+Ref: imovel_caracteristica.id_imovel > imovel.id_imovel // APRESENTA
+Ref: conversa.id_cliente > usuario.id_usuario // INICIA
+Ref: conversa.id_corretor > usuario.id_usuario // ATENDE
+Ref: conversa.id_estagio > funil_estagio.id_estagio // PERTENCE A
+Ref: conversa_imovel.id_imovel > imovel.id_imovel // INTERESSA
+Ref: conversa_imovel.id_conversa > conversa.id_conversa // INTERESSA
+Ref: mensagem.id_conversa > conversa.id_conversa // CONTEM
+Ref: historico_estagio.id_conversa > conversa.id_conversa // MOVE
+Ref: historico_estagio.id_estagio > funil_estagio.id_estagio // MOVE
+Ref: historico_estagio.id_usuario > usuario.id_usuario // REGISTRA
+Ref: tarefa.id_conversa > conversa.id_conversa // GERA TAREFA
+Ref: tarefa.id_corretor > usuario.id_usuario // EXECUTA
+Ref: conversa_tag.id_conversa > conversa.id_conversa // MARCA
+Ref: conversa_tag.id_tag > tag.id_tag // MARCA
+Ref: visita.id_imovel > imovel.id_imovel // VISITA
+Ref: visita.id_cliente > usuario.id_usuario // VISITA
+Ref: visita.id_corretor > usuario.id_usuario // ACOMPANHA
+Ref: proposta.id_imovel > imovel.id_imovel // PROPOE
+Ref: proposta.id_cliente > usuario.id_usuario // PROPOE
+Ref: proposta.id_corretor > usuario.id_usuario // NEGOCIA
+Ref: proposta.id_autorizador > usuario.id_usuario // AUTORIZA
+Ref: proposta.id_proposta_respondida - proposta.id_proposta // RESPONDE
+Ref: proposta.id_visita > visita.id_visita // ORIGINA
+Ref: contrato.id_proposta - proposta.id_proposta // FECHA
+Ref: documento.id_contrato > contrato.id_contrato // ANEXA
+Ref: comissao.id_contrato > contrato.id_contrato // RECEBE
+Ref: comissao.id_corretor > usuario.id_usuario // RECEBE
+Ref: comissao.id_aprovador > usuario.id_usuario // APROVA
+Ref: comissao.id_conta_pagar - conta_pagar.id_conta_pagar // LANCA
+Ref: financiamento.id_contrato - contrato.id_contrato // FINANCIA
+Ref: financiamento.id_instituicao > usuario.id_usuario // CONCEDE
+Ref: conta_receber.id_contrato > contrato.id_contrato // GERA RECEITA
+Ref: conta_receber.id_categoria > categoria_financeira.id_categoria // CLASSIFICA
+Ref: conta_receber.id_pagador > usuario.id_usuario // PAGA
+Ref: recebimento.id_conta_receber > conta_receber.id_conta_receber // QUITA
+Ref: recebimento.id_conta > conta_bancaria.id_conta // CREDITA
+Ref: conta_pagar.id_contrato > contrato.id_contrato // GERA DESPESA
+Ref: conta_pagar.id_categoria > categoria_financeira.id_categoria // CATEGORIZA
+Ref: conta_pagar.id_favorecido > usuario.id_usuario // FAVORECE
+Ref: conta_pagar.id_custeador > usuario.id_usuario // CUSTEIA
+Ref: pagamento.id_conta_pagar > conta_pagar.id_conta_pagar // LIQUIDA
+Ref: pagamento.id_conta > conta_bancaria.id_conta // DEBITA
+Ref: pagamento.id_usuario > usuario.id_usuario // EFETIVA
+Ref: automacao_execucao.id_conversa > conversa.id_conversa // DISPARA
+Ref: automacao_log.(id_conversa, nr_execucao) > automacao_execucao.(id_conversa, nr_execucao) // GRAVA
+Ref: auditoria.id_usuario > usuario.id_usuario // PRATICA
+Ref: auditoria_campo.id_auditoria > auditoria.id_auditoria // DETALHA
