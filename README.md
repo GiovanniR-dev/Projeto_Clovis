@@ -1,6 +1,6 @@
 # Projeto ERP — CRMoveis
 
-> Sistema de gestão (ERP) para imobiliária de venda e locação de imóveis, com CRM integrado ao WhatsApp e ao N8N e módulos de negociação e financeiro. Entrega final do Projeto Integrador de Modelagem de Dados: do problema real ao modelo conceitual.
+> Sistema de gestão (ERP) para imobiliária de venda e locação de imóveis, com CRM integrado ao WhatsApp e ao N8N e módulos de negociação e financeiro. Primeira entrega do Projeto Integrador de Modelagem de Dados: do problema real ao modelo conceitual.
 
 ## Sumário
 
@@ -21,7 +21,8 @@
 - [15. Dicionário de dados conceitual](#15-dicionário-de-dados-conceitual)
 - [16. DER](#16-der)
 - [17. Justificativas técnicas](#17-justificativas-técnicas)
-- [18. Conclusão](#18-conclusão)
+- [18. Normalização (1FN, 2FN e 3FN)](#18-normalização-1fn-2fn-e-3fn)
+- [19. Conclusão](#19-conclusão)
 - [Arquivos do repositório](#arquivos-do-repositório)
 
 ## 1. Identificação da equipe
@@ -103,8 +104,8 @@ Escolhemos uma imobiliária de venda e locação porque o negócio reúne proces
 |---|---|
 | **Quem participa** | Proprietário e corretor |
 | **O que inicia** | O proprietário procura a imobiliária para vender ou alugar |
-| **O que acontece** | O proprietário é cadastrado (ou tem o papel acrescentado), o imóvel é registrado com endereço, características e fotos, a documentação é conferida e um corretor responsável é definido |
-| **Informação gerada** | Usuário com papel proprietário, imóvel, características, fotos e tarefa de pendência |
+| **O que acontece** | O proprietário é cadastrado (ou tem o papel acrescentado), o imóvel é registrado com endereço e CEP (a cidade e a UF vêm do CEP), características e fotos, a documentação é conferida e um corretor responsável é definido |
+| **Informação gerada** | Usuário com papel proprietário, imóvel, CEP e cidade (quando ainda não cadastrados), características, fotos e tarefa de pendência |
 | **Resultado** | O imóvel é publicado como disponível |
 | **Fluxograma** | [F2](#f2--captação-de-imóvel) |
 
@@ -152,7 +153,7 @@ O que o sistema deve fazer. A coluna *Fluxo* indica em qual fluxograma o requisi
 | RF01 | O sistema deverá cadastrar usuários com nome, documento (CPF/CNPJ), e-mail e origem do contato. | F1, F2 | USUARIO |
 | RF02 | O sistema deverá permitir que um mesmo usuário exerça mais de um papel: cliente, proprietário, inquilino, corretor, financeiro, fornecedor, administrador ou instituição financeira. | F1, F2 | USUARIO (papel) |
 | RF03 | O sistema deverá registrar um ou mais telefones por usuário e identificar o usuário pelo número do WhatsApp. | F1 | TELEFONE |
-| RF04 | O sistema deverá registrar os perfis de interesse do cliente: finalidade, tipo de imóvel, cidade, bairro, faixa de valor e quartos. | F1 | PERFIL_INTERESSE |
+| RF04 | O sistema deverá registrar os perfis de interesse do cliente: finalidade, tipo de imóvel, cidade, bairro, faixa de valor e quartos. | F1 | PERFIL_INTERESSE, CIDADE |
 
 ### Atendimento e funil
 
@@ -171,8 +172,8 @@ O que o sistema deve fazer. A coluna *Fluxo* indica em qual fluxograma o requisi
 
 | Código | Requisito | Fluxo | Entidades |
 |---|---|---|---|
-| RF13 | O sistema deverá cadastrar imóveis com endereço, características, finalidade (venda, locação ou ambas), valores de venda e/ou de aluguel e situação. | F2 | IMOVEL, CARACTERISTICA |
-| RF14 | O sistema deverá importar e atualizar os imóveis a partir do IMOBIZI. | F2 | IMOVEL |
+| RF13 | O sistema deverá cadastrar imóveis com endereço, características, finalidade (venda, locação ou ambas), valores de venda e/ou de aluguel e situação. | F2 | IMOVEL, CARACTERISTICA, CEP, CIDADE |
+| RF14 | O sistema deverá importar e atualizar os imóveis a partir do IMOBIZI. | F2 | IMOVEL, CEP |
 | RF15 | O sistema deverá anexar fotos aos imóveis, na ordem de exibição. | F2 | FOTO |
 | RF16 | O sistema deverá registrar o proprietário e o corretor responsável de cada imóvel. | F2 | IMOVEL, USUARIO |
 | RF17 | O sistema deverá registrar os imóveis de interesse de cada conversa. | F1 | CONVERSA_IMOVEL |
@@ -212,7 +213,7 @@ O que o sistema deve fazer. A coluna *Fluxo* indica em qual fluxograma o requisi
 
 | Código | Requisito | Fluxo | Entidades |
 |---|---|---|---|
-| RF34 | O sistema deverá registrar quem criou, alterou ou cancelou contratos, propostas, comissões e lançamentos financeiros, e quando. | — | AUDITORIA |
+| RF34 | O sistema deverá registrar quem criou, alterou ou cancelou contratos, propostas, comissões e lançamentos financeiros, e quando, com os campos alterados. | — | AUDITORIA, AUDITORIA_CAMPO |
 | RF35 | O sistema deverá anonimizar os dados pessoais de um usuário a pedido do titular quando houver obrigação de guarda dos registros (contratos e lançamentos financeiros), e excluir o cadastro quando não houver. | — | USUARIO, TELEFONE, MENSAGEM |
 
 ## 7. Requisitos não funcionais
@@ -249,6 +250,7 @@ O que pode ou não pode acontecer. A última coluna mostra onde a regra aparece 
 | RN05 | Um cliente pode ter nenhum ou vários perfis de interesse. | USUARIO (0,n) — BUSCA — (1,1) PERFIL_INTERESSE |
 | RN32 | O papel exigido em cada relacionamento deve constar entre os papéis do usuário: proprietário em ANUNCIA; corretor em RESPONSAVEL, ATENDE, EXECUTA, ACOMPANHA, NEGOCIA e RECEBE; cliente em INICIA, VISITA e PROPOE; administrador em AUTORIZA e APROVA; instituição financeira em CONCEDE; administrador ou financeiro em EFETIVA. | Restrição sobre USUARIO.tp_papel nos relacionamentos indicados |
 | RN33 | O papel de inquilino é atribuído ao cliente quando o contrato de locação é assinado, e o de instituição financeira é atribuído ao banco que concede um financiamento. | USUARIO.tp_papel (inquilino, instituição financeira) |
+| RN42 | O perfil de interesse pode indicar no máximo uma cidade, escolhida do cadastro de cidades, para que a comparação com a cidade do imóvel seja exata. | CIDADE (0,n) — PREFERE — (0,1) PERFIL_INTERESSE |
 
 ### Imóveis
 
@@ -259,6 +261,7 @@ O que pode ou não pode acontecer. A última coluna mostra onde a regra aparece 
 | RN08 | Um imóvel pode ter várias características, e uma característica pode estar em vários imóveis. | IMOVEL (0,n) — APRESENTA — (0,n) CARACTERISTICA |
 | RN09 | Uma foto só existe vinculada a um imóvel. | FOTO · entidade fraca |
 | RN10 | Imóvel vendido, alugado ou inativo não pode receber novas visitas nem propostas. | IMOVEL.st_imovel |
+| RN41 | Todo imóvel está em exatamente um CEP, e todo CEP pertence a exatamente uma cidade. A cidade e a UF do imóvel não são digitadas no imóvel: são obtidas pelo CEP. | CEP (0,n) — LOCALIZA — (1,1) IMOVEL · CIDADE (0,n) — AGRUPA — (1,1) CEP |
 
 ### Atendimento e funil
 
@@ -290,11 +293,11 @@ O que pode ou não pode acontecer. A última coluna mostra onde a regra aparece 
 | Código | Regra | Onde aparece no modelo |
 |---|---|---|
 | RN22 | Um contrato pode ter no máximo um financiamento. O financiamento só existe quando a forma de pagamento do contrato é “financiado”, e todo contrato “financiado” tem financiamento. | CONTRATO (0,1) — FINANCIA — (1,1) FINANCIAMENTO · CONTRATO.tp_forma_pagamento |
-| RN23 | Na venda financiada, a corretagem só é considerada recebida depois que o banco libera o crédito. | FINANCIAMENTO (0,n) — LIBERA — (0,1) CONTA_RECEBER |
+| RN23 | Na venda financiada, a corretagem só é considerada recebida depois que o banco libera o crédito: nenhum recebimento da corretagem pode ter data anterior à liberação do financiamento do mesmo contrato. | FINANCIAMENTO.dt_liberacao · RECEBIMENTO.dt_recebimento · CONTRATO (0,1) — FINANCIA — (1,1) FINANCIAMENTO |
 | RN24 | A comissão só é liberada para pagamento quando a condição da regra de pagamento é atendida: na assinatura, na liberação do crédito ou no recebimento. | COMISSAO.tp_regra_pagamento |
 | RN25 | Cada comissão liberada gera no máximo uma conta a pagar ao corretor. | COMISSAO (0,1) — LANCA — (0,1) CONTA_PAGAR |
 | RN26 | Toda conta a receber e toda conta a pagar deve ter uma categoria financeira do tipo compatível (receita para a conta a receber, despesa para a conta a pagar). | CATEGORIA_FINANCEIRA (0,n) — CLASSIFICA e CATEGORIZA — (1,1) CONTA_RECEBER e CONTA_PAGAR |
-| RN27 | Toda conta a receber tem um pagador, que é um usuário: cliente, inquilino, proprietário ou banco. Quando o pagador é o banco, a conta deve estar ligada ao financiamento que ele concedeu. | USUARIO (0,n) — PAGA — (1,1) CONTA_RECEBER · CONTA_RECEBER.tp_papel_pagador |
+| RN27 | Toda conta a receber tem um pagador, que é um usuário: cliente, inquilino, proprietário ou banco. Quando o pagador é o banco, a conta deve pertencer a um contrato financiado, e o banco deve ser a instituição financeira que concedeu esse financiamento; o financiamento é encontrado pelo próprio contrato. | USUARIO (0,n) — PAGA — (1,1) CONTA_RECEBER · CONTA_RECEBER.tp_papel_pagador · USUARIO (0,n) — CONCEDE — (1,1) FINANCIAMENTO |
 | RN28 | Toda conta a pagar é paga pela imobiliária ao favorecido; o atributo de custeio indica quem arca com o valor final: a imobiliária, o proprietário (descontado do repasse) ou o inquilino (cobrado no aluguel). Quando não for a imobiliária, a pessoa que arca com o custo deve ser informada. | CONTA_PAGAR.tp_papel_custeio · USUARIO (0,n) — CUSTEIA — (0,1) CONTA_PAGAR |
 | RN29 | Uma conta pode ser quitada em vários recebimentos ou pagamentos parciais, sem que a soma passe do valor da conta, e cada baixa deve indicar a conta bancária movimentada. | CONTA (0,n) — QUITA e LIQUIDA — (1,1) baixa · CONTA_BANCARIA (0,n) — CREDITA e DEBITA — (1,1) baixa |
 | RN30 | Na locação, o aluguel recebido do inquilino gera o repasse ao proprietário, descontada a taxa de administração; enquanto o aluguel não for recebido, o repasse não é gerado. O prazo de pagamento do repasse é o da PO05. | CONTRATO.pc_administracao · CONTA_RECEBER → CONTA_PAGAR |
@@ -306,7 +309,7 @@ O que pode ou não pode acontecer. A última coluna mostra onde a regra aparece 
 | Código | Regra | Onde aparece no modelo |
 |---|---|---|
 | RN31 | A mesma demanda de uma conversa não pode ser processada duas vezes pela automação, e a mesma mensagem do WhatsApp não pode ser registrada duas vezes na conversa. | AUTOMACAO_EXECUCAO · único (conversa, cd_demanda) · MENSAGEM.cd_externo |
-| RN40 | Toda criação, alteração ou cancelamento de contrato, proposta, comissão e lançamento financeiro (conta, recebimento e pagamento) gera um registro de auditoria com o usuário e a data e hora da ação, e esse registro nunca é alterado. | USUARIO (0,n) — PRATICA — (1,1) AUDITORIA |
+| RN40 | Toda criação, alteração ou cancelamento de contrato, proposta, comissão e lançamento financeiro (conta, recebimento e pagamento) gera um registro de auditoria com o usuário e a data e hora da ação; cada campo alterado é registrado à parte, com o valor anterior e o novo; esse registro nunca é alterado. | USUARIO (0,n) — PRATICA — (1,1) AUDITORIA · AUDITORIA (0,n) — DETALHA — (1,1) AUDITORIA_CAMPO |
 
 ## 9. Restrições e políticas organizacionais
 
@@ -328,8 +331,8 @@ Cada fluxograma tem início, fim, atividades e decisões. O arquivo completo est
 
 | Fluxo | Processo | Requisitos atendidos | Regras respeitadas |
 |---|---|---|---|
-| F1 | Atendimento de um novo contato pelo WhatsApp | RF01–RF08, RF10–RF12, RF17 | RN01–RN03, RN05, RN11–RN14, RN31, RN34 |
-| F2 | Captação de imóvel | RF01, RF02, RF10, RF13–RF16 | RN01, RN02, RN06–RN09, RN32 |
+| F1 | Atendimento de um novo contato pelo WhatsApp | RF01–RF08, RF10–RF12, RF17 | RN01–RN03, RN05, RN11–RN14, RN31, RN34, RN42 |
+| F2 | Captação de imóvel | RF01, RF02, RF10, RF13–RF16 | RN01, RN02, RN06–RN09, RN32, RN41 |
 | F3 | Visita e proposta | RF18–RF20 | RN10, RN16–RN18, RN35 |
 | F4 | Venda: contrato, financiamento e comissão | RF10, RF20–RF26, RF28, RF29, RF33 | RN19–RN29, RN33, RN36–RN39 |
 | F5 | Locação: ciclo mensal do aluguel | RF24–RF27, RF29 | RN26–RN30, RN33, RN38, RN39 |
@@ -358,14 +361,14 @@ Os requisitos RF09, RF30–RF32, RF34 e RF35 são transversais ou de consulta e,
 
 ## 11. Entidades
 
-O modelo tem **28 entidades**. Cada uma existe porque um requisito ou regra precisa dela.
+O modelo tem **31 entidades**. Cada uma existe porque um requisito ou regra precisa dela. Três delas (CIDADE, CEP e AUDITORIA_CAMPO) nasceram da normalização da [seção 18](#18-normalização-1fn-2fn-e-3fn).
 
 | Entidade | Tipo | Por que existe | Requisito · regra | Folha do DER |
 |---|---|---|---|---|
 | **USUARIO** | forte | Toda pessoa ou instituição que circula no CRM: cliente, proprietário, inquilino, corretor, financeiro, fornecedor, administrador e banco. Uma entidade só evita cadastro duplicado. | RF01, RF02 · RN01, RN02, RN32, RN33 | 2 |
 | **TELEFONE** | forte | A pessoa pode ter vários telefones, e é pelo número do WhatsApp que o sistema a identifica. Tem identificador próprio porque os telefones que não são de WhatsApp podem ser compartilhados. | RF03 · RN03 | 2 |
-| **PERFIL_INTERESSE** | fraca | Guarda o que o cliente procura, para a automação sugerir imóveis. Só existe ligado a um usuário. | RF04, RF11 · RN05 | 2 |
-| **IMOVEL** | forte | O produto da imobiliária, com endereço, características, valor e situação. | RF13, RF14 · RN06, RN10 | 2 |
+| **PERFIL_INTERESSE** | fraca | Guarda o que o cliente procura, para a automação sugerir imóveis. Só existe ligado a um usuário. | RF04, RF11 · RN05, RN42 | 2 |
+| **IMOVEL** | forte | O produto da imobiliária, com endereço, características, valor e situação. | RF13, RF14 · RN06, RN10, RN41 | 2 |
 | **FOTO** | fraca | Galeria do imóvel; a foto não tem sentido fora dele. | RF15 · RN09 | 2 |
 | **CARACTERISTICA** | forte | Catálogo de itens (piscina, elevador, aceita pet) que permite filtrar imóveis sem depender de texto livre. | RF13 · RN08 | 2 |
 | **CONVERSA_IMOVEL** | associativa | Registra quais imóveis interessam em cada conversa e desde quando. | RF17 | 2 |
@@ -387,9 +390,12 @@ O modelo tem **28 entidades**. Cada uma existe porque um requisito ou regra prec
 | **CONTA_BANCARIA** | forte | Onde o dinheiro entra e sai: contas e caixa da imobiliária. | RF26 · RN29 | 5 |
 | **CONTA_PAGAR** | forte | Tudo o que a imobiliária tem a pagar: comissões, repasses, despesas e impostos, com quem paga e quem recebe. | RF25, RF27 · RN25, RN28 | 6 |
 | **PAGAMENTO** | fraca | Cada baixa de uma conta a pagar; permite pagamento parcial. | RF26 · RN29 | 6 |
-| **AUTOMACAO_EXECUCAO** | fraca | Cada vez que o N8N processa uma demanda de uma conversa; garante que a mesma demanda não seja processada duas vezes. | RF11 · RN31 | 6 |
-| **AUTOMACAO_LOG** | fraca | Eventos técnicos de cada execução, para rastrear falhas da integração. | RF12 | 6 |
-| **AUDITORIA** | forte | Registro de quem criou, alterou ou cancelou contratos, propostas, comissões e lançamentos financeiros, e quando. | RF34 · RN40 · RNF04 | 6 |
+| **AUTOMACAO_EXECUCAO** | fraca | Cada vez que o N8N processa uma demanda de uma conversa; garante que a mesma demanda não seja processada duas vezes. | RF11 · RN31 | 7 |
+| **AUTOMACAO_LOG** | fraca | Eventos técnicos de cada execução, para rastrear falhas da integração. | RF12 | 7 |
+| **AUDITORIA** | forte | Registro de quem criou, alterou ou cancelou contratos, propostas, comissões e lançamentos financeiros, e quando. | RF34 · RN40 · RNF04 | 7 |
+| **AUDITORIA_CAMPO** | fraca | Cada campo alterado em uma ação auditada, com o valor anterior e o novo. Nasce da normalização: uma alteração pode mudar vários campos, e guardá-los num único atributo seria um grupo repetitivo (1FN). | RF34 · RN40 | 7 |
+| **CIDADE** | forte | Cadastro único de cidades, com a UF. É usada pelo CEP do imóvel e pelo perfil de interesse, o que evita a mesma cidade escrita de formas diferentes e permite comparar perfil e imóvel com exatidão. | RF04, RF11, RF13 · RN41, RN42 | 7 |
+| **CEP** | forte | Guarda a cidade de cada CEP. Nasce da normalização: o CEP determina a cidade e a UF, então esses dados ficam aqui, e não repetidos em cada imóvel (3FN). | RF13, RF14 · RN41 | 7 |
 
 **Tipos:** *forte* tem identificação própria; *fraca* depende da identificação de outra entidade e usa um identificador parcial; *associativa* nasce de um relacionamento N:N e guarda informações da própria relação.
 
@@ -399,9 +405,9 @@ A lista completa, com classe, obrigatoriedade, descrição e regra de cada atrib
 
 | Classificação | Atributos |
 |---|---|
-| **Identificador** | USUARIO.id_usuario, TELEFONE.id_telefone, IMOVEL.id_imovel, CARACTERISTICA.id_caracteristica, CONVERSA.id_conversa, FUNIL_ESTAGIO.id_estagio, TAREFA.id_tarefa, TAG.id_tag, VISITA.id_visita, PROPOSTA.id_proposta, CONTRATO.id_contrato, CATEGORIA_FINANCEIRA.id_categoria, CONTA_BANCARIA.id_conta, CONTA_RECEBER.id_conta_receber, CONTA_PAGAR.id_conta_pagar, AUDITORIA.id_auditoria |
-| **Identificador parcial (entidade fraca)** | PERFIL_INTERESSE.nr_perfil, FOTO.nr_foto, MENSAGEM.nr_mensagem, HISTORICO_ESTAGIO.dt_alteracao, DOCUMENTO.nr_documento, RECEBIMENTO.nr_recebimento, PAGAMENTO.nr_pagamento, AUTOMACAO_EXECUCAO.nr_execucao, AUTOMACAO_LOG.nr_log. FINANCIAMENTO é identificado apenas pelo contrato (relação 1:1) |
-| **Composto** | IMOVEL.endereco (nm_logradouro, nr_endereco, ds_complemento, nm_bairro, nm_cidade, sg_uf, nr_cep) |
+| **Identificador** | USUARIO.id_usuario, TELEFONE.id_telefone, IMOVEL.id_imovel, CARACTERISTICA.id_caracteristica, CONVERSA.id_conversa, FUNIL_ESTAGIO.id_estagio, TAREFA.id_tarefa, TAG.id_tag, VISITA.id_visita, PROPOSTA.id_proposta, CONTRATO.id_contrato, CATEGORIA_FINANCEIRA.id_categoria, CONTA_BANCARIA.id_conta, CONTA_RECEBER.id_conta_receber, CONTA_PAGAR.id_conta_pagar, AUDITORIA.id_auditoria, CIDADE.id_cidade, CEP.nr_cep |
+| **Identificador parcial (entidade fraca)** | PERFIL_INTERESSE.nr_perfil, FOTO.nr_foto, MENSAGEM.nr_mensagem, HISTORICO_ESTAGIO.dt_alteracao, DOCUMENTO.nr_documento, RECEBIMENTO.nr_recebimento, PAGAMENTO.nr_pagamento, AUTOMACAO_EXECUCAO.nr_execucao, AUTOMACAO_LOG.nr_log, AUDITORIA_CAMPO.nm_campo. FINANCIAMENTO é identificado apenas pelo contrato (relação 1:1) |
+| **Composto** | IMOVEL.endereco (nm_logradouro, nr_endereco, ds_complemento, nm_bairro). O CEP, a cidade e a UF saíram do atributo composto e passaram a vir das entidades CEP e CIDADE (3FN, seção 18) |
 | **Multivalorado** | USUARIO.tp_papel (cliente, proprietário, inquilino, corretor, financeiro, fornecedor, administrador, instituição financeira) |
 | **Derivado** | COMISSAO.vl_comissao (pc_comissao × CONTRATO.vl_corretagem); CONTRATO.vl_corretagem (vl_final × pc_corretagem); CONTA_RECEBER.st_conta e CONTA_PAGAR.st_conta (calculados a partir das baixas e do vencimento); CONVERSA.dt_atualizacao (data da última mensagem) |
 | **Simples** | Todos os demais. A obrigatoriedade de cada atributo (sim, não ou condicional) está na coluna *Obrig.* do dicionário |
@@ -422,17 +428,20 @@ Informações que descrevem a relação, e não uma das entidades (Etapa 15 do m
 
 ## 13. Relacionamentos
 
-São **46 relacionamentos**, contando os que foram representados por entidade associativa.
+São **49 relacionamentos**, contando os que foram representados por entidade associativa. A normalização acrescentou AGRUPA, LOCALIZA, PREFERE e DETALHA e removeu LIBERA, que era redundante (seção 18).
 
 | Relacionamento | Entre | Significado | Requisito · regra |
 |---|---|---|---|
 | **POSSUI** | USUARIO — TELEFONE | Um usuário possui telefones | RN03 |
 | **BUSCA** | USUARIO — PERFIL_INTERESSE | Um usuário busca imóveis com determinado perfil | RN05 |
+| **PREFERE** | CIDADE — PERFIL_INTERESSE | O perfil indica a cidade desejada | RN42 |
 | **ANUNCIA** | USUARIO (proprietário) — IMOVEL | O proprietário anuncia o imóvel | RN06 |
 | **RESPONSAVEL** | USUARIO (corretor) — IMOVEL | O corretor é responsável pelo imóvel | RN07 |
 | **TEM** | IMOVEL — FOTO | O imóvel tem fotos | RN09 |
 | **APRESENTA** | IMOVEL — CARACTERISTICA | O imóvel possui características | RN08 |
 | **INTERESSA (associativa CONVERSA_IMOVEL)** | IMOVEL — CONVERSA | A conversa se interessa por imóveis | RF17 |
+| **LOCALIZA** | CEP — IMOVEL | O CEP localiza o imóvel | RN41 |
+| **AGRUPA** | CIDADE — CEP | A cidade agrupa os seus CEPs | RN41 |
 | **INICIA** | USUARIO (cliente) — CONVERSA | O cliente inicia a conversa | RN11 |
 | **ATENDE** | USUARIO (corretor) — CONVERSA | O corretor atende a conversa | RN12 |
 | **CONTEM** | CONVERSA — MENSAGEM | A conversa contém mensagens | RF05 |
@@ -456,7 +465,6 @@ São **46 relacionamentos**, contando os que foram representados por entidade as
 | **FINANCIA** | CONTRATO — FINANCIAMENTO | O contrato é financiado | RN22 |
 | **CONCEDE** | USUARIO (instituição financeira) — FINANCIAMENTO | O banco concede o financiamento | RN27, RN33 |
 | **GERA RECEITA** | CONTRATO — CONTA_RECEBER | O contrato gera contas a receber | RF24 |
-| **LIBERA** | FINANCIAMENTO — CONTA_RECEBER | A liberação do crédito gera a conta a receber da corretagem | RN23 |
 | **CLASSIFICA** | CATEGORIA_FINANCEIRA — CONTA_RECEBER | A categoria classifica a conta a receber | RN26 |
 | **PAGA** | USUARIO (pagador) — CONTA_RECEBER | A pessoa paga a conta a receber | RN27 |
 | **QUITA** | CONTA_RECEBER — RECEBIMENTO | A conta a receber é baixada por recebimentos | RN29 |
@@ -472,6 +480,7 @@ São **46 relacionamentos**, contando os que foram representados por entidade as
 | **DISPARA** | CONVERSA — AUTOMACAO_EXECUCAO | A conversa dispara execuções da automação | RN31 |
 | **GRAVA** | AUTOMACAO_EXECUCAO — AUTOMACAO_LOG | A execução registra eventos (logs) | RF12 |
 | **PRATICA** | USUARIO — AUDITORIA | O usuário pratica a ação registrada na auditoria | RN40 |
+| **DETALHA** | AUDITORIA — AUDITORIA_CAMPO | O registro de auditoria detalha cada campo alterado | RN40 |
 
 ## 14. Cardinalidades
 
@@ -483,11 +492,14 @@ Cada cardinalidade foi definida pelo método **vá e volte** do manual: partindo
 |---|---|---|---|---|
 | POSSUI | 1 USUARIO → nenhum ou vários TELEFONE | 1 TELEFONE → exatamente um USUARIO | USUARIO (0,n) — POSSUI — (1,1) TELEFONE | RN03 |
 | BUSCA | 1 USUARIO → nenhum ou vários PERFIL_INTERESSE | 1 PERFIL_INTERESSE → exatamente um USUARIO | USUARIO (0,n) — BUSCA — (1,1) PERFIL_INTERESSE | RN05 |
+| PREFERE | 1 CIDADE → nenhum ou vários PERFIL_INTERESSE | 1 PERFIL_INTERESSE → nenhuma ou uma CIDADE | CIDADE (0,n) — PREFERE — (0,1) PERFIL_INTERESSE | RN42 |
 | ANUNCIA | 1 USUARIO (proprietário) → nenhum ou vários IMOVEL | 1 IMOVEL → exatamente um USUARIO (proprietário) | USUARIO (proprietário) (0,n) — ANUNCIA — (1,1) IMOVEL | RN06 |
 | RESPONSAVEL | 1 USUARIO (corretor) → nenhum ou vários IMOVEL | 1 IMOVEL → nenhum ou um USUARIO (corretor) | USUARIO (corretor) (0,n) — RESPONSAVEL — (0,1) IMOVEL | RN07 |
 | TEM | 1 IMOVEL → nenhum ou vários FOTO | 1 FOTO → exatamente um IMOVEL | IMOVEL (0,n) — TEM — (1,1) FOTO | RN09 |
 | APRESENTA | 1 IMOVEL → nenhum ou vários CARACTERISTICA | 1 CARACTERISTICA → nenhum ou vários IMOVEL | IMOVEL (0,n) — APRESENTA — (0,n) CARACTERISTICA | RN08 |
 | INTERESSA | 1 IMOVEL → nenhum ou vários CONVERSA | 1 CONVERSA → nenhum ou vários IMOVEL | IMOVEL (0,n) — INTERESSA — (0,n) CONVERSA · N:N | RF17 |
+| LOCALIZA | 1 CEP → nenhum ou vários IMOVEL | 1 IMOVEL → exatamente um CEP | CEP (0,n) — LOCALIZA — (1,1) IMOVEL | RN41 |
+| AGRUPA | 1 CIDADE → nenhum ou vários CEP | 1 CEP → exatamente uma CIDADE | CIDADE (0,n) — AGRUPA — (1,1) CEP | RN41 |
 | INICIA | 1 USUARIO (cliente) → nenhum ou vários CONVERSA | 1 CONVERSA → exatamente um USUARIO (cliente) | USUARIO (cliente) (0,n) — INICIA — (1,1) CONVERSA | RN11 |
 | ATENDE | 1 USUARIO (corretor) → nenhum ou vários CONVERSA | 1 CONVERSA → nenhum ou um USUARIO (corretor) | USUARIO (corretor) (0,n) — ATENDE — (0,1) CONVERSA | RN12 |
 | CONTEM | 1 CONVERSA → nenhum ou vários MENSAGEM | 1 MENSAGEM → exatamente um CONVERSA | CONVERSA (0,n) — CONTEM — (1,1) MENSAGEM | RF05 |
@@ -511,7 +523,6 @@ Cada cardinalidade foi definida pelo método **vá e volte** do manual: partindo
 | FINANCIA | 1 CONTRATO → nenhum ou um FINANCIAMENTO | 1 FINANCIAMENTO → exatamente um CONTRATO | CONTRATO (0,1) — FINANCIA — (1,1) FINANCIAMENTO | RN22 |
 | CONCEDE | 1 USUARIO (instituição financeira) → nenhum ou vários FINANCIAMENTO | 1 FINANCIAMENTO → exatamente um USUARIO (instituição financeira) | USUARIO (instituição financeira) (0,n) — CONCEDE — (1,1) FINANCIAMENTO | RN27, RN33 |
 | GERA RECEITA | 1 CONTRATO → nenhum ou vários CONTA_RECEBER | 1 CONTA_RECEBER → nenhum ou um CONTRATO | CONTRATO (0,n) — GERA RECEITA — (0,1) CONTA_RECEBER | RF24 |
-| LIBERA | 1 FINANCIAMENTO → nenhum ou vários CONTA_RECEBER | 1 CONTA_RECEBER → nenhum ou um FINANCIAMENTO | FINANCIAMENTO (0,n) — LIBERA — (0,1) CONTA_RECEBER | RN23 |
 | CLASSIFICA | 1 CATEGORIA_FINANCEIRA → nenhum ou vários CONTA_RECEBER | 1 CONTA_RECEBER → exatamente um CATEGORIA_FINANCEIRA | CATEGORIA_FINANCEIRA (0,n) — CLASSIFICA — (1,1) CONTA_RECEBER | RN26 |
 | PAGA | 1 USUARIO (pagador) → nenhum ou vários CONTA_RECEBER | 1 CONTA_RECEBER → exatamente um USUARIO (pagador) | USUARIO (pagador) (0,n) — PAGA — (1,1) CONTA_RECEBER | RN27 |
 | QUITA | 1 CONTA_RECEBER → nenhum ou vários RECEBIMENTO | 1 RECEBIMENTO → exatamente um CONTA_RECEBER | CONTA_RECEBER (0,n) — QUITA — (1,1) RECEBIMENTO | RN29 |
@@ -527,6 +538,7 @@ Cada cardinalidade foi definida pelo método **vá e volte** do manual: partindo
 | DISPARA | 1 CONVERSA → nenhum ou vários AUTOMACAO_EXECUCAO | 1 AUTOMACAO_EXECUCAO → exatamente um CONVERSA | CONVERSA (0,n) — DISPARA — (1,1) AUTOMACAO_EXECUCAO | RN31 |
 | GRAVA | 1 AUTOMACAO_EXECUCAO → nenhum ou vários AUTOMACAO_LOG | 1 AUTOMACAO_LOG → exatamente um AUTOMACAO_EXECUCAO | AUTOMACAO_EXECUCAO (0,n) — GRAVA — (1,1) AUTOMACAO_LOG | RF12 |
 | PRATICA | 1 USUARIO → nenhuma ou várias AUDITORIA | 1 AUDITORIA → exatamente um USUARIO | USUARIO (0,n) — PRATICA — (1,1) AUDITORIA | RN40 |
+| DETALHA | 1 AUDITORIA → nenhum ou vários AUDITORIA_CAMPO | 1 AUDITORIA_CAMPO → exatamente uma AUDITORIA | AUDITORIA (0,n) — DETALHA — (1,1) AUDITORIA_CAMPO | RN40 |
 
 **Relacionamentos N:N verificados (Etapa 14):** imóvel × característica e conversa × tag ficaram como losango, porque não têm informação própria; conversa × imóvel, conversa × estágio, cliente × imóvel (visita e proposta) e contrato × corretor viraram entidades associativas, porque têm. **Relacionamento recursivo:** RESPONDE liga uma proposta a outra proposta (a contraproposta) e é opcional e único nos dois lados (0,1).
 
@@ -583,12 +595,13 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 
 ### PERFIL_INTERESSE · fraca
 
+*A cidade desejada é a CIDADE ligada pelo relacionamento PREFERE (RN42), e não um texto digitado no perfil.*
+
 | Atributo | Classe | Obrig. | Descrição | Regra / observação |
 |---|---|---|---|---|
 | nr_perfil | Ident. parcial | Sim | Número do perfil dentro do usuário | Identificador parcial |
 | tp_finalidade | Simples | Sim | Venda ou locação | Mesmo vocabulário de IMOVEL |
 | tp_imovel | Simples | Não | Tipo de imóvel procurado | Ex.: apartamento, casa, comercial |
-| nm_cidade | Simples | Não | Cidade desejada | — |
 | nm_bairro | Simples | Não | Bairro desejado | Pode ficar em branco |
 | vl_minimo | Simples | Não | Valor mínimo aceito | Não pode ser maior que o valor máximo |
 | vl_maximo | Simples | Não | Valor máximo aceito | Maior ou igual ao mínimo |
@@ -602,7 +615,7 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 | cd_imobizi | Simples | Cond. | Código do imóvel no IMOBIZI | Não pode se repetir; obrigatório nos imóveis importados (RF14) |
 | tp_imovel | Simples | Sim | Tipo do imóvel | Apartamento, casa, terreno, comercial ou rural |
 | tp_finalidade | Simples | Sim | Venda, locação ou ambas | Define quais valores são obrigatórios (17.24) |
-| endereco | Composto | Sim | Endereço do imóvel | Composto por nm_logradouro, nr_endereco, ds_complemento, nm_bairro, nm_cidade, sg_uf e nr_cep |
+| endereco | Composto | Sim | Endereço do imóvel | Composto por nm_logradouro, nr_endereco, ds_complemento e nm_bairro; o CEP vem do relacionamento LOCALIZA, e a cidade e a UF, do CEP (RN41) |
 | vl_area_util | Simples | Não | Área útil em m² | — |
 | vl_area_total | Simples | Não | Área total em m² | Maior ou igual à área útil |
 | qt_quartos | Simples | Não | Quantidade de quartos | — |
@@ -851,18 +864,42 @@ Preliminar, no formato do manual: identificar, descrever e organizar. Tipos de d
 
 ### AUDITORIA · forte
 
+*Os campos alterados em cada ação ficam em AUDITORIA_CAMPO, ligada pelo relacionamento DETALHA (RN40).*
+
 | Atributo | Classe | Obrig. | Descrição | Regra / observação |
 |---|---|---|---|---|
 | id_auditoria | Identificador | Sim | Identificador do registro de auditoria | Identificação única |
 | nm_entidade | Simples | Sim | Entidade afetada | Contrato, proposta, comissão, conta a receber, conta a pagar, recebimento ou pagamento |
 | cd_registro | Simples | Sim | Identificação do registro afetado | Referência genérica, sem relacionamento com cada entidade (17.22) |
 | tp_acao | Simples | Sim | Ação praticada | Criação, alteração ou cancelamento (RN40) |
-| ds_valores | Simples | Não | Valores antes e depois da alteração | — |
 | dt_acao | Simples | Sim | Data e hora da ação | Preenchida automaticamente; o registro nunca é alterado (RNF04) |
+
+### AUDITORIA_CAMPO · fraca
+
+| Atributo | Classe | Obrig. | Descrição | Regra / observação |
+|---|---|---|---|---|
+| nm_campo | Ident. parcial | Sim | Nome do campo alterado | Identificador parcial dentro do registro de auditoria |
+| ds_valor_anterior | Simples | Cond. | Valor do campo antes da ação | Vazio na criação |
+| ds_valor_novo | Simples | Cond. | Valor do campo depois da ação | Vazio quando o valor é apagado |
+
+### CIDADE · forte
+
+| Atributo | Classe | Obrig. | Descrição | Regra / observação |
+|---|---|---|---|---|
+| id_cidade | Identificador | Sim | Identificador da cidade | Identificação única |
+| nm_cidade | Simples | Sim | Nome da cidade | Junto com a UF, não pode se repetir |
+| sg_uf | Simples | Sim | Sigla do estado | Duas letras (ex.: SP) |
+
+### CEP · forte
+
+| Atributo | Classe | Obrig. | Descrição | Regra / observação |
+|---|---|---|---|---|
+| nr_cep | Identificador | Sim | CEP com 8 dígitos | Identificação única; determina a cidade (RN41) |
+| tp_cep | Simples | Sim | Abrangência do CEP | Geral (a cidade inteira) ou de logradouro; como um CEP geral não indica rua nem bairro, esses dados continuam no imóvel |
 
 ## 16. DER
 
-Modelo conceitual em notação de Chen. O DER foi desenhado em seis folhas, uma por domínio, para que nenhuma linha cruze outra e a letra seja legível. Quando uma entidade detalhada em outra folha participa de um relacionamento, ela aparece como **atalho** (caixa tracejada com a folha indicada).
+Modelo conceitual em notação de Chen. O DER foi desenhado em sete folhas, uma por domínio, para que nenhuma linha cruze outra e a letra seja legível. Quando uma entidade detalhada em outra folha participa de um relacionamento, ela aparece como **atalho** (caixa tracejada com a folha indicada).
 
 Arquivo para impressão (A3): [`docs/der/CRMoveis-DER-conceitual.pdf`](docs/der/CRMoveis-DER-conceitual.pdf)
 
@@ -906,9 +943,13 @@ Todas as folhas juntas, para ver a integração entre os domínios. Para leitura
 
 ![DER folha 5 — Financeiro · contas a receber](docs/der/folha-5.png)
 
-### Folha 6 — Financeiro · contas a pagar e Integração N8N
+### Folha 6 — Financeiro · contas a pagar
 
-![DER folha 6 — Financeiro · contas a pagar e Integração N8N](docs/der/folha-6.png)
+![DER folha 6 — Financeiro · contas a pagar](docs/der/folha-6.png)
+
+### Folha 7 — Localização, Integração N8N e Auditoria
+
+![DER folha 7 — Localização, Integração N8N e Auditoria](docs/der/folha-7.png)
 
 ## 17. Justificativas técnicas
 
@@ -934,7 +975,7 @@ As principais decisões de modelagem, no formato pedido pelo manual.
 
 | | |
 |---|---|
-| **O que decidimos** | O endereço do imóvel foi decomposto em logradouro, número, complemento, bairro, cidade, UF e CEP. |
+| **O que decidimos** | O endereço do imóvel foi decomposto em logradouro, número, complemento e bairro. O CEP, a cidade e a UF saíram do atributo composto e passaram a vir das entidades CEP e CIDADE (17.25). |
 | **Por que decidimos assim** | A busca por imóvel é feita por cidade e bairro, e o perfil de interesse compara esses campos separadamente. |
 | **Qual regra sustenta** | RF04, RF11, RF13 |
 
@@ -970,12 +1011,12 @@ As principais decisões de modelagem, no formato pedido pelo manual.
 | **Por que decidimos assim** | Um contrato pode dividir a comissão entre vários corretores, e um corretor recebe comissão de vários contratos. O percentual descreve a participação, não o contrato nem o corretor. A base é a corretagem porque é o que a imobiliária efetivamente recebe: aplicar a comissão sobre o preço do imóvel permitiria pagar aos corretores mais do que a imobiliária recebeu. |
 | **Qual regra sustenta** | RN20, RN21 · Etapa 15 do manual |
 
-### 17.8 FINANCIAMENTO como entidade fraca do contrato, concedido por um banco e ligado à conta a receber
+### 17.8 FINANCIAMENTO como entidade fraca do contrato, concedido por um banco
 
 | | |
 |---|---|
-| **O que decidimos** | O financiamento é 1:1 opcional com o contrato, é concedido por um usuário com o papel de instituição financeira (CONCEDE) e se liga à conta a receber pelo relacionamento LIBERA. |
-| **Por que decidimos assim** | Na venda financiada, a corretagem só entra quando o banco libera o crédito; o sistema precisa saber de qual financiamento veio o dinheiro e qual banco o concedeu. Guardar só o nome do banco como texto impediria ligar o banco como pagador da conta a receber. |
+| **O que decidimos** | O financiamento é 1:1 opcional com o contrato, é identificado pelo próprio contrato e é concedido por um usuário com o papel de instituição financeira (CONCEDE). A conta a receber da corretagem se liga apenas ao contrato (GERA RECEITA); o financiamento é encontrado por esse mesmo contrato. |
+| **Por que decidimos assim** | Na venda financiada, a corretagem só entra quando o banco libera o crédito; o sistema precisa saber qual banco concedeu o crédito e quando o liberou. Guardar só o nome do banco como texto impediria ligar o banco como pagador da conta a receber. Uma versão anterior ligava a conta a receber também ao financiamento (LIBERA), mas, como o financiamento é identificado pelo contrato, a conta apontava duas vezes para o mesmo contrato: um campo carona, que a 3FN não permite. LIBERA foi removido sem perda de informação (seção 18). |
 | **Qual regra sustenta** | RN22, RN23, RN27, RN33 |
 
 ### 17.9 Contas a receber e a pagar separadas, com baixas
@@ -983,7 +1024,7 @@ As principais decisões de modelagem, no formato pedido pelo manual.
 | | |
 |---|---|
 | **O que decidimos** | Receitas e despesas são entidades diferentes, e cada uma tem baixas (RECEBIMENTO e PAGAMENTO) como entidades fracas. |
-| **Por que decidimos assim** | Reconhecemos que as duas se parecem (valor, vencimento, categoria, baixas). Comparamos com um lançamento único com tipo receita/despesa. Mantivemos separadas porque os relacionamentos e as regras diferem: só a conta a receber se liga ao financiamento (LIBERA) e sempre tem um pagador (PAGA); só a conta a pagar nasce de uma comissão (LANCA), tem favorecido (FAVORECE) e indica quem arca com o custo (CUSTEIA). Um lançamento único teria relacionamentos opcionais que só valem para um dos tipos. As baixas podem ser parciais e em contas bancárias diferentes. O modelo lógico poderá reavaliar a unificação como supertipo. |
+| **Por que decidimos assim** | Reconhecemos que as duas se parecem (valor, vencimento, categoria, baixas). Comparamos com um lançamento único com tipo receita/despesa. Mantivemos separadas porque os relacionamentos e as regras diferem: só a conta a receber sempre tem um pagador (PAGA), que pode ser o banco do financiamento; só a conta a pagar nasce de uma comissão (LANCA), tem favorecido (FAVORECE) e indica quem arca com o custo (CUSTEIA). Um lançamento único teria relacionamentos opcionais que só valem para um dos tipos. As baixas podem ser parciais e em contas bancárias diferentes. O modelo lógico poderá reavaliar a unificação como supertipo. |
 | **Qual regra sustenta** | RN26, RN29 · RF26 |
 
 ### 17.10 “Quem paga” como atributo e relacionamento
@@ -1030,8 +1071,8 @@ As principais decisões de modelagem, no formato pedido pelo manual.
 
 | | |
 |---|---|
-| **O que decidimos** | O DER foi desenhado em seis folhas por domínio; entidades de outra folha aparecem como atalho tracejado. |
-| **Por que decidimos assim** | Com 28 entidades e a pessoa ligada a quase tudo, uma folha única teria linhas cruzando e letra ilegível. Os atalhos mantêm cada linha curta e sem ambiguidade. |
+| **O que decidimos** | O DER foi desenhado em sete folhas por domínio; entidades de outra folha aparecem como atalho tracejado. |
+| **Por que decidimos assim** | Com 31 entidades e a pessoa ligada a quase tudo, uma folha única teria linhas cruzando e letra ilegível. Os atalhos mantêm cada linha curta e sem ambiguidade. |
 | **Qual regra sustenta** | Legibilidade e consistência do modelo |
 
 ### 17.16 Estágio atual (PERTENCE A) e histórico do funil juntos
@@ -1086,7 +1127,7 @@ As principais decisões de modelagem, no formato pedido pelo manual.
 
 | | |
 |---|---|
-| **O que decidimos** | AUDITORIA é uma entidade que registra usuário (PRATICA), data, ação e valores, e aponta para o registro afetado pelo nome da entidade e pelo código, sem relacionamento direto com cada entidade. O relacionamento EFETIVA guarda quem realizou cada pagamento. |
+| **O que decidimos** | AUDITORIA é uma entidade que registra usuário (PRATICA), data e ação, guarda cada campo alterado em AUDITORIA_CAMPO (DETALHA) e aponta para o registro afetado pelo nome da entidade e pelo código, sem relacionamento direto com cada entidade. O relacionamento EFETIVA guarda quem realizou cada pagamento. |
 | **Por que decidimos assim** | O requisito de auditoria exige saber quem criou ou alterou contratos, propostas, comissões e lançamentos. Um relacionamento com cada uma dessas entidades poluiria o DER; a referência genérica é uma escolha consciente, que o modelo lógico poderá detalhar. A política PO01 exige saber quem pagou a comissão, e por isso EFETIVA existe. |
 | **Qual regra sustenta** | RN39, RN40, PO01 · RF34, RNF04 |
 
@@ -1106,9 +1147,335 @@ As principais decisões de modelagem, no formato pedido pelo manual.
 | **Por que decidimos assim** | Um mesmo imóvel pode ser ofertado para venda e para locação. Com um único valor, seria preciso cadastrar duas vezes a mesma unidade. |
 | **Qual regra sustenta** | RF13 |
 
-## 18. Conclusão
+### 17.25 Localização normalizada: CEP e CIDADE
+
+| | |
+|---|---|
+| **O que decidimos** | A cidade e a UF saíram do imóvel e do perfil de interesse. O imóvel se liga a um CEP (LOCALIZA), o CEP a uma cidade (AGRUPA), e o perfil de interesse indica a cidade desejada (PREFERE). |
+| **Por que decidimos assim** | O CEP determina a cidade e a UF. Com os três no imóvel, cidade e UF eram campos carona: dependiam do CEP, e não da chave do imóvel, o que viola a 3FN. Separá-los evita a mesma cidade escrita de formas diferentes e faz o perfil e o imóvel usarem a mesma cidade na comparação. Logradouro e bairro continuam no imóvel porque um CEP geral cobre a cidade inteira e não determina rua nem bairro. |
+| **Qual regra sustenta** | RN41, RN42 · RF04, RF11, RF13 |
+
+### 17.26 Campos alterados da auditoria em entidade própria
+
+| | |
+|---|---|
+| **O que decidimos** | Os valores alterados saíram de AUDITORIA e foram para AUDITORIA_CAMPO, com um registro por campo, contendo o valor anterior e o novo. |
+| **Por que decidimos assim** | Uma alteração pode mudar vários campos de uma vez. Guardar "os valores antes e depois" num único atributo seria uma lista dentro de uma célula, o que a 1FN não permite. |
+| **Qual regra sustenta** | RN40 · RF34 |
+
+### 17.27 Valores congelados não são redundância
+
+| | |
+|---|---|
+| **O que decidimos** | A proposta guarda o valor anunciado no momento em que foi feita (vl_anunciado), e o contrato guarda o valor fechado (vl_final), mesmo que o preço do imóvel mude depois. |
+| **Por que decidimos assim** | Esses valores não dependem do preço atual do imóvel, e sim da proposta e do contrato naquele momento; por isso não são campos carona. É a mesma lógica de guardar num pedido o preço pago, e não o preço de hoje do produto. |
+| **Qual regra sustenta** | PO03, RN18 · RF19, RF20 |
+
+## 18. Normalização (1FN, 2FN e 3FN)
+
+Produto da aula 8: **modelo lógico revisado e normalizado até a 3FN, acompanhado do dicionário de dados atualizado e das justificativas técnicas**. A seção segue o roteiro do diário de bordo: conceitos, seleção das tabelas, auditoria pelos oito critérios, registro das inconsistências, antes e depois, atualização da documentação e reflexão final.
+
+**Resultado:** 34 tabelas, 224 colunas e 57 chaves estrangeiras, todas na 3FN. Cinco problemas foram encontrados e corrigidos (três de 1FN e dois de 3FN); nenhuma tabela violava a 2FN.
+
+Arquivo completo: [`docs/modelo-logico/CRMoveis-modelo-logico-normalizado.pdf`](docs/modelo-logico/CRMoveis-modelo-logico-normalizado.pdf) · dicionário lógico: [`docs/modelo-logico/dicionario-logico.md`](docs/modelo-logico/dicionario-logico.md) · script para o dbdiagram.io: [`docs/modelo-logico/crmoveis.dbml`](docs/modelo-logico/crmoveis.dbml)
+
+### 18.1 Conceitos usados
+
+As definições são as apresentadas em aula.
+
+| Conceito | Definição | Pergunta que usamos para conferir |
+|---|---|---|
+| **Normalização** | Processo de organização das relações de um banco de dados, com base em dependências entre atributos, buscando reduzir redundâncias indevidas e prevenir anomalias. | O mesmo fato está guardado em mais de um lugar sem necessidade? |
+| **Dependência funcional** | X → Y quando cada valor de X determina um único valor de Y. Ex.: id_produto → nome_produto. | Conhecendo X, eu sei Y com certeza? |
+| **1FN** | Todos os campos contêm valores atômicos (indivisíveis) e não há grupos repetitivos. | Alguma célula guarda uma lista ou um texto com várias partes? |
+| **2FN** | Tudo o que está na tabela deve depender da chave inteira, e não de apenas metade dela. Só se aplica a tabelas com chave primária composta (duas ou mais colunas). | “De qual chave esse atributo depende?” |
+| **3FN** | Eliminação de dependências transitivas: um atributo não chave não deve depender de outro atributo não chave; deve depender diretamente da chave primária. Não pode haver campo “carona”. | Esse campo depende da chave ou de outro campo que não é chave? |
+
+As formas normais são cumulativas: uma tabela na 3FN também está na 1FN e na 2FN.
+
+### 18.2 Do modelo conceitual ao modelo lógico
+
+| Elemento do DER | Como virou tabela | Exemplos |
+|---|---|---|
+| Entidade forte | Tabela com o identificador como chave primária | usuario, imovel, contrato, cidade, cep |
+| Entidade fraca | Chave primária composta: FK da entidade dona + identificador parcial | foto, mensagem, documento, recebimento, auditoria_campo |
+| Entidade fraca 1:1 | A chave primária é a própria FK da dona | financiamento (id_contrato) |
+| Relacionamento 1:N | FK no lado N; NOT NULL quando a participação mínima é 1 | imovel.id_proprietario (ANUNCIA), imovel.nr_cep (LOCALIZA) |
+| Relacionamento 1:1 | FK com valor único (UK) | contrato.id_proposta (FECHA), comissao.id_conta_pagar (LANCA), proposta.id_proposta_respondida (RESPONDE) |
+| Relacionamento N:N sem atributos | Tabela de ligação com chave primária composta | imovel_caracteristica (APRESENTA), conversa_tag (MARCA) |
+| Entidade associativa | Tabela própria com as FKs dos dois lados e seus atributos | conversa_imovel, historico_estagio, comissao, visita, proposta |
+| Atributo multivalorado | Tabela própria, uma linha por valor | usuario_papel |
+| Atributo composto | Uma coluna atômica por parte | imovel: nm_logradouro, nr_endereco, ds_complemento, nm_bairro |
+| Atributo derivado | Não é armazenado; é calculado na consulta | vl_corretagem, vl_comissao, st_conta, dt_atualizacao |
+
+As 31 entidades viraram 31 tabelas; o atributo multivalorado e os dois N:N sem atributos geraram mais 3, num total de 34. Os 49 relacionamentos viraram 56 chaves estrangeiras (cada N:N gera duas); com a de usuario_papel, são 57. A conferência entre o DER e o modelo lógico foi feita por script: todo relacionamento tem a FK correspondente, toda FK de participação mínima 1 é NOT NULL, toda FK de relacionamento 1:1 é única, todo atributo não derivado do dicionário conceitual está presente e nenhum derivado é armazenado.
+
+### 18.3 Seleção das tabelas
+
+O diário pede no mínimo quatro tabelas, incluindo uma associativa. Auditamos as 34 e destacamos seis, que cobrem todos os tipos de tabela e todos os problemas encontrados.
+
+| Tabela | Classificação | Por que foi escolhida |
+|---|---|---|
+| usuario | Forte | O atributo multivalorado tp_papel não pode virar uma coluna com vários valores (1FN) |
+| imovel | Forte | Endereço composto (1FN) e, na versão anterior, cidade e UF dependentes do CEP (3FN) |
+| auditoria | Forte | Na versão anterior, guardava os campos alterados num único texto (1FN) |
+| conta_receber | Forte | Na versão anterior, apontava para o contrato e também para o financiamento do mesmo contrato (3FN) |
+| financiamento | Fraca (identificada pelo contrato) | Como a chave do financiamento é o próprio contrato, a ligação LIBERA com a conta a receber repetia o contrato (3FN) |
+| comissao | Associativa (chave composta) | Teste da 2FN: cada atributo depende do par contrato + corretor? |
+
+### 18.4 Auditoria de normalização
+
+Os oito critérios do diário, verificados em todas as tabelas:
+
+| # | Critério | Resultado | Como verificamos |
+|---|---|---|---|
+| 1 | Os atributos apresentam valores atômicos, sem listas ou grupos repetitivos (1FN) | Atendido após correção | Três problemas corrigidos: papéis do usuário, endereço do imóvel e valores da auditoria (registros 1 a 3) |
+| 2 | Todos os atributos não chave dependem da chave completa, sem dependências parciais (2FN) | Atendido | As 15 tabelas com chave composta foram conferidas uma a uma (quadro abaixo); nenhuma dependência parcial |
+| 3 | Não existem dependências transitivas indevidas entre atributos não chave (3FN) | Atendido após correção | Dois problemas corrigidos: cidade e UF dependentes do CEP e conta a receber ligada ao financiamento (registros 4 e 5); os atributos derivados não são armazenados |
+| 4 | As dependências funcionais foram identificadas corretamente | Atendido | Dependências listadas na 18.5 e no quadro da 2FN |
+| 5 | Não existem redundâncias desnecessárias | Atendido | As repetições que restaram são valores congelados ou redundância controlada, justificadas na 18.7 |
+| 6 | Foram analisados os riscos de anomalias de inserção, atualização e exclusão | Atendido | Exemplo completo no antes e depois do CEP (18.6) |
+| 7 | As chaves primárias e estrangeiras estão corretamente definidas | Atendido | 34 chaves primárias e 57 chaves estrangeiras; conferência automática contra as cardinalidades da seção 14 |
+| 8 | A decomposição preserva os relacionamentos e as regras de negócio | Atendido | Os 49 relacionamentos têm FK; a junção das tabelas decompostas reconstrói os dados originais; RN23, RN27 e RN40 foram reescritas e RN41 e RN42 foram criadas para o novo desenho |
+
+**8 de 8 critérios verificados.**
+
+**Quadro da 2FN.** Para cada tabela de chave composta, a pergunta “de qual chave esse atributo depende?”:
+
+| Tabela | Chave primária | Atributos não chave dependem de… |
+|---|---|---|
+| usuario_papel | (id_usuario, tp_papel) | Não há atributo não chave: a tabela só registra o par usuário–papel. |
+| perfil_interesse | (id_usuario, nr_perfil) | Finalidade, tipo, bairro, cidade, faixa de valor e quartos descrevem aquele perfil, e não o usuário: o mesmo cliente pode ter um perfil de compra e outro de locação. |
+| foto | (id_imovel, nr_foto) | Ordem e endereço do arquivo descrevem aquela foto; não dependem só do imóvel. |
+| imovel_caracteristica | (id_caracteristica, id_imovel) | Não há atributo não chave. |
+| conversa_imovel | (id_imovel, id_conversa) | dt_interesse é o momento em que aquela conversa mostrou interesse naquele imóvel: depende do par. |
+| mensagem | (id_conversa, nr_mensagem) | Código externo, direção, canal, texto e data descrevem aquela mensagem da conversa. |
+| historico_estagio | (id_conversa, dt_alteracao) | O estágio e quem fez a mudança dependem daquela mudança (conversa + data e hora). |
+| conversa_tag | (id_conversa, id_tag) | Não há atributo não chave. |
+| documento | (id_contrato, nr_documento) | Nome e arquivo descrevem aquele documento do contrato. |
+| comissao | (id_contrato, id_corretor) | Percentual, regra de pagamento, situação, aprovação e conta a pagar valem para aquele corretor naquele contrato. Contraexemplo: nm_corretor dependeria só de id_corretor e pc_corretagem só de id_contrato (metade da chave), por isso ficam em usuario e contrato. |
+| recebimento | (id_conta_receber, nr_recebimento) | Conta bancária, data, valor e forma de pagamento descrevem aquela baixa, e não a conta a receber inteira (a conta pode ter várias baixas). |
+| pagamento | (id_conta_pagar, nr_pagamento) | Conta bancária, quem efetivou, data, valor e forma descrevem aquela baixa da conta a pagar. |
+| automacao_execucao | (id_conversa, nr_execucao) | Demanda, situação, critérios, conteúdo, resumo, erro e datas descrevem aquela execução da automação na conversa. |
+| automacao_log | (id_conversa, nr_execucao, nr_log) | Evento, descrição, dados e data descrevem aquele registro do log da execução. |
+| auditoria_campo | (id_auditoria, nm_campo) | Valor anterior e valor novo dependem do campo dentro daquele registro de auditoria. |
+
+### 18.5 Registro das inconsistências encontradas
+
+| Registro | Inconsistência encontrada | Forma normal analisada | Correção aplicada |
+|---|---|---|---|
+| 1 | USUARIO guardava os papéis da pessoa (cliente, proprietário, corretor…) num único atributo multivalorado. Em tabela, isso viraria uma lista dentro de uma célula ou colunas repetidas (papel1, papel2…). | 1FN | Tabela usuario_papel (id_usuario, tp_papel), uma linha por papel. A consulta “quem é corretor?” passa a ser um filtro simples. |
+| 2 | O endereço do imóvel era um atributo composto (logradouro, número, complemento, bairro, CEP, cidade e UF). Guardado num único campo de texto, não seria atômico: buscar por bairro ou por cidade exigiria recortar o texto. | 1FN | Colunas atômicas nm_logradouro, nr_endereco, ds_complemento e nm_bairro; CEP, cidade e UF seguiram para o registro 4. |
+| 3 | AUDITORIA guardava em ds_valores todos os campos alterados e seus valores num único texto (“dt_assinatura: vazio → 15/09/2026; st_contrato: rascunho → assinado”). | 1FN | Tabela auditoria_campo (id_auditoria, nm_campo, ds_valor_anterior, ds_valor_novo), um registro por campo alterado (RN40). |
+| 4 | O imóvel guardava nr_cep, nm_cidade e sg_uf, e o perfil de interesse guardava a cidade como texto. Como nr_cep → nm_cidade, sg_uf, a cidade e a UF eram campos carona: dependiam do CEP, e não de id_imovel. | 3FN | Tabelas cep (nr_cep, id_cidade, tp_cep) e cidade (id_cidade, nm_cidade, sg_uf); o imóvel guarda só nr_cep (LOCALIZA) e o perfil aponta para a cidade (PREFERE). RN41 e RN42. |
+| 5 | A conta a receber apontava para o contrato (GERA RECEITA) e também para o financiamento (LIBERA). Como o financiamento é identificado pelo próprio contrato, a FK de LIBERA guardava de novo um contrato: era determinada por id_contrato, que não é chave da conta a receber, e as duas referências podiam se contradizer (a conta de um contrato apontando para o financiamento de outro). | 3FN | LIBERA foi removido sem perda de informação: o financiamento de uma conta é encontrado pelo contrato da conta (financiamento.id_contrato = conta_receber.id_contrato). RN23 e RN27 foram reescritas. |
+
+**Principais dependências funcionais do modelo final:**
+
+| Dependência | Onde fica |
+|---|---|
+| id_usuario → nm_usuario, nr_cpf_cnpj, ds_email… · nr_cpf_cnpj → id_usuario (chave candidata) | usuario |
+| nr_cep → id_cidade · id_cidade → nm_cidade, sg_uf · (nm_cidade, sg_uf) → id_cidade | cep, cidade |
+| id_imovel → id_proprietario, nr_cep, nm_logradouro, nr_endereco, nm_bairro, valores, situação | imovel |
+| id_proposta → id_imovel, id_cliente, vl_proposto, vl_anunciado, st_proposta | proposta |
+| id_contrato → id_proposta, vl_final, pc_corretagem… · (vl_final, pc_corretagem) → vl_corretagem, que é derivado e não é armazenado | contrato |
+| (id_contrato, id_corretor) → pc_comissao, tp_regra_pagamento, st_comissao | comissao |
+| id_contrato → id_instituicao, vl_financiado, dt_liberacao | financiamento |
+| (id_conta_receber, nr_recebimento) → id_conta, dt_recebimento, vl_recebido · a situação da conta é calculada a partir das baixas | recebimento |
+| (id_auditoria, nm_campo) → ds_valor_anterior, ds_valor_novo | auditoria_campo |
+
+### 18.6 Antes e depois da normalização
+
+**Estrutura original** (dados fictícios): cidade e UF no imóvel.
+
+| id_imovel | nm_logradouro | nr_endereco | nm_bairro | nr_cep | nm_cidade | sg_uf |
+|---|---|---|---|---|---|---|
+| 101 | Rua das Flores | 120 | Gonzaga | 11060-001 | Santos | SP |
+| 102 | Rua das Flores | 300 | Gonzaga | 11060-001 | Santos | SP |
+| 103 | Rua do Sol | 30 | Centro | 11310-050 | São Vicente | SP |
+| 104 | Rua do Sol | 85 | Centro | 11310-050 | S. Vicente | SP |
+
+Anomalias que essa estrutura permite:
+
+- **Atualização:** corrigir o nome de uma cidade exige alterar todos os imóveis daquele CEP; basta esquecer um para “São Vicente” e “S. Vicente” conviverem (linhas 103 e 104), e a busca por cidade deixa de encontrar o imóvel 104.
+- **Inserção:** não é possível registrar a que cidade pertence um CEP sem antes cadastrar um imóvel nele; e o perfil de interesse, com a cidade digitada, não casa com o imóvel quando a grafia difere.
+- **Exclusão:** ao excluir o último imóvel de um CEP, perde-se a informação de que aquele CEP pertence àquela cidade.
+
+**Estrutura corrigida:**
+
+| cidade: id_cidade | nm_cidade | sg_uf |
+|---|---|---|
+| 1 | Santos | SP |
+| 2 | São Vicente | SP |
+
+| cep: nr_cep | id_cidade | tp_cep |
+|---|---|---|
+| 11060-001 | 1 | logradouro |
+| 11310-050 | 2 | logradouro |
+
+| imovel: id_imovel | nm_logradouro | nr_endereco | nm_bairro | nr_cep |
+|---|---|---|---|---|
+| 101 | Rua das Flores | 120 | Gonzaga | 11060-001 |
+| 102 | Rua das Flores | 300 | Gonzaga | 11060-001 |
+| 103 | Rua do Sol | 30 | Centro | 11310-050 |
+| 104 | Rua do Sol | 85 | Centro | 11310-050 |
+
+**Justificativa técnica:** a cidade passa a existir uma única vez, a UF é escrita uma vez por cidade e o CEP é cadastrado uma vez. A junção imovel → cep → cidade devolve exatamente a cidade e a UF de cada imóvel, sem perda de informação, porque nr_cep é a chave de cep e id_cidade é a chave de cidade. Logradouro e bairro continuam no imóvel porque um CEP geral cobre a cidade inteira e não determina rua nem bairro (17.25).
+
+O mesmo raciocínio, em resumo, para as outras correções:
+
+| Antes | Depois |
+|---|---|
+| usuario(id_usuario, …, tp_papel = “cliente, proprietário”) | usuario(id_usuario, …) + usuario_papel(id_usuario, tp_papel): (7, cliente), (7, proprietário) |
+| auditoria(id_auditoria, …, ds_valores = “dt_assinatura: vazio → 15/09/2026; st_contrato: rascunho → assinado”) | auditoria(id_auditoria, …) + auditoria_campo: (501, dt_assinatura, vazio, 15/09/2026), (501, st_contrato, rascunho, assinado) |
+| conta_receber(…, id_contrato, id_contrato_financiamento): a FK de LIBERA repetia o contrato | conta_receber(…, id_contrato); o financiamento é financiamento(**id_contrato**, …), encontrado pelo mesmo contrato |
+
+### 18.7 O que parece redundância, mas não é
+
+| Situação | Por que fica |
+|---|---|
+| proposta.vl_anunciado e contrato.vl_final | Valores congelados no momento da proposta e do contrato. Dependem da proposta e do contrato, e não do preço atual do imóvel, que pode mudar depois (17.27, PO03). |
+| conta_receber.tp_papel_pagador e conta_pagar.tp_papel_custeio | Dizem em que papel a pessoa paga ou arca com aquela conta. Uma pessoa pode ser cliente e proprietária ao mesmo tempo, então o papel não é determinado pelo usuário (RN27, RN28). |
+| nm_bairro no imóvel e no perfil de interesse | No imóvel é o bairro onde ele fica; no perfil é o bairro desejado pelo cliente. São fatos diferentes, e o CEP não determina o bairro. |
+| conversa.id_estagio e historico_estagio | Redundância controlada: o estágio atual é sempre o do registro mais recente do histórico (RN14). Fica na conversa para o quadro do funil não precisar procurar o último registro de cada conversa; as duas gravações acontecem na mesma operação. |
+| vl_corretagem, vl_comissao, st_conta e dt_atualizacao | Não são armazenados: são calculados a partir de outros campos, o que evita guardar um resultado que poderia ficar desatualizado. |
+
+### 18.8 Modelo lógico normalizado
+
+Notação: **chave primária** em negrito e _chave estrangeira_ em itálico.
+
+**Pessoas e localização**
+
+- usuario(**id_usuario**, nm_usuario, nr_cpf_cnpj, ds_email, ds_senha_hash, nr_creci, tp_origem, fl_ativo, dt_cadastro, dt_anonimizacao)
+- usuario_papel(_**id_usuario**_, **tp_papel**)
+- telefone(**id_telefone**, _id_usuario_, nr_telefone, tp_telefone, fl_principal)
+- cidade(**id_cidade**, nm_cidade, sg_uf)
+- cep(**nr_cep**, _id_cidade_, tp_cep)
+- perfil_interesse(_**id_usuario**_, **nr_perfil**, _id_cidade_, tp_finalidade, tp_imovel, nm_bairro, vl_minimo, vl_maximo, qt_quartos_min)
+
+**Imóveis**
+
+- imovel(**id_imovel**, cd_imobizi, _id_proprietario_, _id_corretor_responsavel_, _nr_cep_, tp_imovel, tp_finalidade, nm_logradouro, nr_endereco, ds_complemento, nm_bairro, vl_area_util, vl_area_total, qt_quartos, qt_banheiros, qt_vagas_garagem, vl_venda, vl_aluguel, st_imovel, ds_anuncio, dt_cadastro)
+- foto(_**id_imovel**_, **nr_foto**, nr_ordem, ds_url)
+- caracteristica(**id_caracteristica**, nm_caracteristica)
+- imovel_caracteristica(_**id_caracteristica**_, _**id_imovel**_)
+
+**Funil / CRM**
+
+- funil_estagio(**id_estagio**, nm_estagio, nr_ordem, ds_cor)
+- conversa(**id_conversa**, _id_cliente_, _id_corretor_, _id_estagio_, st_conversa, ds_notas, dt_inicio)
+- conversa_imovel(_**id_imovel**_, _**id_conversa**_, dt_interesse)
+- mensagem(_**id_conversa**_, **nr_mensagem**, cd_externo, tp_direcao, tp_canal, ds_corpo, dt_mensagem)
+- historico_estagio(_**id_conversa**_, **dt_alteracao**, _id_estagio_, _id_usuario_)
+- tarefa(**id_tarefa**, _id_conversa_, _id_corretor_, ds_titulo, ds_tarefa, dt_vencimento, st_tarefa)
+- tag(**id_tag**, nm_tag)
+- conversa_tag(_**id_conversa**_, _**id_tag**_)
+
+**Negociação**
+
+- visita(**id_visita**, _id_imovel_, _id_cliente_, _id_corretor_, dt_visita, st_visita, ds_feedback)
+- proposta(**id_proposta**, _id_imovel_, _id_cliente_, _id_corretor_, _id_autorizador_, _id_proposta_respondida_, _id_visita_, vl_proposto, vl_anunciado, ds_condicoes, st_proposta, dt_proposta, dt_autorizacao)
+- contrato(**id_contrato**, _id_proposta_, tp_contrato, tp_forma_pagamento, vl_final, pc_corretagem, pc_administracao, nr_dia_vencimento, dt_assinatura, dt_inicio, dt_fim, st_contrato, dt_cancelamento, ds_motivo_cancelamento)
+- documento(_**id_contrato**_, **nr_documento**, nm_documento, ds_url)
+- comissao(_**id_contrato**_, _**id_corretor**_, pc_comissao, tp_regra_pagamento, st_comissao, _id_aprovador_, dt_aprovacao, _id_conta_pagar_)
+
+**Financeiro**
+
+- financiamento(_**id_contrato**_, _id_instituicao_, vl_financiado, vl_entrada, nr_parcelas, pc_juros_aa, st_financiamento, dt_aprovacao, dt_liberacao)
+- categoria_financeira(**id_categoria**, nm_categoria, tp_categoria)
+- conta_bancaria(**id_conta**, nm_apelido, nm_instituicao, tp_conta_bancaria, fl_ativa)
+- conta_receber(**id_conta_receber**, _id_contrato_, _id_categoria_, _id_pagador_, tp_papel_pagador, tp_origem_receita, ds_conta, dt_competencia, vl_receber, dt_vencimento, fl_cancelada)
+- recebimento(_**id_conta_receber**_, **nr_recebimento**, _id_conta_, dt_recebimento, vl_recebido, tp_forma_pagamento)
+- conta_pagar(**id_conta_pagar**, _id_contrato_, _id_categoria_, _id_favorecido_, _id_custeador_, tp_papel_custeio, tp_despesa, ds_conta, dt_competencia, vl_pagar, dt_vencimento, fl_cancelada)
+- pagamento(_**id_conta_pagar**_, **nr_pagamento**, _id_conta_, _id_usuario_, dt_pagamento, vl_pago, tp_forma_pagamento)
+
+**Integração N8N e auditoria**
+
+- automacao_execucao(_**id_conversa**_, **nr_execucao**, cd_demanda, st_execucao, ds_demanda, ds_criterios, ds_conteudo_enviado, ds_resumo, ds_erro, dt_execucao, dt_envio)
+- automacao_log(_**id_conversa**_, _**nr_execucao**_, **nr_log**, nm_evento, ds_evento, ds_dados, dt_log)
+- auditoria(**id_auditoria**, _id_usuario_, nm_entidade, cd_registro, tp_acao, dt_acao)
+- auditoria_campo(_**id_auditoria**_, **nm_campo**, ds_valor_anterior, ds_valor_novo)
+
+| Tabela | Origem no DER | Chave primária | Chaves estrangeiras |
+|---|---|---|---|
+| usuario | USUARIO (forte) | (id_usuario) | — |
+| usuario_papel | Atributo multivalorado USUARIO.tp_papel | (id_usuario, tp_papel) | id_usuario → usuario |
+| telefone | TELEFONE (forte) | (id_telefone) | id_usuario → usuario |
+| cidade | CIDADE (forte) | (id_cidade) | — |
+| cep | CEP (forte) | (nr_cep) | id_cidade → cidade |
+| perfil_interesse | PERFIL_INTERESSE (fraca) | (id_usuario, nr_perfil) | id_usuario → usuario; id_cidade → cidade |
+| imovel | IMOVEL (forte) | (id_imovel) | id_proprietario → usuario; id_corretor_responsavel → usuario; nr_cep → cep |
+| foto | FOTO (fraca) | (id_imovel, nr_foto) | id_imovel → imovel |
+| caracteristica | CARACTERISTICA (forte) | (id_caracteristica) | — |
+| imovel_caracteristica | Relacionamento N:N APRESENTA | (id_caracteristica, id_imovel) | id_caracteristica → caracteristica; id_imovel → imovel |
+| funil_estagio | FUNIL_ESTAGIO (forte) | (id_estagio) | — |
+| conversa | CONVERSA (forte) | (id_conversa) | id_cliente → usuario; id_corretor → usuario; id_estagio → funil_estagio |
+| conversa_imovel | CONVERSA_IMOVEL (associativa) | (id_imovel, id_conversa) | id_imovel → imovel; id_conversa → conversa |
+| mensagem | MENSAGEM (fraca) | (id_conversa, nr_mensagem) | id_conversa → conversa |
+| historico_estagio | HISTORICO_ESTAGIO (associativa) | (id_conversa, dt_alteracao) | id_conversa → conversa; id_estagio → funil_estagio; id_usuario → usuario |
+| tarefa | TAREFA (forte) | (id_tarefa) | id_conversa → conversa; id_corretor → usuario |
+| tag | TAG (forte) | (id_tag) | — |
+| conversa_tag | Relacionamento N:N MARCA | (id_conversa, id_tag) | id_conversa → conversa; id_tag → tag |
+| visita | VISITA (associativa) | (id_visita) | id_imovel → imovel; id_cliente → usuario; id_corretor → usuario |
+| proposta | PROPOSTA (associativa) | (id_proposta) | id_imovel → imovel; id_cliente → usuario; id_corretor → usuario; id_autorizador → usuario; id_proposta_respondida → proposta; id_visita → visita |
+| contrato | CONTRATO (forte) | (id_contrato) | id_proposta → proposta |
+| documento | DOCUMENTO (fraca) | (id_contrato, nr_documento) | id_contrato → contrato |
+| comissao | COMISSAO (associativa) | (id_contrato, id_corretor) | id_contrato → contrato; id_corretor → usuario; id_aprovador → usuario; id_conta_pagar → conta_pagar |
+| financiamento | FINANCIAMENTO (fraca) | (id_contrato) | id_contrato → contrato; id_instituicao → usuario |
+| categoria_financeira | CATEGORIA_FINANCEIRA (forte) | (id_categoria) | — |
+| conta_bancaria | CONTA_BANCARIA (forte) | (id_conta) | — |
+| conta_receber | CONTA_RECEBER (forte) | (id_conta_receber) | id_contrato → contrato; id_categoria → categoria_financeira; id_pagador → usuario |
+| recebimento | RECEBIMENTO (fraca) | (id_conta_receber, nr_recebimento) | id_conta_receber → conta_receber; id_conta → conta_bancaria |
+| conta_pagar | CONTA_PAGAR (forte) | (id_conta_pagar) | id_contrato → contrato; id_categoria → categoria_financeira; id_favorecido → usuario; id_custeador → usuario |
+| pagamento | PAGAMENTO (fraca) | (id_conta_pagar, nr_pagamento) | id_conta_pagar → conta_pagar; id_conta → conta_bancaria; id_usuario → usuario |
+| automacao_execucao | AUTOMACAO_EXECUCAO (fraca) | (id_conversa, nr_execucao) | id_conversa → conversa |
+| automacao_log | AUTOMACAO_LOG (fraca) | (id_conversa, nr_execucao, nr_log) | (id_conversa, nr_execucao) → automacao_execucao |
+| auditoria | AUDITORIA (forte) | (id_auditoria) | id_usuario → usuario |
+| auditoria_campo | AUDITORIA_CAMPO (fraca) | (id_auditoria, nm_campo) | id_auditoria → auditoria |
+
+Os diagramas abaixo seguem o estilo do dbdiagram.io, em quatro folhas A3 sem nenhuma linha cruzando outra. Caixa tracejada é atalho para uma tabela detalhada em outro bloco.
+
+#### Modelo lógico — folha 1: Pessoas, localização e imóveis
+
+![Modelo lógico — Pessoas, localização e imóveis](docs/modelo-logico/logico-1.png)
+
+#### Modelo lógico — folha 2: Funil / CRM, integração N8N e auditoria
+
+![Modelo lógico — Funil / CRM, integração N8N e auditoria](docs/modelo-logico/logico-2.png)
+
+#### Modelo lógico — folha 3: Negociação
+
+![Modelo lógico — Negociação](docs/modelo-logico/logico-3.png)
+
+#### Modelo lógico — folha 4: Financeiro
+
+![Modelo lógico — Financeiro](docs/modelo-logico/logico-4.png)
+
+### 18.9 Atualização da documentação
+
+| Item do checklist de entrega | Situação |
+|---|---|
+| Modelo lógico atualizado | Feito: 18.8 e folhas A3 em `docs/modelo-logico/` |
+| Dicionário de dados atualizado | Feito: dicionário conceitual (seção 15) e dicionário lógico com tipos, chaves, obrigatoriedade e restrições ([`dicionario-logico.md`](docs/modelo-logico/dicionario-logico.md)) |
+| PK e FK conferidas | Feito: 34 PKs e 57 FKs conferidas contra as cardinalidades da seção 14 |
+| Relacionamentos revisados | Feito: LIBERA removido; PREFERE, LOCALIZA, AGRUPA e DETALHA incluídos (seções 13 e 14) |
+| Correções de normalização justificadas | Feito: registros da 18.5 e justificativas 17.3, 17.8, 17.25, 17.26 e 17.27 |
+| Coerência entre modelo lógico e dicionário de dados verificada | Feito: o dicionário lógico é gerado do mesmo modelo que gera os diagramas, o DBML e o Mermaid |
+
+### 18.10 Reflexão final
+
+**Por que a criação de tabelas não garante, isoladamente, um banco de dados corretamente projetado?**
+
+Porque uma tabela pode ser criada e aceitar dados mesmo guardando o mesmo fato em vários lugares. Foi o que vimos no imóvel com cidade e UF: a tabela funcionava, mas a cidade dependia do CEP, e não da chave do imóvel. Essa dependência funcional escondida gerava redundância, e a redundância abria espaço para anomalias: a mesma cidade escrita de dois jeitos, um CEP que só existia enquanto houvesse imóvel nele, uma correção que precisava ser repetida em várias linhas. A normalização parte das dependências entre os atributos para decidir onde cada fato deve ficar. Com cada fato guardado uma única vez, e as tabelas ligadas por chaves primárias e estrangeiras, o próprio banco garante a integridade dos dados, em vez de depender do cuidado de quem digita.
+
+
+## 19. Conclusão
 
 O modelo conceitual do CRMoveis foi construído na ordem pedida pelo manual: a caracterização da imobiliária levou aos processos, os processos revelaram os problemas, os problemas viraram requisitos e regras, e as regras definiram as entidades, os relacionamentos e as cardinalidades do DER. Cada decisão aponta para o requisito ou a regra que a sustenta.
+
+O modelo, com 31 entidades e 49 relacionamentos, integra atendimento, imóveis, negociação e financeiro. A normalização da [seção 18](#18-normalização-1fn-2fn-e-3fn) transformou o modelo conceitual em um modelo lógico de 34 tabelas na 3FN, sem grupos repetitivos, sem dependências parciais e sem campos carona, com as poucas redundâncias que restaram justificadas. O modelo lógico, o dicionário lógico e o script para o dbdiagram estão em [`docs/modelo-logico/`](docs/modelo-logico/).
+
+**Fora do escopo desta entrega:** copropriedade de imóveis (vários proprietários), fiador e caução, reajuste anual do aluguel e multa e juros por atraso. Essas situações não tiveram regra levantada nesta etapa e podem ser incorporadas nas próximas.
 
 ## Arquivos do repositório
 
@@ -1117,17 +1484,19 @@ CRMoveis/
 ├── README.md
 └── docs/
     ├── der/
-    │   ├── CRMoveis-DER-conceitual.pdf     
-    │   ├── visao-geral.png                  
-    │   └── folha-1.png … folha-6.png        
+    │   ├── CRMoveis-DER-conceitual.pdf     # DER em 7 folhas A3
+    │   ├── visao-geral.png                  # todas as folhas numa imagem
+    │   └── folha-1.png … folha-7.png        # imagens usadas neste README
     ├── fluxogramas/
-    │   ├── CRMoveis-fluxogramas.pdf        
+    │   ├── CRMoveis-fluxogramas.pdf        # 5 fluxogramas em A4
     │   └── fluxo-1.png … fluxo-5.png
     ├── requisitos/
     │   ├── CRMoveis-requisitos-e-regras.pdf
     │   └── CRMoveis-requisitos-e-regras.md
-    └── modelo-logico/                       
-        ├── CRMoveis-modelo-logico-ampliado.pdf
-        ├── crmoveis.dbml                    
-        └── crmoveis.mmd                     
+    └── modelo-logico/                       # modelo lógico normalizado (3FN)
+        ├── CRMoveis-modelo-logico-normalizado.pdf   # normalização, esquema e dicionário
+        ├── dicionario-logico.md             # dicionário de dados lógico
+        ├── logico-1.png … logico-4.png      # diagramas lógicos usados neste README
+        ├── crmoveis.dbml                    # colar em dbdiagram.io
+        └── crmoveis.mmd                     # Mermaid, para Miro ou mermaid.live
 ```
