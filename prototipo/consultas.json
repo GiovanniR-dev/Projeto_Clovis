@@ -1,0 +1,202 @@
+{
+ "gerenciais": [
+  {
+   "id": "G01",
+   "titulo": "Funil comercial",
+   "pergunta": "Quantas conversas chegaram a cada etapa do funil e quanto se perde de uma etapa para a outra?",
+   "decisao": "Mostra em que etapa os clientes desistem. Se a queda maior esta entre visita e proposta, o problema e a selecao dos imoveis visitados; se esta no comeco, e o tempo de resposta.",
+   "sql": "SELECT fe.nr_ordem AS ordem, fe.nm_estagio AS etapa,\n       count(DISTINCT h.id_conversa) AS conversas_que_chegaram,\n       round(100.0 * count(DISTINCT h.id_conversa) / (SELECT count(*) FROM conversa), 1) AS pct_do_total\n  FROM funil_estagio fe\n  LEFT JOIN historico_estagio h ON h.id_estagio = fe.id_estagio\n GROUP BY fe.id_estagio, fe.nr_ordem, fe.nm_estagio\n ORDER BY fe.nr_ordem;"
+  },
+  {
+   "id": "G02",
+   "titulo": "Origem dos clientes",
+   "pergunta": "De onde vem os clientes que fecham negocio?",
+   "decisao": "Indica onde investir a divulgacao: o canal com mais contratos por cliente merece mais verba; o que so traz contatos precisa de outra abordagem.",
+   "sql": "SELECT coalesce(oc.nm_origem, '(nao informada)') AS origem,\n       count(DISTINCT cl.id_usuario) AS clientes,\n       count(DISTINCT cv.id_conversa) AS conversas,\n       count(DISTINCT ct.id_contrato) FILTER (WHERE ct.dt_assinatura IS NOT NULL) AS contratos_assinados,\n       round(100.0 * count(DISTINCT ct.id_contrato) FILTER (WHERE ct.dt_assinatura IS NOT NULL)\n             / NULLIF(count(DISTINCT cl.id_usuario), 0), 1) AS conversao_pct\n  FROM cliente cl\n  JOIN usuario u ON u.id_usuario = cl.id_usuario\n  LEFT JOIN origem_contato oc ON oc.id_origem = u.id_origem\n  LEFT JOIN conversa cv ON cv.id_cliente = cl.id_usuario\n  LEFT JOIN proposta p ON p.id_cliente = cl.id_usuario\n  LEFT JOIN contrato ct ON ct.id_proposta = p.id_proposta\n GROUP BY oc.nm_origem\n ORDER BY contratos_assinados DESC, clientes DESC;"
+  },
+  {
+   "id": "G03",
+   "titulo": "Desempenho dos corretores",
+   "pergunta": "Quanto cada corretor atende, visita, propoe e fecha, e quanto ja tem de comissao liberada?",
+   "decisao": "Apoia a distribuicao de novos contatos e o acompanhamento individual: quem visita muito e fecha pouco precisa de apoio na negociacao.",
+   "sql": "SELECT u.nm_usuario AS corretor,\n       CASE WHEN co.dt_fim IS NULL THEN 'ativo' ELSE 'saiu em ' || to_char(co.dt_fim, 'DD/MM/YYYY') END AS situacao,\n       (SELECT count(*) FROM conversa c WHERE c.id_corretor = co.id_usuario) AS conversas,\n       (SELECT count(*) FROM visita v WHERE v.id_corretor = co.id_usuario AND v.st_visita = 'realizada') AS visitas,\n       (SELECT count(*) FROM proposta p WHERE p.id_corretor = co.id_usuario) AS propostas,\n       (SELECT count(*) FROM proposta p JOIN contrato ct ON ct.id_proposta = p.id_proposta\n         WHERE p.id_corretor = co.id_usuario AND ct.dt_assinatura IS NOT NULL) AS contratos,\n       (SELECT coalesce(sum(vc.vl_comissao), 0) FROM vw_comissao vc\n         WHERE vc.id_corretor = co.id_usuario AND vc.st_comissao = 'liberada') AS comissao_liberada\n  FROM corretor co\n  JOIN usuario u ON u.id_usuario = co.id_usuario\n ORDER BY contratos DESC, visitas DESC;"
+  },
+  {
+   "id": "G04",
+   "titulo": "Receita por mes",
+   "pergunta": "Quanto a imobiliaria faturou por mes, separando corretagem, taxa de administracao e multas?",
+   "decisao": "Mostra a dependencia das vendas (receita irregular) e das locacoes (receita recorrente) e ajuda a planejar o caixa e as metas.",
+   "sql": "WITH receitas AS (\n    SELECT date_trunc('month', r.dt_recebimento)::date AS mes,\n           CASE WHEN cf.cd_categoria IN ('corretagem_venda', 'intermediacao_locacao') THEN r.vl_recebido ELSE 0 END AS corretagem,\n           CASE WHEN cf.cd_categoria = 'aluguel' THEN r.vl_recebido - cp.vl_pagar ELSE 0 END AS taxa_administracao,\n           CASE WHEN cf.cd_categoria = 'multa_rescisoria' THEN r.vl_recebido ELSE 0 END AS multa\n      FROM recebimento r\n      JOIN conta_receber cr ON cr.id_conta_receber = r.id_conta_receber\n      JOIN categoria_financeira cf ON cf.id_categoria = cr.id_categoria\n      LEFT JOIN conta_pagar cp ON cp.id_conta_receber_origem = r.id_conta_receber\n                              AND cp.nr_recebimento_origem = r.nr_recebimento)\nSELECT to_char(mes, 'MM/YYYY') AS mes,\n       sum(corretagem) AS corretagem_e_intermediacao,\n       sum(taxa_administracao) AS taxa_de_administracao,\n       sum(multa) AS multas,\n       sum(corretagem + taxa_administracao + multa) AS receita_total\n  FROM receitas\n WHERE mes >= DATE '2026-01-01'\n GROUP BY mes\n ORDER BY mes;"
+  },
+  {
+   "id": "G05",
+   "titulo": "Inadimplencia",
+   "pergunta": "Quais alugueis estao em atraso, de quem e ha quantos dias?",
+   "decisao": "Define a ordem da cobranca e quando acionar a garantia do contrato; tambem mostra se um inquilino atrasa com frequencia.",
+   "sql": "SELECT u.nm_usuario AS inquilino, cr.id_contrato AS contrato, cr.ds_conta AS conta,\n       to_char(cr.dt_vencimento, 'DD/MM/YYYY') AS vencimento,\n       cr.vl_receber AS valor, cr.vl_baixado AS recebido, cr.vl_receber - cr.vl_baixado AS saldo,\n       CURRENT_DATE - cr.dt_vencimento AS dias_de_atraso\n  FROM vw_conta_receber cr\n  JOIN usuario u ON u.id_usuario = cr.id_pagador\n WHERE cr.st_conta = 'atrasada'\n ORDER BY dias_de_atraso DESC;"
+  },
+  {
+   "id": "G06",
+   "titulo": "Repasses aos proprietarios",
+   "pergunta": "Quais repasses estao para vencer ou atrasados?",
+   "decisao": "O repasse tem prazo de 5 dias uteis (PO05): a lista organiza os pagamentos do financeiro e evita multa e desgaste com o proprietario.",
+   "sql": "SELECT u.nm_usuario AS proprietario, cp.ds_conta AS conta,\n       to_char(cp.dt_vencimento, 'DD/MM/YYYY') AS vencimento, cp.vl_pagar AS valor, cp.st_conta AS situacao\n  FROM vw_conta_pagar cp\n  JOIN categoria_financeira cf ON cf.id_categoria = cp.id_categoria\n  JOIN usuario u ON u.id_usuario = cp.id_favorecido\n WHERE cf.cd_categoria = 'repasse' AND cp.st_conta IN ('prevista', 'parcial', 'atrasada')\n ORDER BY cp.dt_vencimento;"
+  },
+  {
+   "id": "G07",
+   "titulo": "Imoveis mais procurados",
+   "pergunta": "Quais imoveis despertam mais interesse, visitas e propostas?",
+   "decisao": "Mostra o perfil de imovel que o mercado procura: orienta a captacao de imoveis parecidos e o destaque nos anuncios.",
+   "sql": "SELECT i.cd_imobizi AS codigo, t.nm_tipo_imovel AS tipo, b.nm_bairro AS bairro, ci.nm_cidade AS cidade, i.st_imovel AS situacao,\n       count(DISTINCT x.id_conversa) AS interesses, count(DISTINCT v.id_visita) AS visitas, count(DISTINCT p.id_proposta) AS propostas\n  FROM imovel i\n  JOIN tipo_imovel t ON t.id_tipo_imovel = i.id_tipo_imovel\n  JOIN bairro b ON b.id_bairro = i.id_bairro\n  JOIN cep ON cep.nr_cep = i.nr_cep\n  JOIN cidade ci ON ci.id_cidade = cep.id_cidade\n  LEFT JOIN conversa_imovel x ON x.id_imovel = i.id_imovel\n  LEFT JOIN visita v ON v.id_imovel = i.id_imovel\n  LEFT JOIN proposta p ON p.id_imovel = i.id_imovel\n GROUP BY i.id_imovel, t.nm_tipo_imovel, b.nm_bairro, ci.nm_cidade\n ORDER BY interesses DESC, visitas DESC, propostas DESC\n LIMIT 10;"
+  },
+  {
+   "id": "G08",
+   "titulo": "Imoveis parados",
+   "pergunta": "Quais imoveis disponiveis nao recebem visita ha mais de 60 dias?",
+   "decisao": "Candidatos a rever preco, fotos ou anuncio, ou a conversar com o proprietario sobre a exclusividade.",
+   "sql": "SELECT i.cd_imobizi AS codigo, t.nm_tipo_imovel AS tipo, b.nm_bairro AS bairro, i.tp_finalidade AS finalidade,\n       coalesce(i.vl_venda, i.vl_aluguel) AS valor, to_char(max(v.dt_visita), 'DD/MM/YYYY') AS ultima_visita,\n       CURRENT_DATE - i.dt_cadastro::date AS dias_na_carteira\n  FROM imovel i\n  JOIN tipo_imovel t ON t.id_tipo_imovel = i.id_tipo_imovel\n  JOIN bairro b ON b.id_bairro = i.id_bairro\n  LEFT JOIN visita v ON v.id_imovel = i.id_imovel AND v.st_visita = 'realizada'\n WHERE i.st_imovel = 'disponivel'\n GROUP BY i.id_imovel, t.nm_tipo_imovel, b.nm_bairro\nHAVING max(v.dt_visita) IS NULL OR max(v.dt_visita) < CURRENT_DATE - 60\n ORDER BY max(v.dt_visita) NULLS FIRST, dias_na_carteira DESC;"
+  },
+  {
+   "id": "G09",
+   "titulo": "Demanda × oferta por regiao",
+   "pergunta": "Onde ha mais clientes procurando do que imoveis disponiveis?",
+   "decisao": "Indica onde captar novos imoveis: regiao com muitos perfis e pouca oferta e oportunidade perdida.",
+   "sql": "WITH demanda AS (   -- cada bairro aceito conta o perfil (ABRANGE); perfil sem bairro aceita qualquer bairro da cidade\n    SELECT p.id_cidade, pb.id_bairro, p.tp_finalidade, count(*) AS perfis\n      FROM perfil_interesse p\n      LEFT JOIN perfil_interesse_bairro pb ON pb.id_usuario = p.id_usuario AND pb.nr_perfil = p.nr_perfil\n     GROUP BY p.id_cidade, pb.id_bairro, p.tp_finalidade)\nSELECT ci.nm_cidade AS cidade, coalesce(b.nm_bairro, '(qualquer bairro)') AS bairro, d.tp_finalidade AS finalidade, d.perfis,\n       (SELECT count(*) FROM imovel i JOIN cep ce ON ce.nr_cep = i.nr_cep\n         WHERE i.st_imovel = 'disponivel' AND ce.id_cidade = d.id_cidade\n           AND (d.id_bairro IS NULL OR i.id_bairro = d.id_bairro)\n           AND i.tp_finalidade IN (d.tp_finalidade, 'ambas')) AS imoveis_disponiveis\n  FROM demanda d\n  JOIN cidade ci ON ci.id_cidade = d.id_cidade\n  LEFT JOIN bairro b ON b.id_bairro = d.id_bairro\n ORDER BY d.perfis DESC, imoveis_disponiveis, cidade, bairro;"
+  },
+  {
+   "id": "G10",
+   "titulo": "Tempo ate o contrato",
+   "pergunta": "Quanto tempo leva, em media, do primeiro contato ate a assinatura?",
+   "decisao": "Ajuda a prever o fechamento das negociacoes em andamento e a medir se as melhorias no atendimento encurtam o ciclo.",
+   "sql": "SELECT ct.tp_contrato AS tipo, count(*) AS contratos,\n       round(avg(ct.dt_assinatura - x.primeiro_contato)) AS dias_em_media,\n       min(ct.dt_assinatura - x.primeiro_contato) AS menor, max(ct.dt_assinatura - x.primeiro_contato) AS maior\n  FROM contrato ct\n  JOIN proposta p ON p.id_proposta = ct.id_proposta\n  JOIN LATERAL (SELECT min(cv.dt_inicio)::date AS primeiro_contato\n                  FROM conversa cv JOIN conversa_imovel ci ON ci.id_conversa = cv.id_conversa\n                 WHERE cv.id_cliente = p.id_cliente AND ci.id_imovel = p.id_imovel) x ON TRUE\n WHERE ct.dt_assinatura IS NOT NULL\n GROUP BY ct.tp_contrato;"
+  },
+  {
+   "id": "G11",
+   "titulo": "Descontos nas propostas",
+   "pergunta": "Qual e o desconto medio pedido e quantas propostas precisaram de autorizacao?",
+   "decisao": "Calibra o preco anunciado: descontos altos e frequentes indicam imoveis acima do mercado; autorizacoes frequentes indicam a regra de 10% muito apertada.",
+   "sql": "SELECT st_proposta AS situacao, count(*) AS propostas,\n       round(avg(100 * (1 - vl_proposto / vl_anunciado)), 1) AS desconto_medio_pct,\n       count(*) FILTER (WHERE id_autorizador IS NOT NULL) AS com_autorizacao\n  FROM proposta\n GROUP BY st_proposta\n ORDER BY propostas DESC;"
+  },
+  {
+   "id": "G12",
+   "titulo": "Receita recorrente prevista",
+   "pergunta": "Quanto de aluguel e de taxa de administracao esta previsto para os proximos tres meses?",
+   "decisao": "Base do planejamento de caixa: a receita recorrente das locacoes cobre os custos fixos?",
+   "sql": "SELECT to_char(m, 'MM/YYYY') AS mes, count(*) AS locacoes_vigentes,\n       sum(ct.vl_final) AS aluguel_previsto,\n       round(sum(ct.vl_final * ct.pc_administracao / 100), 2) AS taxa_prevista\n  FROM contrato ct\n CROSS JOIN generate_series(date_trunc('month', CURRENT_DATE) + INTERVAL '1 month',\n                            date_trunc('month', CURRENT_DATE) + INTERVAL '3 month', INTERVAL '1 month') AS m\n WHERE ct.tp_contrato = 'locacao' AND ct.st_contrato = 'vigente' AND m::date <= ct.dt_fim\n GROUP BY m\n ORDER BY m;"
+  },
+  {
+   "id": "G13",
+   "titulo": "Tempo de primeira resposta",
+   "pergunta": "Quanto tempo cada corretor leva para responder o primeiro contato no WhatsApp?",
+   "decisao": "Mede o atendimento contra a meta do RNF05; corretor com resposta lenta perde clientes no comeco do funil.",
+   "sql": "WITH t AS (\n    SELECT cv.id_conversa, cv.id_corretor,\n           min(m.dt_mensagem) FILTER (WHERE m.tp_direcao = 'entrada') AS primeira_entrada,\n           min(m.dt_mensagem) FILTER (WHERE m.tp_direcao = 'saida') AS primeira_saida\n      FROM conversa cv JOIN mensagem m ON m.id_conversa = cv.id_conversa\n     GROUP BY cv.id_conversa, cv.id_corretor)\nSELECT coalesce(u.nm_usuario, '(sem corretor)') AS corretor, count(*) AS conversas,\n       round(avg(extract(epoch FROM primeira_saida - primeira_entrada) / 60)) AS minutos_em_media\n  FROM t LEFT JOIN usuario u ON u.id_usuario = t.id_corretor\n WHERE primeira_saida > primeira_entrada\n GROUP BY u.nm_usuario\n ORDER BY minutos_em_media;"
+  },
+  {
+   "id": "G14",
+   "titulo": "Automacao N8N",
+   "pergunta": "Quantas demandas a automacao recebeu, enviou e em quantas falhou?",
+   "decisao": "Mostra se a automacao esta cumprindo o papel de responder sozinha e quando e preciso revisar o fluxo do N8N ou o seletor de imoveis.",
+   "sql": "SELECT st_execucao AS situacao, count(*) AS execucoes,\n       round(100.0 * count(*) / sum(count(*)) OVER (), 1) AS pct,\n       round(avg(extract(epoch FROM dt_envio - dt_execucao) / 60), 1) AS minutos_ate_enviar\n  FROM automacao_execucao\n GROUP BY st_execucao\n ORDER BY execucoes DESC;"
+  },
+  {
+   "id": "G15",
+   "titulo": "Demanda × oferta por tipo de imovel",
+   "pergunta": "Quais tipos de imovel os clientes procuram, comparados com os imoveis disponiveis de cada tipo?",
+   "decisao": "Orienta a captacao: tipo com muitos perfis e pouca oferta e o primeiro a captar; tipo com oferta e sem procura pede revisao de preco ou de anuncio. Perfis sem tipo aceitam qualquer tipo e nao entram na contagem.",
+   "sql": "WITH demanda AS (\n    SELECT pt.id_tipo_imovel, p.tp_finalidade, count(*) AS perfis\n      FROM perfil_interesse_tipo pt\n      JOIN perfil_interesse p ON p.id_usuario = pt.id_usuario AND p.nr_perfil = pt.nr_perfil\n     GROUP BY pt.id_tipo_imovel, p.tp_finalidade),\noferta AS (\n    SELECT i.id_tipo_imovel, f.fin AS tp_finalidade, count(*) AS imoveis\n      FROM imovel i\n     CROSS JOIN (VALUES ('venda'), ('locacao')) AS f(fin)\n     WHERE i.st_imovel = 'disponivel' AND i.tp_finalidade IN (f.fin, 'ambas')\n     GROUP BY i.id_tipo_imovel, f.fin)\nSELECT t.nm_tipo_imovel AS tipo, x.fin AS finalidade,\n       coalesce(d.perfis, 0) AS perfis_que_aceitam, coalesce(o.imoveis, 0) AS imoveis_disponiveis\n  FROM tipo_imovel t\n CROSS JOIN (VALUES ('venda'), ('locacao')) AS x(fin)\n  LEFT JOIN demanda d ON d.id_tipo_imovel = t.id_tipo_imovel AND d.tp_finalidade = x.fin\n  LEFT JOIN oferta o ON o.id_tipo_imovel = t.id_tipo_imovel AND o.tp_finalidade = x.fin\n WHERE d.perfis IS NOT NULL OR o.imoveis IS NOT NULL\n ORDER BY perfis_que_aceitam DESC, imoveis_disponiveis, tipo;"
+  }
+ ],
+ "auditoria": [
+  {
+   "id": "A01",
+   "titulo": "Extrato sem lancamento",
+   "verifica": "Movimentos do extrato bancario que nao tem baixa ligada (pendentes) ou cuja soma das baixas nao chega ao valor (parciais).",
+   "acao": "O financeiro identifica cada um: tarifa a lancar como despesa, recebimento esquecido ou credito de origem desconhecida.",
+   "sql": "SELECT cb.nm_apelido AS conta, mb.nr_movimento, to_char(mb.dt_movimento, 'DD/MM/YYYY') AS data,\n       mb.tp_movimento AS tipo, mb.vl_movimento AS valor, mb.vl_conciliado AS conciliado,\n       mb.st_conciliacao AS situacao, mb.ds_historico AS historico\n  FROM vw_movimento_bancario mb\n  JOIN conta_bancaria cb ON cb.id_conta = mb.id_conta\n WHERE mb.st_conciliacao <> 'conciliado'\n ORDER BY mb.dt_movimento;"
+  },
+  {
+   "id": "A02",
+   "titulo": "Baixas sem extrato",
+   "verifica": "Recebimentos e pagamentos registrados ha mais de 3 dias, em periodo com extrato importado, que ainda nao foram conferidos com o extrato.",
+   "acao": "Uma baixa que nao aparece no banco pode ser lancamento errado (valor, data ou conta) ou dinheiro que nao entrou.",
+   "sql": "SELECT 'recebimento' AS baixa, r.id_conta_receber AS conta, r.nr_recebimento AS numero, cb.nm_apelido AS conta_bancaria,\n       to_char(r.dt_recebimento, 'DD/MM/YYYY') AS data, r.vl_recebido AS valor\n  FROM recebimento r JOIN conta_bancaria cb ON cb.id_conta = r.id_conta\n WHERE r.nr_movimento IS NULL AND r.dt_recebimento < CURRENT_DATE - 3\n   AND r.dt_recebimento >= (SELECT min(mb.dt_movimento) FROM movimento_bancario mb WHERE mb.id_conta = r.id_conta)\nUNION ALL\nSELECT 'pagamento', p.id_conta_pagar, p.nr_pagamento, cb.nm_apelido, to_char(p.dt_pagamento, 'DD/MM/YYYY'), p.vl_pago\n  FROM pagamento p JOIN conta_bancaria cb ON cb.id_conta = p.id_conta\n WHERE p.nr_movimento IS NULL AND p.dt_pagamento < CURRENT_DATE - 3\n   AND p.dt_pagamento >= (SELECT min(mb.dt_movimento) FROM movimento_bancario mb WHERE mb.id_conta = p.id_conta)\n ORDER BY data;"
+  },
+  {
+   "id": "A03",
+   "titulo": "Repasses atrasados",
+   "verifica": "Repasses ao proprietario vencidos e nao pagos (o prazo e de 5 dias uteis, PO05).",
+   "acao": "Pagar com prioridade e registrar o motivo do atraso.",
+   "sql": "SELECT cp.id_conta_pagar, u.nm_usuario AS proprietario, cp.ds_conta AS conta,\n       to_char(cp.dt_vencimento, 'DD/MM/YYYY') AS vencimento, cp.vl_pagar - cp.vl_baixado AS saldo,\n       CURRENT_DATE - cp.dt_vencimento AS dias_de_atraso\n  FROM vw_conta_pagar cp\n  JOIN categoria_financeira cf ON cf.id_categoria = cp.id_categoria\n  JOIN usuario u ON u.id_usuario = cp.id_favorecido\n WHERE cf.cd_categoria = 'repasse' AND cp.st_conta = 'atrasada'\n ORDER BY cp.dt_vencimento;"
+  },
+  {
+   "id": "A04",
+   "titulo": "Comissao sem conta a pagar",
+   "verifica": "Comissoes liberadas sem a conta a pagar ao corretor (RN25) e contas a pagar de comissao que nao estao ligadas a nenhuma comissao.",
+   "acao": "Lancar a conta que falta ou corrigir a ligacao; evita comissao esquecida ou paga sem aprovacao.",
+   "sql": "SELECT 'comissao liberada sem conta' AS problema, cm.id_contrato AS contrato, u.nm_usuario AS corretor, NULL::integer AS conta_pagar\n  FROM comissao cm JOIN usuario u ON u.id_usuario = cm.id_corretor\n WHERE cm.st_comissao = 'liberada' AND cm.id_conta_pagar IS NULL\nUNION ALL\nSELECT 'conta de comissao sem comissao', cp.id_contrato, u.nm_usuario, cp.id_conta_pagar\n  FROM conta_pagar cp\n  JOIN categoria_financeira cf ON cf.id_categoria = cp.id_categoria\n  LEFT JOIN usuario u ON u.id_usuario = cp.id_favorecido\n WHERE cf.cd_categoria = 'comissao' AND NOT cp.fl_cancelada\n   AND NOT EXISTS (SELECT 1 FROM comissao cm WHERE cm.id_conta_pagar = cp.id_conta_pagar);"
+  },
+  {
+   "id": "A05",
+   "titulo": "Negocios parados",
+   "verifica": "Propostas aceitas sem contrato ha mais de 7 dias e contratos ainda em rascunho mais de 3 dias depois do aceite da proposta.",
+   "acao": "O corretor responsavel retoma o negocio antes que o cliente desista.",
+   "sql": "SELECT 'proposta aceita sem contrato' AS situacao, p.id_proposta AS registro, u.nm_usuario AS cliente,\n       to_char(p.dt_proposta, 'DD/MM/YYYY') AS desde, CURRENT_DATE - p.dt_proposta::date AS dias\n  FROM proposta p JOIN usuario u ON u.id_usuario = p.id_cliente\n WHERE p.st_proposta = 'aceita' AND NOT EXISTS (SELECT 1 FROM contrato ct WHERE ct.id_proposta = p.id_proposta)\n   AND p.dt_proposta < CURRENT_DATE - 7\nUNION ALL\nSELECT 'contrato em rascunho', ct.id_contrato, u.nm_usuario,\n       to_char(p.dt_proposta, 'DD/MM/YYYY'), CURRENT_DATE - p.dt_proposta::date\n  FROM contrato ct JOIN proposta p ON p.id_proposta = ct.id_proposta JOIN usuario u ON u.id_usuario = p.id_cliente\n WHERE ct.st_contrato = 'rascunho' AND p.dt_proposta < CURRENT_DATE - 3\n ORDER BY dias DESC;"
+  },
+  {
+   "id": "A06",
+   "titulo": "Conversas sem atendimento",
+   "verifica": "Conversas abertas sem corretor ou sem nenhuma mensagem nos ultimos 7 dias.",
+   "acao": "Distribuir para um corretor ou retomar o contato antes que o cliente esfrie.",
+   "sql": "SELECT cv.id_conversa, u.nm_usuario AS cliente, coalesce(c.nm_usuario, '(sem corretor)') AS corretor, fe.nm_estagio AS etapa,\n       to_char(vc.dt_atualizacao, 'DD/MM/YYYY') AS ultima_mensagem, CURRENT_DATE - vc.dt_atualizacao::date AS dias_sem_contato\n  FROM vw_conversa vc\n  JOIN conversa cv ON cv.id_conversa = vc.id_conversa\n  JOIN usuario u ON u.id_usuario = cv.id_cliente\n  LEFT JOIN usuario c ON c.id_usuario = cv.id_corretor\n  JOIN funil_estagio fe ON fe.id_estagio = cv.id_estagio\n WHERE cv.st_conversa = 'aberta' AND (cv.id_corretor IS NULL OR vc.dt_atualizacao < CURRENT_DATE - 7)\n ORDER BY dias_sem_contato DESC;"
+  },
+  {
+   "id": "A07",
+   "titulo": "Tarefas vencidas",
+   "verifica": "Tarefas pendentes com prazo vencido, por corretor.",
+   "acao": "Cobrar a execucao ou redistribuir as tarefas de quem esta sobrecarregado.",
+   "sql": "SELECT u.nm_usuario AS corretor, count(*) AS tarefas_vencidas,\n       min(t.dt_vencimento)::date AS mais_antiga, string_agg(t.ds_titulo || ' (conversa ' || t.id_conversa || ')', '; ' ORDER BY t.dt_vencimento) AS tarefas\n  FROM tarefa t JOIN usuario u ON u.id_usuario = t.id_corretor\n WHERE t.st_tarefa = 'pendente' AND t.dt_vencimento < CURRENT_DATE\n GROUP BY u.nm_usuario\n ORDER BY tarefas_vencidas DESC;"
+  },
+  {
+   "id": "A08",
+   "titulo": "Anuncios incompletos",
+   "verifica": "Imoveis disponiveis sem corretor responsavel, com menos de 3 fotos ou sem nenhuma caracteristica.",
+   "acao": "Completar o cadastro antes de divulgar: anuncio incompleto gera menos interesse.",
+   "sql": "SELECT i.cd_imobizi AS codigo, t.nm_tipo_imovel AS tipo, b.nm_bairro AS bairro,\n       (i.id_corretor_responsavel IS NULL) AS sem_corretor,\n       (SELECT count(*) FROM foto f WHERE f.id_imovel = i.id_imovel) AS fotos,\n       (SELECT count(*) FROM imovel_caracteristica x WHERE x.id_imovel = i.id_imovel) AS caracteristicas\n  FROM imovel i\n  JOIN tipo_imovel t ON t.id_tipo_imovel = i.id_tipo_imovel\n  JOIN bairro b ON b.id_bairro = i.id_bairro\n WHERE i.st_imovel = 'disponivel'\n   AND (i.id_corretor_responsavel IS NULL\n        OR (SELECT count(*) FROM foto f WHERE f.id_imovel = i.id_imovel) < 3\n        OR NOT EXISTS (SELECT 1 FROM imovel_caracteristica x WHERE x.id_imovel = i.id_imovel))\n ORDER BY fotos;"
+  },
+  {
+   "id": "A09",
+   "titulo": "Numeros compartilhados",
+   "verifica": "Numeros que estao no cadastro de mais de uma pessoa, com o titular de cada um (RN03). Celular ou fixo se deduz do numero.",
+   "acao": "Confirmar com o cliente quem e o titular: e por ele que a automacao identifica quem mandou a mensagem.",
+   "sql": "SELECT t.nr_telefone AS telefone,\n       CASE WHEN length(t.nr_telefone) = 11 AND substr(t.nr_telefone, 3, 1) = '9' THEN 'celular' ELSE 'fixo' END AS tipo,\n       count(*) AS pessoas,\n       max(u.nm_usuario) FILTER (WHERE t.fl_titular) AS titular,\n       string_agg(u.nm_usuario, ', ' ORDER BY u.nm_usuario) FILTER (WHERE NOT t.fl_titular) AS tambem_usam\n  FROM telefone t\n  JOIN usuario u ON u.id_usuario = t.id_usuario\n GROUP BY t.nr_telefone\nHAVING count(*) > 1;"
+  },
+  {
+   "id": "A10",
+   "titulo": "Papel encerrado ainda em uso",
+   "verifica": "Pessoas com papel encerrado (data de fim) que ainda aparecem como corretor de conversa aberta ou de imovel disponivel, ou como inquilino de locacao vigente.",
+   "acao": "Transferir os registros para quem exerce o papel hoje (RN02, RN32).",
+   "sql": "SELECT 'corretor de conversa aberta' AS situacao, u.nm_usuario AS pessoa, cv.id_conversa AS registro\n  FROM conversa cv JOIN corretor co ON co.id_usuario = cv.id_corretor JOIN usuario u ON u.id_usuario = co.id_usuario\n WHERE cv.st_conversa = 'aberta' AND co.dt_fim IS NOT NULL\nUNION ALL\nSELECT 'corretor de imovel disponivel', u.nm_usuario, i.id_imovel\n  FROM imovel i JOIN corretor co ON co.id_usuario = i.id_corretor_responsavel JOIN usuario u ON u.id_usuario = co.id_usuario\n WHERE i.st_imovel = 'disponivel' AND co.dt_fim IS NOT NULL\nUNION ALL\nSELECT 'inquilino de locacao vigente', u.nm_usuario, ct.id_contrato\n  FROM contrato ct JOIN proposta p ON p.id_proposta = ct.id_proposta JOIN inquilino iq ON iq.id_usuario = p.id_cliente\n  JOIN usuario u ON u.id_usuario = iq.id_usuario\n WHERE ct.tp_contrato = 'locacao' AND ct.st_contrato = 'vigente' AND iq.dt_fim IS NOT NULL;"
+  },
+  {
+   "id": "A11",
+   "titulo": "Estagio da conversa × historico",
+   "verifica": "Conversas cujo estagio atual e diferente do ultimo registro do historico (redundancia controlada, RN14).",
+   "acao": "Se aparecer algum registro, a gravacao do estagio e do historico nao foi feita na mesma operacao; corrigir pelo historico.",
+   "sql": "SELECT cv.id_conversa, fa.nm_estagio AS estagio_na_conversa, fh.nm_estagio AS ultimo_no_historico\n  FROM conversa cv\n  JOIN funil_estagio fa ON fa.id_estagio = cv.id_estagio\n  JOIN LATERAL (SELECT h.id_estagio FROM historico_estagio h WHERE h.id_conversa = cv.id_conversa\n                 ORDER BY h.dt_alteracao DESC LIMIT 1) ult ON TRUE\n  JOIN funil_estagio fh ON fh.id_estagio = ult.id_estagio\n WHERE ult.id_estagio <> cv.id_estagio;"
+  },
+  {
+   "id": "A12",
+   "titulo": "Trilha de contratos e comissoes",
+   "verifica": "Alteracoes e cancelamentos feitos em contratos e comissoes, com quem fez e o que mudou (RN40).",
+   "acao": "Conferir se cada mudanca sensivel foi feita por quem tinha permissao e se o motivo esta registrado.",
+   "sql": "SELECT a.id_auditoria, to_char(a.dt_acao, 'DD/MM/YYYY HH24:MI') AS quando, u.nm_usuario AS quem, a.tp_acao AS acao,\n       CASE WHEN a.id_contrato IS NOT NULL THEN 'contrato ' || a.id_contrato\n            ELSE 'comissao ' || a.id_comissao_contrato || '/' || a.id_comissao_corretor END AS registro,\n       string_agg(c.nm_campo || ': ' || coalesce(c.ds_valor_anterior, 'vazio') || ' → ' || coalesce(c.ds_valor_novo, 'vazio'), '; ' ORDER BY c.nm_campo) AS campos\n  FROM auditoria a\n  JOIN usuario u ON u.id_usuario = a.id_usuario\n  LEFT JOIN auditoria_campo c ON c.id_auditoria = a.id_auditoria\n WHERE (a.id_contrato IS NOT NULL OR a.id_comissao_contrato IS NOT NULL) AND a.tp_acao <> 'criacao'\n GROUP BY a.id_auditoria, u.nm_usuario\n ORDER BY a.id_auditoria;"
+  },
+  {
+   "id": "A13",
+   "titulo": "Contas incoerentes",
+   "verifica": "Contas canceladas que receberam baixa, contas com baixas acima do valor e contratos encerrados ou rescindidos com contas de periodo futuro em aberto.",
+   "acao": "Nenhuma linha e o esperado: as regras do banco impedem esses casos. Se aparecer algo, houve carga fora das regras.",
+   "sql": "SELECT 'conta a receber cancelada com baixa' AS problema, cr.id_conta_receber AS conta\n  FROM vw_conta_receber cr WHERE cr.fl_cancelada AND cr.vl_baixado > 0\nUNION ALL\nSELECT 'baixas acima do valor (receber)', cr.id_conta_receber FROM vw_conta_receber cr WHERE cr.vl_baixado > cr.vl_receber\nUNION ALL\nSELECT 'baixas acima do valor (pagar)', cp.id_conta_pagar FROM vw_conta_pagar cp WHERE cp.vl_baixado > cp.vl_pagar\nUNION ALL\nSELECT 'contrato terminado com aluguel futuro em aberto', cr.id_conta_receber\n  FROM vw_conta_receber cr JOIN contrato ct ON ct.id_contrato = cr.id_contrato\n  JOIN categoria_financeira cf ON cf.id_categoria = cr.id_categoria\n WHERE ct.st_contrato IN ('rescindido', 'encerrado') AND cf.cd_categoria = 'aluguel'\n   AND cr.dt_competencia > ct.dt_termino AND cr.st_conta NOT IN ('cancelada', 'quitada');"
+  }
+ ]
+}

@@ -1,0 +1,2919 @@
+{
+ "grupos": [
+  {
+   "nome": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "tabelas": [
+    "usuario",
+    "cliente",
+    "proprietario",
+    "inquilino",
+    "corretor",
+    "financeiro",
+    "fornecedor",
+    "administrador",
+    "instituicao_financeira",
+    "origem_contato",
+    "telefone"
+   ]
+  },
+  {
+   "nome": "Localizacao e perfil",
+   "cor": "#0369a1",
+   "tabelas": [
+    "uf",
+    "cidade",
+    "cep",
+    "bairro",
+    "perfil_interesse",
+    "perfil_interesse_tipo",
+    "perfil_interesse_bairro"
+   ]
+  },
+  {
+   "nome": "Imoveis",
+   "cor": "#7c3aed",
+   "tabelas": [
+    "tipo_imovel",
+    "imovel",
+    "foto",
+    "caracteristica",
+    "imovel_caracteristica"
+   ]
+  },
+  {
+   "nome": "Funil / CRM",
+   "cor": "#b45309",
+   "tabelas": [
+    "funil_estagio",
+    "conversa",
+    "conversa_imovel",
+    "mensagem",
+    "historico_estagio",
+    "tarefa",
+    "tag",
+    "conversa_tag"
+   ]
+  },
+  {
+   "nome": "Negociacao",
+   "cor": "#be123c",
+   "tabelas": [
+    "visita",
+    "proposta",
+    "contrato",
+    "documento",
+    "tipo_documento",
+    "comissao",
+    "financiamento"
+   ]
+  },
+  {
+   "nome": "Financeiro",
+   "cor": "#15803d",
+   "tabelas": [
+    "categoria_financeira",
+    "conta_bancaria",
+    "movimento_bancario",
+    "conta_receber",
+    "recebimento",
+    "conta_pagar",
+    "pagamento",
+    "forma_pagamento"
+   ]
+  },
+  {
+   "nome": "N8N e auditoria",
+   "cor": "#475569",
+   "tabelas": [
+    "automacao_execucao",
+    "automacao_log",
+    "auditoria",
+    "auditoria_campo"
+   ]
+  }
+ ],
+ "tabelas": {
+  "usuario": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "USUARIO",
+   "tipo": "forte",
+   "pk": [
+    "id_usuario"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "O CPF/CNPJ nao serve de chave: e opcional para quem so conversou, some na anonimizacao (PO07) e pode ser digitado errado. Ele continua unico (UNIQUE) como chave candidata.",
+   "fks": [
+    {
+     "nome": "fk_usuario_capta",
+     "colunas": [
+      "id_origem"
+     ],
+     "ref": "origem_contato",
+     "refcolunas": [
+      "id_origem"
+     ],
+     "relacionamento": "CAPTA",
+     "cardinalidade": "ORIGEM_CONTATO (0,n) — USUARIO (0,1)",
+     "regra": "RN49",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {},
+   "nota": "Supertipo da especializacao dos papeis."
+  },
+  "cliente": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "CLIENTE",
+   "tipo": "subtipo",
+   "pk": [
+    "id_usuario"
+   ],
+   "pk_tipo": "herdada (subtipo)",
+   "pk_por_que": "O subtipo e o proprio usuario naquele papel: a chave e o id_usuario, que tambem e FK para usuario. Assim a pessoa tem o papel no maximo uma vez.",
+   "fks": [
+    {
+     "nome": "fk_cliente_usuario",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "especializacao",
+     "cardinalidade": "supertipo — subtipo",
+     "regra": "RN01, RN02",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_cliente_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02)."
+   },
+   "nota": "Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02)."
+  },
+  "proprietario": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "PROPRIETARIO",
+   "tipo": "subtipo",
+   "pk": [
+    "id_usuario"
+   ],
+   "pk_tipo": "herdada (subtipo)",
+   "pk_por_que": "O subtipo e o proprio usuario naquele papel: a chave e o id_usuario, que tambem e FK para usuario. Assim a pessoa tem o papel no maximo uma vez.",
+   "fks": [
+    {
+     "nome": "fk_proprietario_usuario",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "especializacao",
+     "cardinalidade": "supertipo — subtipo",
+     "regra": "RN01, RN02",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_proprietario_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02)."
+   },
+   "nota": "Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02)."
+  },
+  "inquilino": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "INQUILINO",
+   "tipo": "subtipo",
+   "pk": [
+    "id_usuario"
+   ],
+   "pk_tipo": "herdada (subtipo)",
+   "pk_por_que": "O subtipo e o proprio usuario naquele papel: a chave e o id_usuario, que tambem e FK para usuario. Assim a pessoa tem o papel no maximo uma vez.",
+   "fks": [
+    {
+     "nome": "fk_inquilino_usuario",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "especializacao",
+     "cardinalidade": "supertipo — subtipo",
+     "regra": "RN01, RN02",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_inquilino_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02)."
+   },
+   "nota": "Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02)."
+  },
+  "corretor": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "CORRETOR",
+   "tipo": "subtipo",
+   "pk": [
+    "id_usuario"
+   ],
+   "pk_tipo": "herdada (subtipo)",
+   "pk_por_que": "O subtipo e o proprio usuario naquele papel: a chave e o id_usuario, que tambem e FK para usuario. Assim a pessoa tem o papel no maximo uma vez.",
+   "fks": [
+    {
+     "nome": "fk_corretor_usuario",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "especializacao",
+     "cardinalidade": "supertipo — subtipo",
+     "regra": "RN01, RN02",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_corretor_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02)."
+   },
+   "nota": "Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02)."
+  },
+  "financeiro": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "FINANCEIRO",
+   "tipo": "subtipo",
+   "pk": [
+    "id_usuario"
+   ],
+   "pk_tipo": "herdada (subtipo)",
+   "pk_por_que": "O subtipo e o proprio usuario naquele papel: a chave e o id_usuario, que tambem e FK para usuario. Assim a pessoa tem o papel no maximo uma vez.",
+   "fks": [
+    {
+     "nome": "fk_financeiro_usuario",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "especializacao",
+     "cardinalidade": "supertipo — subtipo",
+     "regra": "RN01, RN02",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_financeiro_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02)."
+   },
+   "nota": "Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02)."
+  },
+  "fornecedor": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "FORNECEDOR",
+   "tipo": "subtipo",
+   "pk": [
+    "id_usuario"
+   ],
+   "pk_tipo": "herdada (subtipo)",
+   "pk_por_que": "O subtipo e o proprio usuario naquele papel: a chave e o id_usuario, que tambem e FK para usuario. Assim a pessoa tem o papel no maximo uma vez.",
+   "fks": [
+    {
+     "nome": "fk_fornecedor_usuario",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "especializacao",
+     "cardinalidade": "supertipo — subtipo",
+     "regra": "RN01, RN02",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_fornecedor_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02)."
+   },
+   "nota": "Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02)."
+  },
+  "administrador": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "ADMINISTRADOR",
+   "tipo": "subtipo",
+   "pk": [
+    "id_usuario"
+   ],
+   "pk_tipo": "herdada (subtipo)",
+   "pk_por_que": "O subtipo e o proprio usuario naquele papel: a chave e o id_usuario, que tambem e FK para usuario. Assim a pessoa tem o papel no maximo uma vez.",
+   "fks": [
+    {
+     "nome": "fk_administrador_usuario",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "especializacao",
+     "cardinalidade": "supertipo — subtipo",
+     "regra": "RN01, RN02",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_administrador_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02)."
+   },
+   "nota": "Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02)."
+  },
+  "instituicao_financeira": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "INSTITUICAO_FINANCEIRA",
+   "tipo": "subtipo",
+   "pk": [
+    "id_usuario"
+   ],
+   "pk_tipo": "herdada (subtipo)",
+   "pk_por_que": "O subtipo e o proprio usuario naquele papel: a chave e o id_usuario, que tambem e FK para usuario. Assim a pessoa tem o papel no maximo uma vez.",
+   "fks": [
+    {
+     "nome": "fk_instituicao_financeira_usuario",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "especializacao",
+     "cardinalidade": "supertipo — subtipo",
+     "regra": "RN01, RN02",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_instituicao_financeira_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02)."
+   },
+   "nota": "Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02)."
+  },
+  "origem_contato": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "ORIGEM_CONTATO",
+   "tipo": "forte",
+   "pk": [
+    "id_origem"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Lista de dominio: o nome e unico (UNIQUE) e pode ser corrigido sem afetar os usuarios ligados.",
+   "fks": [],
+   "checks": {},
+   "nota": "Dominio: canais de captacao (antes um CHECK em usuario.tp_origem)."
+  },
+  "telefone": {
+   "area": "Pessoas e papeis",
+   "cor": "#0f766e",
+   "folha": 1,
+   "entidade": "TELEFONE",
+   "tipo": "fraca",
+   "pk": [
+    "id_usuario",
+    "nr_sequencia"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "O telefone so existe no cadastro da pessoa: pessoa + sequencia (1, 2, 3...). O numero nao e chave: muda de dono e pode estar em mais de uma pessoa (casal); a mesma pessoa nao o repete (UNIQUE id_usuario + nr_telefone).",
+   "fks": [
+    {
+     "nome": "fk_telefone_possui",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "POSSUI",
+     "cardinalidade": "USUARIO (0,n) — TELEFONE (1,1)",
+     "regra": "RN03",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_telefone_nr_telefone": "O numero tem so digitos, de 10 a 13 (DDD + numero, com ou sem o codigo do pais). Sem mascara, a comparacao entre cadastros e exata (um valor atomico, 1FN)."
+   },
+   "nota": "Entidade fraca de USUARIO: o numero nao e chave; um numero compartilhado aparece uma vez para cada pessoa, com um unico titular (RN03)."
+  },
+  "uf": {
+   "area": "Localizacao e perfil",
+   "cor": "#0369a1",
+   "folha": 1,
+   "entidade": "UF",
+   "tipo": "forte",
+   "pk": [
+    "sg_uf"
+   ],
+   "pk_tipo": "natural",
+   "pk_por_que": "A sigla da UF (SP, RJ...) e oficial, curta e nao muda: serve de chave sem precisar de numero, e cidade.sg_uf ja mostra a sigla sem JOIN.",
+   "fks": [],
+   "checks": {
+    "ck_uf_sg_uf": "A sigla da UF tem exatamente duas letras maiusculas (SP, RJ...)."
+   },
+   "nota": "Dominio: as 27 unidades federativas (antes a sigla era texto livre em cidade)."
+  },
+  "cidade": {
+   "area": "Localizacao e perfil",
+   "cor": "#0369a1",
+   "folha": 1,
+   "entidade": "CIDADE",
+   "tipo": "forte",
+   "pk": [
+    "id_cidade"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Nome + UF e a chave candidata (UNIQUE), mas e longa e seria repetida em todo CEP, bairro e perfil.",
+   "fks": [
+    {
+     "nome": "fk_cidade_compreende",
+     "colunas": [
+      "sg_uf"
+     ],
+     "ref": "uf",
+     "refcolunas": [
+      "sg_uf"
+     ],
+     "relacionamento": "COMPREENDE",
+     "cardinalidade": "UF (0,n) — CIDADE (1,1)",
+     "regra": "RN41",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {},
+   "nota": "3FN: cidade e UF ficam aqui, e nao no imovel."
+  },
+  "cep": {
+   "area": "Localizacao e perfil",
+   "cor": "#0369a1",
+   "folha": 1,
+   "entidade": "CEP",
+   "tipo": "forte",
+   "pk": [
+    "nr_cep"
+   ],
+   "pk_tipo": "natural",
+   "pk_por_que": "O CEP e o identificador oficial dos Correios, estavel e com tamanho fixo de 8 digitos.",
+   "fks": [
+    {
+     "nome": "fk_cep_agrupa",
+     "colunas": [
+      "id_cidade"
+     ],
+     "ref": "cidade",
+     "refcolunas": [
+      "id_cidade"
+     ],
+     "relacionamento": "AGRUPA",
+     "cardinalidade": "CIDADE (0,n) — CEP (1,1)",
+     "regra": "RN41",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_cep_tp_cep": "Dominio fechado de tp_cep: aceita so geral, logradouro. Geral (a cidade inteira) ou de logradouro; como um CEP geral nao indica rua, a rua continua no imovel"
+   },
+   "nota": "3FN: CEP → cidade e UF."
+  },
+  "bairro": {
+   "area": "Localizacao e perfil",
+   "cor": "#0369a1",
+   "folha": 1,
+   "entidade": "BAIRRO",
+   "tipo": "forte",
+   "pk": [
+    "id_bairro"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Cidade + nome e a chave candidata (UNIQUE): o mesmo nome (Centro) existe em cidades diferentes. A chave substituta e curta e deixa corrigir o nome sem mexer nos imoveis e perfis.",
+   "fks": [
+    {
+     "nome": "fk_bairro_divide",
+     "colunas": [
+      "id_cidade"
+     ],
+     "ref": "cidade",
+     "refcolunas": [
+      "id_cidade"
+     ],
+     "relacionamento": "DIVIDE",
+     "cardinalidade": "CIDADE (0,n) — BAIRRO (1,1)",
+     "regra": "RN51",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {},
+   "nota": "Dominio: bairros de cada cidade (antes um texto repetido em imovel e em perfil_interesse) (RN51)."
+  },
+  "perfil_interesse": {
+   "area": "Localizacao e perfil",
+   "cor": "#0369a1",
+   "folha": 1,
+   "entidade": "PERFIL_INTERESSE",
+   "tipo": "fraca",
+   "pk": [
+    "id_usuario",
+    "nr_perfil"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "O perfil so existe para o cliente: chave do cliente + numero do perfil.",
+   "fks": [
+    {
+     "nome": "fk_perfil_interesse_busca",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "cliente",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "BUSCA",
+     "cardinalidade": "CLIENTE (0,n) — PERFIL_INTERESSE (1,1)",
+     "regra": "RN05",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    },
+    {
+     "nome": "fk_perfil_interesse_prefere",
+     "colunas": [
+      "id_cidade"
+     ],
+     "ref": "cidade",
+     "refcolunas": [
+      "id_cidade"
+     ],
+     "relacionamento": "PREFERE",
+     "cardinalidade": "CIDADE (0,n) — PERFIL_INTERESSE (0,1)",
+     "regra": "RN42",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_perfil_interesse_tp_finalidade": "Dominio fechado de tp_finalidade: aceita so venda, locacao. Mesmo vocabulario de IMOVEL",
+    "ck_perfil_interesse_vl_minimo_vl_maximo": "A faixa de valor do perfil precisa ser coerente: minimo ate o maximo."
+   },
+   "nota": "Entidade fraca do CLIENTE."
+  },
+  "perfil_interesse_tipo": {
+   "area": "Localizacao e perfil",
+   "cor": "#0369a1",
+   "folha": 1,
+   "entidade": "DESEJA",
+   "tipo": "relacionamento N:N",
+   "pk": [
+    "id_usuario",
+    "nr_perfil",
+    "id_tipo_imovel"
+   ],
+   "pk_tipo": "composta",
+   "pk_por_que": "N:N sem atributos: o perfil aceita cada tipo uma vez; a chave e o perfil (cliente + numero) + o tipo.",
+   "fks": [
+    {
+     "nome": "fk_perfil_interesse_tipo_perfil_interesse",
+     "colunas": [
+      "id_usuario",
+      "nr_perfil"
+     ],
+     "ref": "perfil_interesse",
+     "refcolunas": [
+      "id_usuario",
+      "nr_perfil"
+     ],
+     "relacionamento": "DESEJA",
+     "cardinalidade": "PERFIL_INTERESSE (0,n) — TIPO_IMOVEL (0,n)",
+     "regra": "RN47",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    },
+    {
+     "nome": "fk_perfil_interesse_tipo_tipo_imovel",
+     "colunas": [
+      "id_tipo_imovel"
+     ],
+     "ref": "tipo_imovel",
+     "refcolunas": [
+      "id_tipo_imovel"
+     ],
+     "relacionamento": "DESEJA",
+     "cardinalidade": "PERFIL_INTERESSE (0,n) — TIPO_IMOVEL (0,n)",
+     "regra": "RN47",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {},
+   "nota": "Relacionamento N:N DESEJA: os tipos de imovel aceitos pelo perfil; perfil sem tipo aceita qualquer tipo (RN47)."
+  },
+  "perfil_interesse_bairro": {
+   "area": "Localizacao e perfil",
+   "cor": "#0369a1",
+   "folha": 1,
+   "entidade": "ABRANGE",
+   "tipo": "relacionamento N:N",
+   "pk": [
+    "id_usuario",
+    "nr_perfil",
+    "id_bairro"
+   ],
+   "pk_tipo": "composta",
+   "pk_por_que": "N:N sem atributos: o perfil aceita cada bairro uma vez; a chave e o perfil (cliente + numero) + o bairro.",
+   "fks": [
+    {
+     "nome": "fk_perfil_interesse_bairro_perfil_interesse",
+     "colunas": [
+      "id_usuario",
+      "nr_perfil"
+     ],
+     "ref": "perfil_interesse",
+     "refcolunas": [
+      "id_usuario",
+      "nr_perfil"
+     ],
+     "relacionamento": "ABRANGE",
+     "cardinalidade": "PERFIL_INTERESSE (0,n) — BAIRRO (0,n)",
+     "regra": "RN52",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    },
+    {
+     "nome": "fk_perfil_interesse_bairro_bairro",
+     "colunas": [
+      "id_bairro"
+     ],
+     "ref": "bairro",
+     "refcolunas": [
+      "id_bairro"
+     ],
+     "relacionamento": "ABRANGE",
+     "cardinalidade": "PERFIL_INTERESSE (0,n) — BAIRRO (0,n)",
+     "regra": "RN52",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {},
+   "nota": "Relacionamento N:N ABRANGE: os bairros aceitos pelo perfil, todos da cidade do perfil; perfil sem bairro aceita qualquer bairro (RN52)."
+  },
+  "tipo_imovel": {
+   "area": "Imoveis",
+   "cor": "#7c3aed",
+   "folha": 2,
+   "entidade": "TIPO_IMOVEL",
+   "tipo": "forte",
+   "pk": [
+    "id_tipo_imovel"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Lista de dominio mantida pela imobiliaria; o nome e unico (UNIQUE) e pode ser corrigido sem afetar imoveis e perfis.",
+   "fks": [],
+   "checks": {},
+   "nota": "Dominio: tipos de imovel (antes um CHECK repetido em imovel e em perfil_interesse) (RN48)."
+  },
+  "imovel": {
+   "area": "Imoveis",
+   "cor": "#7c3aed",
+   "folha": 2,
+   "entidade": "IMOVEL",
+   "tipo": "forte",
+   "pk": [
+    "id_imovel"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "O codigo do Imobzi (cd_imobizi) e externo e opcional (imovel cadastrado direto no CRM); fica como UNIQUE.",
+   "fks": [
+    {
+     "nome": "fk_imovel_anuncia",
+     "colunas": [
+      "id_proprietario"
+     ],
+     "ref": "proprietario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "ANUNCIA",
+     "cardinalidade": "PROPRIETARIO (0,n) — IMOVEL (1,1)",
+     "regra": "RN06",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_imovel_responsavel",
+     "colunas": [
+      "id_corretor_responsavel"
+     ],
+     "ref": "corretor",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "RESPONSAVEL",
+     "cardinalidade": "CORRETOR (0,n) — IMOVEL (0,1)",
+     "regra": "RN07",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_imovel_localiza",
+     "colunas": [
+      "nr_cep"
+     ],
+     "ref": "cep",
+     "refcolunas": [
+      "nr_cep"
+     ],
+     "relacionamento": "LOCALIZA",
+     "cardinalidade": "CEP (0,n) — IMOVEL (1,1)",
+     "regra": "RN41",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "CASCADE",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_imovel_tipifica",
+     "colunas": [
+      "id_tipo_imovel"
+     ],
+     "ref": "tipo_imovel",
+     "refcolunas": [
+      "id_tipo_imovel"
+     ],
+     "relacionamento": "TIPIFICA",
+     "cardinalidade": "TIPO_IMOVEL (0,n) — IMOVEL (1,1)",
+     "regra": "RN48",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_imovel_situa",
+     "colunas": [
+      "id_bairro"
+     ],
+     "ref": "bairro",
+     "refcolunas": [
+      "id_bairro"
+     ],
+     "relacionamento": "SITUA",
+     "cardinalidade": "BAIRRO (0,n) — IMOVEL (1,1)",
+     "regra": "RN51",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_imovel_tp_finalidade": "Dominio fechado de tp_finalidade: aceita so venda, locacao, ambas. Define quais valores sao obrigatorios (17.24)",
+    "ck_imovel_st_imovel": "Dominio fechado de st_imovel: aceita so disponivel, reservado, vendido, alugado, inativo. Disponivel, reservado, vendido, alugado ou inativo; vendido, alugado ou inativo nao recebe visita nem proposta (RN10)",
+    "ck_imovel_tp_finalidade_vl_venda": "Imovel a venda (ou venda e locacao) precisa ter valor de venda.",
+    "ck_imovel_tp_finalidade_vl_aluguel": "Imovel para locacao (ou venda e locacao) precisa ter valor de aluguel."
+   },
+   "nota": "1FN: endereco em colunas atomicas. 3FN: cidade e UF vem do CEP."
+  },
+  "foto": {
+   "area": "Imoveis",
+   "cor": "#7c3aed",
+   "folha": 2,
+   "entidade": "FOTO",
+   "tipo": "fraca",
+   "pk": [
+    "id_imovel",
+    "nr_foto"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "A foto so existe dentro do imovel: imovel + numero da foto.",
+   "fks": [
+    {
+     "nome": "fk_foto_tem",
+     "colunas": [
+      "id_imovel"
+     ],
+     "ref": "imovel",
+     "refcolunas": [
+      "id_imovel"
+     ],
+     "relacionamento": "TEM",
+     "cardinalidade": "IMOVEL (0,n) — FOTO (1,1)",
+     "regra": "RN09",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {},
+   "nota": ""
+  },
+  "caracteristica": {
+   "area": "Imoveis",
+   "cor": "#7c3aed",
+   "folha": 2,
+   "entidade": "CARACTERISTICA",
+   "tipo": "forte",
+   "pk": [
+    "id_caracteristica"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Catalogo pequeno; o nome e unico (UNIQUE) e pode ser corrigido sem afetar as ligacoes.",
+   "fks": [],
+   "checks": {},
+   "nota": ""
+  },
+  "imovel_caracteristica": {
+   "area": "Imoveis",
+   "cor": "#7c3aed",
+   "folha": 2,
+   "entidade": "APRESENTA",
+   "tipo": "relacionamento N:N",
+   "pk": [
+    "id_caracteristica",
+    "id_imovel"
+   ],
+   "pk_tipo": "composta",
+   "pk_por_que": "N:N sem atributos: o par imovel + caracteristica nao se repete.",
+   "fks": [
+    {
+     "nome": "fk_imovel_caracteristica_caracteristica",
+     "colunas": [
+      "id_caracteristica"
+     ],
+     "ref": "caracteristica",
+     "refcolunas": [
+      "id_caracteristica"
+     ],
+     "relacionamento": "APRESENTA",
+     "cardinalidade": "IMOVEL (0,n) — CARACTERISTICA (0,n)",
+     "regra": "RN08",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_imovel_caracteristica_imovel",
+     "colunas": [
+      "id_imovel"
+     ],
+     "ref": "imovel",
+     "refcolunas": [
+      "id_imovel"
+     ],
+     "relacionamento": "APRESENTA",
+     "cardinalidade": "IMOVEL (0,n) — CARACTERISTICA (0,n)",
+     "regra": "RN08",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {},
+   "nota": "Relacionamento N:N APRESENTA."
+  },
+  "funil_estagio": {
+   "area": "Funil / CRM",
+   "cor": "#b45309",
+   "folha": 3,
+   "entidade": "FUNIL_ESTAGIO",
+   "tipo": "forte",
+   "pk": [
+    "id_estagio"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "O nome e a ordem do estagio podem mudar (renomear a coluna do kanban); ambos sao unicos.",
+   "fks": [],
+   "checks": {},
+   "nota": ""
+  },
+  "conversa": {
+   "area": "Funil / CRM",
+   "cor": "#b45309",
+   "folha": 3,
+   "entidade": "CONVERSA",
+   "tipo": "forte",
+   "pk": [
+    "id_conversa"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Nao ha atributo natural que identifique um atendimento: o mesmo cliente pode ter varias conversas (RN11).",
+   "fks": [
+    {
+     "nome": "fk_conversa_inicia",
+     "colunas": [
+      "id_cliente"
+     ],
+     "ref": "cliente",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "INICIA",
+     "cardinalidade": "CLIENTE (0,n) — CONVERSA (1,1)",
+     "regra": "RN11",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_conversa_atende",
+     "colunas": [
+      "id_corretor"
+     ],
+     "ref": "corretor",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "ATENDE",
+     "cardinalidade": "CORRETOR (0,n) — CONVERSA (0,1)",
+     "regra": "RN12",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_conversa_pertence_a",
+     "colunas": [
+      "id_estagio"
+     ],
+     "ref": "funil_estagio",
+     "refcolunas": [
+      "id_estagio"
+     ],
+     "relacionamento": "PERTENCE A",
+     "cardinalidade": "CONVERSA (1,1) — FUNIL_ESTAGIO (0,n)",
+     "regra": "RN13",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_conversa_st_conversa": "Dominio fechado de st_conversa: aceita so aberta, encerrada. Aberta ou encerrada (RN34)"
+   },
+   "nota": "dt_atualizacao e derivada e nao e armazenada."
+  },
+  "conversa_imovel": {
+   "area": "Funil / CRM",
+   "cor": "#b45309",
+   "folha": 3,
+   "entidade": "CONVERSA_IMOVEL",
+   "tipo": "associativa",
+   "pk": [
+    "id_imovel",
+    "id_conversa"
+   ],
+   "pk_tipo": "composta",
+   "pk_por_que": "Associativa: a conversa se interessa por cada imovel uma vez; dt_interesse e atributo do par.",
+   "fks": [
+    {
+     "nome": "fk_conversa_imovel_imovel",
+     "colunas": [
+      "id_imovel"
+     ],
+     "ref": "imovel",
+     "refcolunas": [
+      "id_imovel"
+     ],
+     "relacionamento": "INTERESSA",
+     "cardinalidade": "IMOVEL (0,n) — CONVERSA (0,n)",
+     "regra": "RF17",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_conversa_imovel_conversa",
+     "colunas": [
+      "id_conversa"
+     ],
+     "ref": "conversa",
+     "refcolunas": [
+      "id_conversa"
+     ],
+     "relacionamento": "INTERESSA",
+     "cardinalidade": "IMOVEL (0,n) — CONVERSA (0,n)",
+     "regra": "RF17",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {},
+   "nota": "Entidade associativa CONVERSA_IMOVEL (INTERESSA)."
+  },
+  "mensagem": {
+   "area": "Funil / CRM",
+   "cor": "#b45309",
+   "folha": 3,
+   "entidade": "MENSAGEM",
+   "tipo": "fraca",
+   "pk": [
+    "id_conversa",
+    "nr_mensagem"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "A mensagem so existe dentro da conversa: conversa + numero da mensagem.",
+   "fks": [
+    {
+     "nome": "fk_mensagem_contem",
+     "colunas": [
+      "id_conversa"
+     ],
+     "ref": "conversa",
+     "refcolunas": [
+      "id_conversa"
+     ],
+     "relacionamento": "CONTEM",
+     "cardinalidade": "CONVERSA (0,n) — MENSAGEM (1,1)",
+     "regra": "RF05",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_mensagem_tp_direcao": "Dominio fechado de tp_direcao: aceita so entrada, saida. Em branco quando for nota interna",
+    "ck_mensagem_tp_canal": "Dominio fechado de tp_canal: aceita so whatsapp, email, nota_interna. WhatsApp, e-mail ou nota interna"
+   },
+   "nota": ""
+  },
+  "historico_estagio": {
+   "area": "Funil / CRM",
+   "cor": "#b45309",
+   "folha": 3,
+   "entidade": "HISTORICO_ESTAGIO",
+   "tipo": "associativa",
+   "pk": [
+    "id_conversa",
+    "dt_alteracao"
+   ],
+   "pk_tipo": "composta",
+   "pk_por_que": "Cada mudanca de estagio e identificada pela conversa e pelo instante em que aconteceu.",
+   "fks": [
+    {
+     "nome": "fk_historico_estagio_conversa",
+     "colunas": [
+      "id_conversa"
+     ],
+     "ref": "conversa",
+     "refcolunas": [
+      "id_conversa"
+     ],
+     "relacionamento": "MOVE",
+     "cardinalidade": "CONVERSA (0,n) — FUNIL_ESTAGIO (0,n)",
+     "regra": "RN14",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    },
+    {
+     "nome": "fk_historico_estagio_funil_estagio",
+     "colunas": [
+      "id_estagio"
+     ],
+     "ref": "funil_estagio",
+     "refcolunas": [
+      "id_estagio"
+     ],
+     "relacionamento": "MOVE",
+     "cardinalidade": "CONVERSA (0,n) — FUNIL_ESTAGIO (0,n)",
+     "regra": "RN14",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_historico_estagio_registra",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "REGISTRA",
+     "cardinalidade": "HISTORICO_ESTAGIO (0,1) — USUARIO (0,n)",
+     "regra": "RF08",
+     "ao_excluir": "SET NULL",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "a participacao e opcional (minimo 0): o registro continua valido sem a referencia"
+    }
+   ],
+   "checks": {},
+   "nota": "Entidade associativa HISTORICO_ESTAGIO (MOVE)."
+  },
+  "tarefa": {
+   "area": "Funil / CRM",
+   "cor": "#b45309",
+   "folha": 3,
+   "entidade": "TAREFA",
+   "tipo": "forte",
+   "pk": [
+    "id_tarefa"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "A tarefa pode existir sem conversa (GERA TAREFA e opcional), entao nao pode depender dela.",
+   "fks": [
+    {
+     "nome": "fk_tarefa_gera_tarefa",
+     "colunas": [
+      "id_conversa"
+     ],
+     "ref": "conversa",
+     "refcolunas": [
+      "id_conversa"
+     ],
+     "relacionamento": "GERA TAREFA",
+     "cardinalidade": "CONVERSA (0,n) — TAREFA (0,1)",
+     "regra": "RN15",
+     "ao_excluir": "SET NULL",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "a participacao e opcional (minimo 0): o registro continua valido sem a referencia"
+    },
+    {
+     "nome": "fk_tarefa_executa",
+     "colunas": [
+      "id_corretor"
+     ],
+     "ref": "corretor",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "EXECUTA",
+     "cardinalidade": "CORRETOR (0,n) — TAREFA (1,1)",
+     "regra": "RN15",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_tarefa_st_tarefa": "Dominio fechado de st_tarefa: aceita so pendente, concluida, cancelada. Pendente, concluida ou cancelada"
+   },
+   "nota": ""
+  },
+  "tag": {
+   "area": "Funil / CRM",
+   "cor": "#b45309",
+   "folha": 3,
+   "entidade": "TAG",
+   "tipo": "forte",
+   "pk": [
+    "id_tag"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Catalogo de etiquetas; o nome e unico.",
+   "fks": [],
+   "checks": {},
+   "nota": ""
+  },
+  "conversa_tag": {
+   "area": "Funil / CRM",
+   "cor": "#b45309",
+   "folha": 3,
+   "entidade": "MARCA",
+   "tipo": "relacionamento N:N",
+   "pk": [
+    "id_conversa",
+    "id_tag"
+   ],
+   "pk_tipo": "composta",
+   "pk_por_que": "N:N sem atributos: a etiqueta e marcada uma vez em cada conversa.",
+   "fks": [
+    {
+     "nome": "fk_conversa_tag_conversa",
+     "colunas": [
+      "id_conversa"
+     ],
+     "ref": "conversa",
+     "refcolunas": [
+      "id_conversa"
+     ],
+     "relacionamento": "MARCA",
+     "cardinalidade": "CONVERSA (0,n) — TAG (0,n)",
+     "regra": "RF09",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    },
+    {
+     "nome": "fk_conversa_tag_tag",
+     "colunas": [
+      "id_tag"
+     ],
+     "ref": "tag",
+     "refcolunas": [
+      "id_tag"
+     ],
+     "relacionamento": "MARCA",
+     "cardinalidade": "CONVERSA (0,n) — TAG (0,n)",
+     "regra": "RF09",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {},
+   "nota": "Relacionamento N:N MARCA."
+  },
+  "visita": {
+   "area": "Negociacao",
+   "cor": "#be123c",
+   "folha": 4,
+   "entidade": "VISITA",
+   "tipo": "associativa",
+   "pk": [
+    "id_visita"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "O mesmo cliente pode visitar o mesmo imovel mais de uma vez (RN16), e a data muda quando a visita e remarcada; a combinacao imovel + cliente + data fica como UNIQUE.",
+   "fks": [
+    {
+     "nome": "fk_visita_imovel",
+     "colunas": [
+      "id_imovel"
+     ],
+     "ref": "imovel",
+     "refcolunas": [
+      "id_imovel"
+     ],
+     "relacionamento": "VISITA",
+     "cardinalidade": "CLIENTE (0,n) — IMOVEL (0,n)",
+     "regra": "RN16",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_visita_cliente",
+     "colunas": [
+      "id_cliente"
+     ],
+     "ref": "cliente",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "VISITA",
+     "cardinalidade": "CLIENTE (0,n) — IMOVEL (0,n)",
+     "regra": "RN16",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_visita_acompanha",
+     "colunas": [
+      "id_corretor"
+     ],
+     "ref": "corretor",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "ACOMPANHA",
+     "cardinalidade": "VISITA (1,1) — CORRETOR (0,n)",
+     "regra": "RN16",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_visita_st_visita": "Dominio fechado de st_visita: aceita so agendada, realizada, cancelada. Agendada, realizada ou cancelada"
+   },
+   "nota": "Entidade associativa VISITA (CLIENTE × IMOVEL)."
+  },
+  "proposta": {
+   "area": "Negociacao",
+   "cor": "#be123c",
+   "folha": 4,
+   "entidade": "PROPOSTA",
+   "tipo": "associativa",
+   "pk": [
+    "id_proposta"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Ha varias propostas do mesmo cliente para o mesmo imovel (contrapropostas, RN35), e a proposta e referenciada por FECHA, RESPONDE e pela auditoria.",
+   "fks": [
+    {
+     "nome": "fk_proposta_imovel",
+     "colunas": [
+      "id_imovel"
+     ],
+     "ref": "imovel",
+     "refcolunas": [
+      "id_imovel"
+     ],
+     "relacionamento": "PROPOE",
+     "cardinalidade": "CLIENTE (0,n) — IMOVEL (0,n)",
+     "regra": "RF19",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_proposta_cliente",
+     "colunas": [
+      "id_cliente"
+     ],
+     "ref": "cliente",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "PROPOE",
+     "cardinalidade": "CLIENTE (0,n) — IMOVEL (0,n)",
+     "regra": "RF19",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_proposta_negocia",
+     "colunas": [
+      "id_corretor"
+     ],
+     "ref": "corretor",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "NEGOCIA",
+     "cardinalidade": "PROPOSTA (1,1) — CORRETOR (0,n)",
+     "regra": "RF19",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_proposta_autoriza",
+     "colunas": [
+      "id_autorizador"
+     ],
+     "ref": "administrador",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "AUTORIZA",
+     "cardinalidade": "PROPOSTA (0,1) — ADMINISTRADOR (0,n)",
+     "regra": "PO03",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_proposta_responde",
+     "colunas": [
+      "id_proposta_respondida"
+     ],
+     "ref": "proposta",
+     "refcolunas": [
+      "id_proposta"
+     ],
+     "relacionamento": "RESPONDE",
+     "cardinalidade": "PROPOSTA (0,1) — PROPOSTA (0,1)",
+     "regra": "RN35",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_proposta_origina",
+     "colunas": [
+      "id_visita"
+     ],
+     "ref": "visita",
+     "refcolunas": [
+      "id_visita"
+     ],
+     "relacionamento": "ORIGINA",
+     "cardinalidade": "VISITA (0,n) — PROPOSTA (0,1)",
+     "regra": "RN17",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_proposta_st_proposta": "Dominio fechado de st_proposta: aceita so pendente, aceita, recusada, substituida. Pendente, aceita, recusada ou substituida (respondida por contraproposta, RN35)",
+    "ck_proposta_vl_proposto_vl_anunciado": "Valores de proposta e de anuncio positivos.",
+    "ck_proposta_id_autorizador_vl_proposto": "Desconto acima de 10% do valor anunciado so com autorizacao do administrador registrada (PO03).",
+    "ck_proposta_id_proposta_id_proposta_respondida": "Uma proposta nao responde a si mesma (RN35)."
+   },
+   "nota": "Entidade associativa PROPOSTA (CLIENTE × IMOVEL). vl_anunciado e o valor congelado no momento da proposta."
+  },
+  "contrato": {
+   "area": "Negociacao",
+   "cor": "#be123c",
+   "folha": 4,
+   "entidade": "CONTRATO",
+   "tipo": "forte",
+   "pk": [
+    "id_contrato"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "O contrato nasce de uma proposta (id_proposta e UNIQUE), mas recebe chave propria porque e referenciado por contas, comissoes, financiamento e auditoria.",
+   "fks": [
+    {
+     "nome": "fk_contrato_fecha",
+     "colunas": [
+      "id_proposta"
+     ],
+     "ref": "proposta",
+     "refcolunas": [
+      "id_proposta"
+     ],
+     "relacionamento": "FECHA",
+     "cardinalidade": "PROPOSTA (0,1) — CONTRATO (1,1)",
+     "regra": "RN18",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_contrato_tp_contrato": "Dominio fechado de tp_contrato: aceita so venda, locacao. RN19",
+    "ck_contrato_tp_condicao_pagamento": "Dominio fechado de tp_condicao_pagamento: aceita so a_vista, financiado, parcelado_direto. A vista, financiado ou parcelado direto; \"financiado\" se, e somente se, houver financiamento (RN22). Nao confundir com a forma de cada baixa (FORMA_PAGAMENTO)",
+    "ck_contrato_st_contrato": "Dominio fechado de st_contrato: aceita so rascunho, vigente, encerrado, rescindido, cancelado. Rascunho, vigente, encerrado, rescindido ou cancelado; contrato assinado nao e excluido (PO04)",
+    "ck_contrato_pc_corretagem": "Percentual de corretagem entre 0 e 100.",
+    "ck_contrato_pc_administracao": "Taxa de administracao entre 0 e 100.",
+    "ck_contrato_tp_contrato_pc_administracao": "Contrato de locacao precisa de inicio, termino, taxa de administracao e dia de vencimento (RN19).",
+    "ck_contrato_dt_assinatura_st_contrato": "Contrato vigente, encerrado ou rescindido foi assinado: tem data de assinatura (RN36).",
+    "ck_contrato_st_contrato_dt_termino": "Encerrado, rescindido ou cancelado sempre tem a data do termino, e so eles tem (RN37, RN43, RN44).",
+    "ck_contrato_st_contrato_ds_motivo_termino": "Cancelamento e rescisao exigem o motivo (RN37, RN43).",
+    "ck_contrato_st_contrato_tp_iniciativa_rescisao": "So a rescisao registra quem pediu (RN43).",
+    "ck_contrato_tp_iniciativa_rescisao": "Dominio fechado de tp_iniciativa_rescisao: aceita so cliente, proprietario, comum_acordo. Cliente, proprietario ou comum acordo; obrigatorio na rescisao (RN43)"
+   },
+   "nota": "vl_corretagem = vl_final × pc_corretagem e derivado e nao e armazenado."
+  },
+  "documento": {
+   "area": "Negociacao",
+   "cor": "#be123c",
+   "folha": 4,
+   "entidade": "DOCUMENTO",
+   "tipo": "fraca",
+   "pk": [
+    "id_contrato",
+    "nr_documento"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "O documento so existe anexado ao contrato: contrato + numero.",
+   "fks": [
+    {
+     "nome": "fk_documento_anexa",
+     "colunas": [
+      "id_contrato"
+     ],
+     "ref": "contrato",
+     "refcolunas": [
+      "id_contrato"
+     ],
+     "relacionamento": "ANEXA",
+     "cardinalidade": "CONTRATO (0,n) — DOCUMENTO (1,1)",
+     "regra": "RF21",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_documento_qualifica",
+     "colunas": [
+      "id_tipo_documento"
+     ],
+     "ref": "tipo_documento",
+     "refcolunas": [
+      "id_tipo_documento"
+     ],
+     "relacionamento": "QUALIFICA",
+     "cardinalidade": "TIPO_DOCUMENTO (0,n) — DOCUMENTO (1,1)",
+     "regra": "RN53",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {},
+   "nota": ""
+  },
+  "tipo_documento": {
+   "area": "Negociacao",
+   "cor": "#be123c",
+   "folha": 4,
+   "entidade": "TIPO_DOCUMENTO",
+   "tipo": "forte",
+   "pk": [
+    "id_tipo_documento"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Lista de dominio dos documentos do contrato; o nome e unico (UNIQUE) e pode ser corrigido sem afetar os documentos.",
+   "fks": [],
+   "checks": {},
+   "nota": "Dominio: tipos de documento do contrato (antes o nome era digitado em cada documento) (RN53)."
+  },
+  "comissao": {
+   "area": "Negociacao",
+   "cor": "#be123c",
+   "folha": 4,
+   "entidade": "COMISSAO",
+   "tipo": "associativa",
+   "pk": [
+    "id_contrato",
+    "id_corretor"
+   ],
+   "pk_tipo": "composta",
+   "pk_por_que": "Associativa: cada corretor tem no maximo uma comissao por contrato; percentual e situacao valem para o par.",
+   "fks": [
+    {
+     "nome": "fk_comissao_contrato",
+     "colunas": [
+      "id_contrato"
+     ],
+     "ref": "contrato",
+     "refcolunas": [
+      "id_contrato"
+     ],
+     "relacionamento": "RECEBE",
+     "cardinalidade": "CONTRATO (0,n) — CORRETOR (0,n)",
+     "regra": "RN20",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_comissao_corretor",
+     "colunas": [
+      "id_corretor"
+     ],
+     "ref": "corretor",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "RECEBE",
+     "cardinalidade": "CONTRATO (0,n) — CORRETOR (0,n)",
+     "regra": "RN20",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_comissao_aprova",
+     "colunas": [
+      "id_aprovador"
+     ],
+     "ref": "administrador",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "APROVA",
+     "cardinalidade": "COMISSAO (0,1) — ADMINISTRADOR (0,n)",
+     "regra": "PO01",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_comissao_lanca",
+     "colunas": [
+      "id_conta_pagar"
+     ],
+     "ref": "conta_pagar",
+     "refcolunas": [
+      "id_conta_pagar"
+     ],
+     "relacionamento": "LANCA",
+     "cardinalidade": "COMISSAO (0,1) — CONTA_PAGAR (0,1)",
+     "regra": "RN25",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_comissao_pc_comissao": "Cada percentual de comissao e maior que 0 e no maximo 100 (a soma por contrato e conferida por gatilho, RN20).",
+    "ck_comissao_tp_regra_pagamento": "Dominio fechado de tp_regra_pagamento: aceita so assinatura, liberacao_credito, recebimento. Na assinatura, na liberacao do credito ou no recebimento (RN24)",
+    "ck_comissao_st_comissao": "Dominio fechado de st_comissao: aceita so pendente, liberada, cancelada. Pendente, liberada ou cancelada; “paga” nao e armazenada, pois deriva da conta a pagar ligada por LANCA (17.20)",
+    "ck_comissao_id_aprovador_dt_aprovacao": "A aprovacao registra quem aprovou e quando, sempre juntos (PO01)."
+   },
+   "nota": "Entidade associativa COMISSAO (RECEBE). vl_comissao e derivado e nao e armazenado."
+  },
+  "financiamento": {
+   "area": "Negociacao",
+   "cor": "#be123c",
+   "folha": 4,
+   "entidade": "FINANCIAMENTO",
+   "tipo": "fraca",
+   "pk": [
+    "id_contrato"
+   ],
+   "pk_tipo": "herdada (fraca 1:1)",
+   "pk_por_que": "Um contrato tem no maximo um financiamento (RN22): a chave e o proprio contrato.",
+   "fks": [
+    {
+     "nome": "fk_financiamento_financia",
+     "colunas": [
+      "id_contrato"
+     ],
+     "ref": "contrato",
+     "refcolunas": [
+      "id_contrato"
+     ],
+     "relacionamento": "FINANCIA",
+     "cardinalidade": "CONTRATO (0,1) — FINANCIAMENTO (1,1)",
+     "regra": "RN22",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_financiamento_concede",
+     "colunas": [
+      "id_instituicao"
+     ],
+     "ref": "instituicao_financeira",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "CONCEDE",
+     "cardinalidade": "INSTITUICAO_FINANCEIRA (0,n) — FINANCIAMENTO (1,1)",
+     "regra": "RN27, RN33",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_financiamento_st_financiamento": "Dominio fechado de st_financiamento: aceita so em_analise, aprovado, reprovado, liberado, cancelado. Em analise, aprovado, reprovado, liberado ou cancelado",
+    "ck_financiamento_st_financiamento_dt_liberacao": "Financiamento liberado tem a data da liberacao (RN23)."
+   },
+   "nota": "Identificado pelo proprio contrato (1:1)."
+  },
+  "categoria_financeira": {
+   "area": "Financeiro",
+   "cor": "#15803d",
+   "folha": 5,
+   "entidade": "CATEGORIA_FINANCEIRA",
+   "tipo": "forte",
+   "pk": [
+    "id_categoria"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Plano de contas: o codigo (usado pelas regras) e o nome sao chaves candidatas (UNIQUE); a chave substituta deixa renomear sem mexer nas contas.",
+   "fks": [],
+   "checks": {
+    "ck_categoria_financeira_tp_categoria": "Dominio fechado de tp_categoria: aceita so receita, despesa. Receita para conta a receber, despesa para conta a pagar (RN26); nao muda enquanto houver conta na categoria",
+    "ck_categoria_financeira_cd_categoria": "O codigo da categoria e minusculo, sem espaco e sem acento, porque e usado pelas regras do banco (RN26)."
+   },
+   "nota": "Plano de contas: a categoria define a natureza do lancamento; as regras a encontram pelo codigo (RN26)."
+  },
+  "conta_bancaria": {
+   "area": "Financeiro",
+   "cor": "#15803d",
+   "folha": 5,
+   "entidade": "CONTA_BANCARIA",
+   "tipo": "forte",
+   "pk": [
+    "id_conta"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "O apelido e unico, mas pode mudar; agencia e conta nao sao guardadas (dado sensivel).",
+   "fks": [],
+   "checks": {
+    "ck_conta_bancaria_tp_conta_bancaria": "Dominio fechado de tp_conta_bancaria: aceita so corrente, poupanca, caixa. Corrente, poupanca ou caixa"
+   },
+   "nota": ""
+  },
+  "movimento_bancario": {
+   "area": "Financeiro",
+   "cor": "#15803d",
+   "folha": 5,
+   "entidade": "MOVIMENTO_BANCARIO",
+   "tipo": "fraca",
+   "pk": [
+    "id_conta",
+    "nr_movimento"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "O lancamento pertence ao extrato da conta: conta + numero do movimento. O codigo da transacao do banco, dentro da conta, e chave candidata (UNIQUE, RN46).",
+   "fks": [
+    {
+     "nome": "fk_movimento_bancario_lista",
+     "colunas": [
+      "id_conta"
+     ],
+     "ref": "conta_bancaria",
+     "refcolunas": [
+      "id_conta"
+     ],
+     "relacionamento": "LISTA",
+     "cardinalidade": "CONTA_BANCARIA (0,n) — MOVIMENTO_BANCARIO (1,1)",
+     "regra": "RN46",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_movimento_bancario_vl_movimento": "Valor do lancamento do extrato positivo; a direcao fica em tp_movimento.",
+    "ck_movimento_bancario_tp_movimento": "Dominio fechado de tp_movimento: aceita so credito, debito. Credito comprova recebimentos; debito comprova pagamentos (RN45)"
+   },
+   "nota": "Entidade fraca da conta bancaria: o extrato importado (RN45, RN46). st_conciliacao e derivado e nao e armazenado."
+  },
+  "conta_receber": {
+   "area": "Financeiro",
+   "cor": "#15803d",
+   "folha": 5,
+   "entidade": "CONTA_RECEBER",
+   "tipo": "forte",
+   "pk": [
+    "id_conta_receber"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Nao ha combinacao natural estavel (o mesmo contrato gera varios alugueis do mesmo valor).",
+   "fks": [
+    {
+     "nome": "fk_conta_receber_gera_receita",
+     "colunas": [
+      "id_contrato"
+     ],
+     "ref": "contrato",
+     "refcolunas": [
+      "id_contrato"
+     ],
+     "relacionamento": "GERA RECEITA",
+     "cardinalidade": "CONTRATO (0,n) — CONTA_RECEBER (0,1)",
+     "regra": "RF24",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_conta_receber_classifica",
+     "colunas": [
+      "id_categoria"
+     ],
+     "ref": "categoria_financeira",
+     "refcolunas": [
+      "id_categoria"
+     ],
+     "relacionamento": "CLASSIFICA",
+     "cardinalidade": "CATEGORIA_FINANCEIRA (0,n) — CONTA_RECEBER (1,1)",
+     "regra": "RN26",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_conta_receber_paga",
+     "colunas": [
+      "id_pagador"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "PAGA",
+     "cardinalidade": "USUARIO (0,n) — CONTA_RECEBER (1,1)",
+     "regra": "RN27",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_conta_receber_tp_papel_pagador": "Dominio fechado de tp_papel_pagador: aceita so cliente, inquilino, proprietario, instituicao_financeira. Cliente, inquilino, proprietario ou instituicao financeira; o pagador precisa exercer esse papel (RN27, RN32)",
+    "ck_conta_receber_vl_receber": "Conta com valor positivo."
+   },
+   "nota": "st_conta e derivada das baixas e do vencimento e nao e armazenada (RN38)."
+  },
+  "recebimento": {
+   "area": "Financeiro",
+   "cor": "#15803d",
+   "folha": 5,
+   "entidade": "RECEBIMENTO",
+   "tipo": "fraca",
+   "pk": [
+    "id_conta_receber",
+    "nr_recebimento"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "A baixa so existe dentro da conta: conta + numero do recebimento (pagamento parcial, RN29).",
+   "fks": [
+    {
+     "nome": "fk_recebimento_quita",
+     "colunas": [
+      "id_conta_receber"
+     ],
+     "ref": "conta_receber",
+     "refcolunas": [
+      "id_conta_receber"
+     ],
+     "relacionamento": "QUITA",
+     "cardinalidade": "CONTA_RECEBER (0,n) — RECEBIMENTO (1,1)",
+     "regra": "RN29",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_recebimento_credita",
+     "colunas": [
+      "id_conta"
+     ],
+     "ref": "conta_bancaria",
+     "refcolunas": [
+      "id_conta"
+     ],
+     "relacionamento": "CREDITA",
+     "cardinalidade": "CONTA_BANCARIA (0,n) — RECEBIMENTO (1,1)",
+     "regra": "RN29",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_recebimento_recebido_via",
+     "colunas": [
+      "id_forma_pagamento"
+     ],
+     "ref": "forma_pagamento",
+     "refcolunas": [
+      "id_forma_pagamento"
+     ],
+     "relacionamento": "RECEBIDO VIA",
+     "cardinalidade": "FORMA_PAGAMENTO (0,n) — RECEBIMENTO (1,1)",
+     "regra": "RN50",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_recebimento_concilia",
+     "colunas": [
+      "id_conta",
+      "nr_movimento"
+     ],
+     "ref": "movimento_bancario",
+     "refcolunas": [
+      "id_conta",
+      "nr_movimento"
+     ],
+     "relacionamento": "CONCILIA",
+     "cardinalidade": "MOVIMENTO_BANCARIO (0,n) — RECEBIMENTO (0,1)",
+     "regra": "RN45",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_recebimento_vl_recebido": "Baixa com valor positivo.",
+    "ck_recebimento_nr_movimento_dt_conciliacao": "Baixa conciliada tem o movimento e a data da conciliacao, sempre juntos (RN45)."
+   },
+   "nota": ""
+  },
+  "conta_pagar": {
+   "area": "Financeiro",
+   "cor": "#15803d",
+   "folha": 5,
+   "entidade": "CONTA_PAGAR",
+   "tipo": "forte",
+   "pk": [
+    "id_conta_pagar"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Comissoes, repasses, despesas e impostos nao tem combinacao natural comum.",
+   "fks": [
+    {
+     "nome": "fk_conta_pagar_gera_despesa",
+     "colunas": [
+      "id_contrato"
+     ],
+     "ref": "contrato",
+     "refcolunas": [
+      "id_contrato"
+     ],
+     "relacionamento": "GERA DESPESA",
+     "cardinalidade": "CONTRATO (0,n) — CONTA_PAGAR (0,1)",
+     "regra": "RF25",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_conta_pagar_categoriza",
+     "colunas": [
+      "id_categoria"
+     ],
+     "ref": "categoria_financeira",
+     "refcolunas": [
+      "id_categoria"
+     ],
+     "relacionamento": "CATEGORIZA",
+     "cardinalidade": "CATEGORIA_FINANCEIRA (0,n) — CONTA_PAGAR (1,1)",
+     "regra": "RN26",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_conta_pagar_favorece",
+     "colunas": [
+      "id_favorecido"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "FAVORECE",
+     "cardinalidade": "USUARIO (0,n) — CONTA_PAGAR (0,1)",
+     "regra": "RF25",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_conta_pagar_custeia",
+     "colunas": [
+      "id_custeador"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "CUSTEIA",
+     "cardinalidade": "USUARIO (0,n) — CONTA_PAGAR (0,1)",
+     "regra": "RN28",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_conta_pagar_repassa",
+     "colunas": [
+      "id_conta_receber_origem",
+      "nr_recebimento_origem"
+     ],
+     "ref": "recebimento",
+     "refcolunas": [
+      "id_conta_receber",
+      "nr_recebimento"
+     ],
+     "relacionamento": "REPASSA",
+     "cardinalidade": "RECEBIMENTO (0,1) — CONTA_PAGAR (0,1)",
+     "regra": "RN30",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_conta_pagar_tp_papel_custeio": "Dominio fechado de tp_papel_custeio: aceita so imobiliaria, proprietario, inquilino. Imobiliaria, proprietario ou inquilino; quem arca precisa exercer esse papel (RN28, RN32)",
+    "ck_conta_pagar_id_custeador_tp_papel_custeio": "Quando quem arca com o custo nao e a imobiliaria, a pessoa precisa ser informada; quando e a imobiliaria, nao ha pessoa (RN28).",
+    "ck_conta_pagar_vl_pagar": "Conta com valor positivo.",
+    "ck_conta_pagar_id_conta_receber_origem_nr_recebimento_origem": "A referencia ao recebimento de origem e composta: as duas colunas vem juntas."
+   },
+   "nota": "st_conta e derivada e nao e armazenada (RN38). No repasse, vl_pagar e dt_vencimento sao calculados na geracao e ficam congelados."
+  },
+  "pagamento": {
+   "area": "Financeiro",
+   "cor": "#15803d",
+   "folha": 5,
+   "entidade": "PAGAMENTO",
+   "tipo": "fraca",
+   "pk": [
+    "id_conta_pagar",
+    "nr_pagamento"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "A baixa so existe dentro da conta a pagar: conta + numero do pagamento.",
+   "fks": [
+    {
+     "nome": "fk_pagamento_liquida",
+     "colunas": [
+      "id_conta_pagar"
+     ],
+     "ref": "conta_pagar",
+     "refcolunas": [
+      "id_conta_pagar"
+     ],
+     "relacionamento": "LIQUIDA",
+     "cardinalidade": "CONTA_PAGAR (0,n) — PAGAMENTO (1,1)",
+     "regra": "RN29",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_pagamento_debita",
+     "colunas": [
+      "id_conta"
+     ],
+     "ref": "conta_bancaria",
+     "refcolunas": [
+      "id_conta"
+     ],
+     "relacionamento": "DEBITA",
+     "cardinalidade": "CONTA_BANCARIA (0,n) — PAGAMENTO (1,1)",
+     "regra": "RN29",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_pagamento_pago_via",
+     "colunas": [
+      "id_forma_pagamento"
+     ],
+     "ref": "forma_pagamento",
+     "refcolunas": [
+      "id_forma_pagamento"
+     ],
+     "relacionamento": "PAGO VIA",
+     "cardinalidade": "FORMA_PAGAMENTO (0,n) — PAGAMENTO (1,1)",
+     "regra": "RN50",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_pagamento_efetiva",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "EFETIVA",
+     "cardinalidade": "USUARIO (0,n) — PAGAMENTO (1,1)",
+     "regra": "RN39, PO01",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_pagamento_confere",
+     "colunas": [
+      "id_conta",
+      "nr_movimento"
+     ],
+     "ref": "movimento_bancario",
+     "refcolunas": [
+      "id_conta",
+      "nr_movimento"
+     ],
+     "relacionamento": "CONFERE",
+     "cardinalidade": "MOVIMENTO_BANCARIO (0,n) — PAGAMENTO (0,1)",
+     "regra": "RN45",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_pagamento_vl_pago": "Baixa com valor positivo.",
+    "ck_pagamento_nr_movimento_dt_conciliacao": "Baixa conciliada tem o movimento e a data da conciliacao, sempre juntos (RN45)."
+   },
+   "nota": ""
+  },
+  "forma_pagamento": {
+   "area": "Financeiro",
+   "cor": "#15803d",
+   "folha": 5,
+   "entidade": "FORMA_PAGAMENTO",
+   "tipo": "forte",
+   "pk": [
+    "id_forma_pagamento"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Lista de dominio usada por recebimento e pagamento; o nome e unico (UNIQUE).",
+   "fks": [],
+   "checks": {},
+   "nota": "Dominio: meios de pagamento das baixas, o mesmo para recebimento e pagamento (antes um CHECK repetido nas duas tabelas) (RN50)."
+  },
+  "automacao_execucao": {
+   "area": "N8N e auditoria",
+   "cor": "#475569",
+   "folha": 2,
+   "entidade": "AUTOMACAO_EXECUCAO",
+   "tipo": "fraca",
+   "pk": [
+    "id_conversa",
+    "nr_execucao"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "A execucao pertence a conversa; o codigo da demanda e unico na conversa (RN31).",
+   "fks": [
+    {
+     "nome": "fk_automacao_execucao_dispara",
+     "colunas": [
+      "id_conversa"
+     ],
+     "ref": "conversa",
+     "refcolunas": [
+      "id_conversa"
+     ],
+     "relacionamento": "DISPARA",
+     "cardinalidade": "CONVERSA (0,n) — AUTOMACAO_EXECUCAO (1,1)",
+     "regra": "RN31",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {
+    "ck_automacao_execucao_st_execucao": "Dominio fechado de st_execucao: aceita so recebida, processada, enviada, erro."
+   },
+   "nota": ""
+  },
+  "automacao_log": {
+   "area": "N8N e auditoria",
+   "cor": "#475569",
+   "folha": 2,
+   "entidade": "AUTOMACAO_LOG",
+   "tipo": "fraca",
+   "pk": [
+    "id_conversa",
+    "nr_execucao",
+    "nr_log"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "O registro do log pertence a execucao: conversa + execucao + numero.",
+   "fks": [
+    {
+     "nome": "fk_automacao_log_grava",
+     "colunas": [
+      "id_conversa",
+      "nr_execucao"
+     ],
+     "ref": "automacao_execucao",
+     "refcolunas": [
+      "id_conversa",
+      "nr_execucao"
+     ],
+     "relacionamento": "GRAVA",
+     "cardinalidade": "AUTOMACAO_EXECUCAO (0,n) — AUTOMACAO_LOG (1,1)",
+     "regra": "RF12",
+     "ao_excluir": "CASCADE",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "o registro dependente nao existe sem o referenciado (subtipo, entidade fraca ou ligacao N:N)"
+    }
+   ],
+   "checks": {},
+   "nota": ""
+  },
+  "auditoria": {
+   "area": "N8N e auditoria",
+   "cor": "#475569",
+   "folha": 2,
+   "entidade": "AUDITORIA",
+   "tipo": "forte",
+   "pk": [
+    "id_auditoria"
+   ],
+   "pk_tipo": "substituta",
+   "pk_por_que": "Registro de evento, so de inclusao; nenhum atributo natural e unico.",
+   "fks": [
+    {
+     "nome": "fk_auditoria_pratica",
+     "colunas": [
+      "id_usuario"
+     ],
+     "ref": "usuario",
+     "refcolunas": [
+      "id_usuario"
+     ],
+     "relacionamento": "PRATICA",
+     "cardinalidade": "USUARIO (0,n) — AUDITORIA (1,1)",
+     "regra": "RN40",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_auditoria_audita_contrato",
+     "colunas": [
+      "id_contrato"
+     ],
+     "ref": "contrato",
+     "refcolunas": [
+      "id_contrato"
+     ],
+     "relacionamento": "AUDITA CONTRATO",
+     "cardinalidade": "CONTRATO (0,n) — AUDITORIA (0,1)",
+     "regra": "RN40",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_auditoria_audita_proposta",
+     "colunas": [
+      "id_proposta"
+     ],
+     "ref": "proposta",
+     "refcolunas": [
+      "id_proposta"
+     ],
+     "relacionamento": "AUDITA PROPOSTA",
+     "cardinalidade": "PROPOSTA (0,n) — AUDITORIA (0,1)",
+     "regra": "RN40",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_auditoria_audita_comissao",
+     "colunas": [
+      "id_comissao_contrato",
+      "id_comissao_corretor"
+     ],
+     "ref": "comissao",
+     "refcolunas": [
+      "id_contrato",
+      "id_corretor"
+     ],
+     "relacionamento": "AUDITA COMISSAO",
+     "cardinalidade": "COMISSAO (0,n) — AUDITORIA (0,1)",
+     "regra": "RN40",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_auditoria_audita_conta_receber",
+     "colunas": [
+      "id_conta_receber"
+     ],
+     "ref": "conta_receber",
+     "refcolunas": [
+      "id_conta_receber"
+     ],
+     "relacionamento": "AUDITA CONTA_RECEBER",
+     "cardinalidade": "CONTA_RECEBER (0,n) — AUDITORIA (0,1)",
+     "regra": "RN40",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_auditoria_audita_recebimento",
+     "colunas": [
+      "id_recebimento_conta",
+      "nr_recebimento"
+     ],
+     "ref": "recebimento",
+     "refcolunas": [
+      "id_conta_receber",
+      "nr_recebimento"
+     ],
+     "relacionamento": "AUDITA RECEBIMENTO",
+     "cardinalidade": "RECEBIMENTO (0,n) — AUDITORIA (0,1)",
+     "regra": "RN40",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_auditoria_audita_conta_pagar",
+     "colunas": [
+      "id_conta_pagar"
+     ],
+     "ref": "conta_pagar",
+     "refcolunas": [
+      "id_conta_pagar"
+     ],
+     "relacionamento": "AUDITA CONTA_PAGAR",
+     "cardinalidade": "CONTA_PAGAR (0,n) — AUDITORIA (0,1)",
+     "regra": "RN40",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    },
+    {
+     "nome": "fk_auditoria_audita_pagamento",
+     "colunas": [
+      "id_pagamento_conta",
+      "nr_pagamento"
+     ],
+     "ref": "pagamento",
+     "refcolunas": [
+      "id_conta_pagar",
+      "nr_pagamento"
+     ],
+     "relacionamento": "AUDITA PAGAMENTO",
+     "cardinalidade": "PAGAMENTO (0,n) — AUDITORIA (0,1)",
+     "regra": "RN40",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {
+    "ck_auditoria_tp_acao": "Dominio fechado de tp_acao: aceita so criacao, alteracao, cancelamento. Criacao, alteracao ou cancelamento (RN40)",
+    "ck_auditoria_arco_exclusivo": "Cada auditoria aponta para exatamente um registro (arco exclusivo dos sete AUDITA, RN40).",
+    "ck_auditoria_id_comissao_contrato_id_comissao_corretor": "A referencia a comissao e composta: as duas colunas vem juntas.",
+    "ck_auditoria_id_recebimento_conta_nr_recebimento": "A referencia ao recebimento e composta: as duas colunas vem juntas.",
+    "ck_auditoria_id_pagamento_conta_nr_pagamento": "A referencia ao pagamento e composta: as duas colunas vem juntas."
+   },
+   "nota": "Arco exclusivo: exatamente uma das sete referencias e preenchida (RN40)."
+  },
+  "auditoria_campo": {
+   "area": "N8N e auditoria",
+   "cor": "#475569",
+   "folha": 2,
+   "entidade": "AUDITORIA_CAMPO",
+   "tipo": "fraca",
+   "pk": [
+    "id_auditoria",
+    "nm_campo"
+   ],
+   "pk_tipo": "composta (fraca)",
+   "pk_por_que": "Cada campo alterado aparece uma vez no registro de auditoria: auditoria + nome do campo.",
+   "fks": [
+    {
+     "nome": "fk_auditoria_campo_detalha",
+     "colunas": [
+      "id_auditoria"
+     ],
+     "ref": "auditoria",
+     "refcolunas": [
+      "id_auditoria"
+     ],
+     "relacionamento": "DETALHA",
+     "cardinalidade": "AUDITORIA (0,n) — AUDITORIA_CAMPO (1,1)",
+     "regra": "RN40",
+     "ao_excluir": "RESTRICT",
+     "ao_atualizar": "NO ACTION",
+     "por_que": "preserva o historico: nao se exclui o que ainda e referenciado (contratos e lancamentos nunca sao excluidos)"
+    }
+   ],
+   "checks": {},
+   "nota": "1FN: um registro por campo alterado."
+  }
+ },
+ "gatilhos": {
+  "tg_exige_papel_ativo": "RN32: a pessoa precisa exercer o papel exigido (sem data de fim)",
+  "tg_especializacao_total": "RN01: todo usuario tem pelo menos um papel (conferido no fim da transacao)",
+  "tg_telefone_titular": "RN03: todo numero tem exatamente um titular entre as pessoas que o usam (conferido no fim da transacao)",
+  "tg_conta_categoria": "RN26/RN30: conta a receber usa categoria de receita; conta a pagar, de despesa; a gerada por recebimento usa a de repasse",
+  "tg_categoria_financeira_estavel": "RN26: o codigo da categoria nao muda e o tipo nao muda enquanto houver conta nela",
+  "tg_comissao_soma": "RN20: a soma das comissoes do contrato nao passa de 100%",
+  "tg_recebimento_regras": "RN29/RN38/RN45: baixa ate o valor da conta e conciliacao com credito da mesma conta",
+  "tg_recebimento_repasse": "RN30/PO05: cada recebimento de aluguel gera o repasse ao proprietario",
+  "tg_pagamento_regras": "RN39/PO01/RN29/RN45: quem pode pagar, comissao so pelo administrador, valor e conciliacao",
+  "tg_conta_receber_pagador": "RN32/RN27: o pagador exerce o papel informado",
+  "tg_conta_pagar_custeio": "RN28/RN32: quem arca com o custo exerce o papel informado",
+  "tg_contrato_inquilino": "RN33: a locacao assinada torna o cliente inquilino",
+  "tg_auditoria": "RN40: grava a auditoria (quem, quando, campos alterados)",
+  "tg_bloqueia_exclusao": "PO04/RN40: registros auditados nao sao excluidos",
+  "tg_auditoria_imutavel": "RNF04: a auditoria nao e alterada nem excluida",
+  "tg_imovel_bairro_da_cidade": "RN51: o bairro do imovel e da cidade do CEP",
+  "tg_perfil_bairro_da_cidade": "RN52: os bairros aceitos pelo perfil sao da cidade do perfil",
+  "tg_cidade_estavel": "RN51/RN52: a cidade do perfil com bairros, do bairro em uso e do CEP em uso nao muda"
+ },
+ "restricoes": {
+  "fk_usuario_capta": "Chave estrangeira CAPTA: id_origem precisa existir em origem_contato (RN49).",
+  "ck_cliente_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02).",
+  "fk_cliente_usuario": "Chave estrangeira especializacao: id_usuario precisa existir em usuario (RN01, RN02).",
+  "ck_proprietario_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02).",
+  "fk_proprietario_usuario": "Chave estrangeira especializacao: id_usuario precisa existir em usuario (RN01, RN02).",
+  "ck_inquilino_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02).",
+  "fk_inquilino_usuario": "Chave estrangeira especializacao: id_usuario precisa existir em usuario (RN01, RN02).",
+  "ck_corretor_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02).",
+  "fk_corretor_usuario": "Chave estrangeira especializacao: id_usuario precisa existir em usuario (RN01, RN02).",
+  "ck_financeiro_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02).",
+  "fk_financeiro_usuario": "Chave estrangeira especializacao: id_usuario precisa existir em usuario (RN01, RN02).",
+  "ck_fornecedor_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02).",
+  "fk_fornecedor_usuario": "Chave estrangeira especializacao: id_usuario precisa existir em usuario (RN01, RN02).",
+  "ck_administrador_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02).",
+  "fk_administrador_usuario": "Chave estrangeira especializacao: id_usuario precisa existir em usuario (RN01, RN02).",
+  "ck_instituicao_financeira_dt_inicio_dt_fim": "O papel nao pode terminar antes de comecar (RN02).",
+  "fk_instituicao_financeira_usuario": "Chave estrangeira especializacao: id_usuario precisa existir em usuario (RN01, RN02).",
+  "ck_telefone_nr_telefone": "O numero tem so digitos, de 10 a 13 (DDD + numero, com ou sem o codigo do pais). Sem mascara, a comparacao entre cadastros e exata (um valor atomico, 1FN).",
+  "fk_telefone_possui": "Chave estrangeira POSSUI: id_usuario precisa existir em usuario (RN03).",
+  "ck_uf_sg_uf": "A sigla da UF tem exatamente duas letras maiusculas (SP, RJ...).",
+  "fk_cidade_compreende": "Chave estrangeira COMPREENDE: sg_uf precisa existir em uf (RN41).",
+  "ck_cep_tp_cep": "Dominio fechado de tp_cep: aceita so geral, logradouro. Geral (a cidade inteira) ou de logradouro; como um CEP geral nao indica rua, a rua continua no imovel",
+  "fk_cep_agrupa": "Chave estrangeira AGRUPA: id_cidade precisa existir em cidade (RN41).",
+  "fk_bairro_divide": "Chave estrangeira DIVIDE: id_cidade precisa existir em cidade (RN51).",
+  "ck_perfil_interesse_tp_finalidade": "Dominio fechado de tp_finalidade: aceita so venda, locacao. Mesmo vocabulario de IMOVEL",
+  "ck_perfil_interesse_vl_minimo_vl_maximo": "A faixa de valor do perfil precisa ser coerente: minimo ate o maximo.",
+  "fk_perfil_interesse_busca": "Chave estrangeira BUSCA: id_usuario precisa existir em cliente (RN05).",
+  "fk_perfil_interesse_prefere": "Chave estrangeira PREFERE: id_cidade precisa existir em cidade (RN42).",
+  "fk_perfil_interesse_tipo_perfil_interesse": "Chave estrangeira DESEJA: id_usuario, nr_perfil precisa existir em perfil_interesse (RN47).",
+  "fk_perfil_interesse_tipo_tipo_imovel": "Chave estrangeira DESEJA: id_tipo_imovel precisa existir em tipo_imovel (RN47).",
+  "fk_perfil_interesse_bairro_perfil_interesse": "Chave estrangeira ABRANGE: id_usuario, nr_perfil precisa existir em perfil_interesse (RN52).",
+  "fk_perfil_interesse_bairro_bairro": "Chave estrangeira ABRANGE: id_bairro precisa existir em bairro (RN52).",
+  "ck_imovel_tp_finalidade": "Dominio fechado de tp_finalidade: aceita so venda, locacao, ambas. Define quais valores sao obrigatorios (17.24)",
+  "ck_imovel_st_imovel": "Dominio fechado de st_imovel: aceita so disponivel, reservado, vendido, alugado, inativo. Disponivel, reservado, vendido, alugado ou inativo; vendido, alugado ou inativo nao recebe visita nem proposta (RN10)",
+  "ck_imovel_tp_finalidade_vl_venda": "Imovel a venda (ou venda e locacao) precisa ter valor de venda.",
+  "ck_imovel_tp_finalidade_vl_aluguel": "Imovel para locacao (ou venda e locacao) precisa ter valor de aluguel.",
+  "fk_imovel_anuncia": "Chave estrangeira ANUNCIA: id_proprietario precisa existir em proprietario (RN06).",
+  "fk_imovel_responsavel": "Chave estrangeira RESPONSAVEL: id_corretor_responsavel precisa existir em corretor (RN07).",
+  "fk_imovel_localiza": "Chave estrangeira LOCALIZA: nr_cep precisa existir em cep (RN41).",
+  "fk_imovel_tipifica": "Chave estrangeira TIPIFICA: id_tipo_imovel precisa existir em tipo_imovel (RN48).",
+  "fk_imovel_situa": "Chave estrangeira SITUA: id_bairro precisa existir em bairro (RN51).",
+  "fk_foto_tem": "Chave estrangeira TEM: id_imovel precisa existir em imovel (RN09).",
+  "fk_imovel_caracteristica_caracteristica": "Chave estrangeira APRESENTA: id_caracteristica precisa existir em caracteristica (RN08).",
+  "fk_imovel_caracteristica_imovel": "Chave estrangeira APRESENTA: id_imovel precisa existir em imovel (RN08).",
+  "ck_conversa_st_conversa": "Dominio fechado de st_conversa: aceita so aberta, encerrada. Aberta ou encerrada (RN34)",
+  "fk_conversa_inicia": "Chave estrangeira INICIA: id_cliente precisa existir em cliente (RN11).",
+  "fk_conversa_atende": "Chave estrangeira ATENDE: id_corretor precisa existir em corretor (RN12).",
+  "fk_conversa_pertence_a": "Chave estrangeira PERTENCE A: id_estagio precisa existir em funil_estagio (RN13).",
+  "fk_conversa_imovel_imovel": "Chave estrangeira INTERESSA: id_imovel precisa existir em imovel (RF17).",
+  "fk_conversa_imovel_conversa": "Chave estrangeira INTERESSA: id_conversa precisa existir em conversa (RF17).",
+  "ck_mensagem_tp_direcao": "Dominio fechado de tp_direcao: aceita so entrada, saida. Em branco quando for nota interna",
+  "ck_mensagem_tp_canal": "Dominio fechado de tp_canal: aceita so whatsapp, email, nota_interna. WhatsApp, e-mail ou nota interna",
+  "fk_mensagem_contem": "Chave estrangeira CONTEM: id_conversa precisa existir em conversa (RF05).",
+  "fk_historico_estagio_conversa": "Chave estrangeira MOVE: id_conversa precisa existir em conversa (RN14).",
+  "fk_historico_estagio_funil_estagio": "Chave estrangeira MOVE: id_estagio precisa existir em funil_estagio (RN14).",
+  "fk_historico_estagio_registra": "Chave estrangeira REGISTRA: id_usuario precisa existir em usuario (RF08).",
+  "ck_tarefa_st_tarefa": "Dominio fechado de st_tarefa: aceita so pendente, concluida, cancelada. Pendente, concluida ou cancelada",
+  "fk_tarefa_gera_tarefa": "Chave estrangeira GERA TAREFA: id_conversa precisa existir em conversa (RN15).",
+  "fk_tarefa_executa": "Chave estrangeira EXECUTA: id_corretor precisa existir em corretor (RN15).",
+  "fk_conversa_tag_conversa": "Chave estrangeira MARCA: id_conversa precisa existir em conversa (RF09).",
+  "fk_conversa_tag_tag": "Chave estrangeira MARCA: id_tag precisa existir em tag (RF09).",
+  "ck_visita_st_visita": "Dominio fechado de st_visita: aceita so agendada, realizada, cancelada. Agendada, realizada ou cancelada",
+  "fk_visita_imovel": "Chave estrangeira VISITA: id_imovel precisa existir em imovel (RN16).",
+  "fk_visita_cliente": "Chave estrangeira VISITA: id_cliente precisa existir em cliente (RN16).",
+  "fk_visita_acompanha": "Chave estrangeira ACOMPANHA: id_corretor precisa existir em corretor (RN16).",
+  "ck_proposta_st_proposta": "Dominio fechado de st_proposta: aceita so pendente, aceita, recusada, substituida. Pendente, aceita, recusada ou substituida (respondida por contraproposta, RN35)",
+  "ck_proposta_vl_proposto_vl_anunciado": "Valores de proposta e de anuncio positivos.",
+  "ck_proposta_id_autorizador_vl_proposto": "Desconto acima de 10% do valor anunciado so com autorizacao do administrador registrada (PO03).",
+  "ck_proposta_id_proposta_id_proposta_respondida": "Uma proposta nao responde a si mesma (RN35).",
+  "fk_proposta_imovel": "Chave estrangeira PROPOE: id_imovel precisa existir em imovel (RF19).",
+  "fk_proposta_cliente": "Chave estrangeira PROPOE: id_cliente precisa existir em cliente (RF19).",
+  "fk_proposta_negocia": "Chave estrangeira NEGOCIA: id_corretor precisa existir em corretor (RF19).",
+  "fk_proposta_autoriza": "Chave estrangeira AUTORIZA: id_autorizador precisa existir em administrador (PO03).",
+  "fk_proposta_responde": "Chave estrangeira RESPONDE: id_proposta_respondida precisa existir em proposta (RN35).",
+  "fk_proposta_origina": "Chave estrangeira ORIGINA: id_visita precisa existir em visita (RN17).",
+  "ck_contrato_tp_contrato": "Dominio fechado de tp_contrato: aceita so venda, locacao. RN19",
+  "ck_contrato_tp_condicao_pagamento": "Dominio fechado de tp_condicao_pagamento: aceita so a_vista, financiado, parcelado_direto. A vista, financiado ou parcelado direto; \"financiado\" se, e somente se, houver financiamento (RN22). Nao confundir com a forma de cada baixa (FORMA_PAGAMENTO)",
+  "ck_contrato_st_contrato": "Dominio fechado de st_contrato: aceita so rascunho, vigente, encerrado, rescindido, cancelado. Rascunho, vigente, encerrado, rescindido ou cancelado; contrato assinado nao e excluido (PO04)",
+  "ck_contrato_pc_corretagem": "Percentual de corretagem entre 0 e 100.",
+  "ck_contrato_pc_administracao": "Taxa de administracao entre 0 e 100.",
+  "ck_contrato_tp_contrato_pc_administracao": "Contrato de locacao precisa de inicio, termino, taxa de administracao e dia de vencimento (RN19).",
+  "ck_contrato_dt_assinatura_st_contrato": "Contrato vigente, encerrado ou rescindido foi assinado: tem data de assinatura (RN36).",
+  "ck_contrato_st_contrato_dt_termino": "Encerrado, rescindido ou cancelado sempre tem a data do termino, e so eles tem (RN37, RN43, RN44).",
+  "ck_contrato_st_contrato_ds_motivo_termino": "Cancelamento e rescisao exigem o motivo (RN37, RN43).",
+  "ck_contrato_st_contrato_tp_iniciativa_rescisao": "So a rescisao registra quem pediu (RN43).",
+  "ck_contrato_tp_iniciativa_rescisao": "Dominio fechado de tp_iniciativa_rescisao: aceita so cliente, proprietario, comum_acordo. Cliente, proprietario ou comum acordo; obrigatorio na rescisao (RN43)",
+  "fk_contrato_fecha": "Chave estrangeira FECHA: id_proposta precisa existir em proposta (RN18).",
+  "fk_documento_anexa": "Chave estrangeira ANEXA: id_contrato precisa existir em contrato (RF21).",
+  "fk_documento_qualifica": "Chave estrangeira QUALIFICA: id_tipo_documento precisa existir em tipo_documento (RN53).",
+  "ck_comissao_pc_comissao": "Cada percentual de comissao e maior que 0 e no maximo 100 (a soma por contrato e conferida por gatilho, RN20).",
+  "ck_comissao_tp_regra_pagamento": "Dominio fechado de tp_regra_pagamento: aceita so assinatura, liberacao_credito, recebimento. Na assinatura, na liberacao do credito ou no recebimento (RN24)",
+  "ck_comissao_st_comissao": "Dominio fechado de st_comissao: aceita so pendente, liberada, cancelada. Pendente, liberada ou cancelada; “paga” nao e armazenada, pois deriva da conta a pagar ligada por LANCA (17.20)",
+  "ck_comissao_id_aprovador_dt_aprovacao": "A aprovacao registra quem aprovou e quando, sempre juntos (PO01).",
+  "fk_comissao_contrato": "Chave estrangeira RECEBE: id_contrato precisa existir em contrato (RN20).",
+  "fk_comissao_corretor": "Chave estrangeira RECEBE: id_corretor precisa existir em corretor (RN20).",
+  "fk_comissao_aprova": "Chave estrangeira APROVA: id_aprovador precisa existir em administrador (PO01).",
+  "fk_comissao_lanca": "Chave estrangeira LANCA: id_conta_pagar precisa existir em conta_pagar (RN25).",
+  "ck_financiamento_st_financiamento": "Dominio fechado de st_financiamento: aceita so em_analise, aprovado, reprovado, liberado, cancelado. Em analise, aprovado, reprovado, liberado ou cancelado",
+  "ck_financiamento_st_financiamento_dt_liberacao": "Financiamento liberado tem a data da liberacao (RN23).",
+  "fk_financiamento_financia": "Chave estrangeira FINANCIA: id_contrato precisa existir em contrato (RN22).",
+  "fk_financiamento_concede": "Chave estrangeira CONCEDE: id_instituicao precisa existir em instituicao_financeira (RN27, RN33).",
+  "ck_categoria_financeira_tp_categoria": "Dominio fechado de tp_categoria: aceita so receita, despesa. Receita para conta a receber, despesa para conta a pagar (RN26); nao muda enquanto houver conta na categoria",
+  "ck_categoria_financeira_cd_categoria": "O codigo da categoria e minusculo, sem espaco e sem acento, porque e usado pelas regras do banco (RN26).",
+  "ck_conta_bancaria_tp_conta_bancaria": "Dominio fechado de tp_conta_bancaria: aceita so corrente, poupanca, caixa. Corrente, poupanca ou caixa",
+  "ck_movimento_bancario_vl_movimento": "Valor do lancamento do extrato positivo; a direcao fica em tp_movimento.",
+  "ck_movimento_bancario_tp_movimento": "Dominio fechado de tp_movimento: aceita so credito, debito. Credito comprova recebimentos; debito comprova pagamentos (RN45)",
+  "fk_movimento_bancario_lista": "Chave estrangeira LISTA: id_conta precisa existir em conta_bancaria (RN46).",
+  "ck_conta_receber_tp_papel_pagador": "Dominio fechado de tp_papel_pagador: aceita so cliente, inquilino, proprietario, instituicao_financeira. Cliente, inquilino, proprietario ou instituicao financeira; o pagador precisa exercer esse papel (RN27, RN32)",
+  "ck_conta_receber_vl_receber": "Conta com valor positivo.",
+  "fk_conta_receber_gera_receita": "Chave estrangeira GERA RECEITA: id_contrato precisa existir em contrato (RF24).",
+  "fk_conta_receber_classifica": "Chave estrangeira CLASSIFICA: id_categoria precisa existir em categoria_financeira (RN26).",
+  "fk_conta_receber_paga": "Chave estrangeira PAGA: id_pagador precisa existir em usuario (RN27).",
+  "ck_recebimento_vl_recebido": "Baixa com valor positivo.",
+  "ck_recebimento_nr_movimento_dt_conciliacao": "Baixa conciliada tem o movimento e a data da conciliacao, sempre juntos (RN45).",
+  "fk_recebimento_quita": "Chave estrangeira QUITA: id_conta_receber precisa existir em conta_receber (RN29).",
+  "fk_recebimento_credita": "Chave estrangeira CREDITA: id_conta precisa existir em conta_bancaria (RN29).",
+  "fk_recebimento_recebido_via": "Chave estrangeira RECEBIDO VIA: id_forma_pagamento precisa existir em forma_pagamento (RN50).",
+  "fk_recebimento_concilia": "Chave estrangeira CONCILIA: id_conta, nr_movimento precisa existir em movimento_bancario (RN45).",
+  "ck_conta_pagar_tp_papel_custeio": "Dominio fechado de tp_papel_custeio: aceita so imobiliaria, proprietario, inquilino. Imobiliaria, proprietario ou inquilino; quem arca precisa exercer esse papel (RN28, RN32)",
+  "ck_conta_pagar_id_custeador_tp_papel_custeio": "Quando quem arca com o custo nao e a imobiliaria, a pessoa precisa ser informada; quando e a imobiliaria, nao ha pessoa (RN28).",
+  "ck_conta_pagar_vl_pagar": "Conta com valor positivo.",
+  "ck_conta_pagar_id_conta_receber_origem_nr_recebimento_origem": "A referencia ao recebimento de origem e composta: as duas colunas vem juntas.",
+  "fk_conta_pagar_gera_despesa": "Chave estrangeira GERA DESPESA: id_contrato precisa existir em contrato (RF25).",
+  "fk_conta_pagar_categoriza": "Chave estrangeira CATEGORIZA: id_categoria precisa existir em categoria_financeira (RN26).",
+  "fk_conta_pagar_favorece": "Chave estrangeira FAVORECE: id_favorecido precisa existir em usuario (RF25).",
+  "fk_conta_pagar_custeia": "Chave estrangeira CUSTEIA: id_custeador precisa existir em usuario (RN28).",
+  "fk_conta_pagar_repassa": "Chave estrangeira REPASSA: id_conta_receber_origem, nr_recebimento_origem precisa existir em recebimento (RN30).",
+  "ck_pagamento_vl_pago": "Baixa com valor positivo.",
+  "ck_pagamento_nr_movimento_dt_conciliacao": "Baixa conciliada tem o movimento e a data da conciliacao, sempre juntos (RN45).",
+  "fk_pagamento_liquida": "Chave estrangeira LIQUIDA: id_conta_pagar precisa existir em conta_pagar (RN29).",
+  "fk_pagamento_debita": "Chave estrangeira DEBITA: id_conta precisa existir em conta_bancaria (RN29).",
+  "fk_pagamento_pago_via": "Chave estrangeira PAGO VIA: id_forma_pagamento precisa existir em forma_pagamento (RN50).",
+  "fk_pagamento_efetiva": "Chave estrangeira EFETIVA: id_usuario precisa existir em usuario (RN39, PO01).",
+  "fk_pagamento_confere": "Chave estrangeira CONFERE: id_conta, nr_movimento precisa existir em movimento_bancario (RN45).",
+  "ck_automacao_execucao_st_execucao": "Dominio fechado de st_execucao: aceita so recebida, processada, enviada, erro.",
+  "fk_automacao_execucao_dispara": "Chave estrangeira DISPARA: id_conversa precisa existir em conversa (RN31).",
+  "fk_automacao_log_grava": "Chave estrangeira GRAVA: id_conversa, nr_execucao precisa existir em automacao_execucao (RF12).",
+  "ck_auditoria_tp_acao": "Dominio fechado de tp_acao: aceita so criacao, alteracao, cancelamento. Criacao, alteracao ou cancelamento (RN40)",
+  "ck_auditoria_arco_exclusivo": "Cada auditoria aponta para exatamente um registro (arco exclusivo dos sete AUDITA, RN40).",
+  "ck_auditoria_id_comissao_contrato_id_comissao_corretor": "A referencia a comissao e composta: as duas colunas vem juntas.",
+  "ck_auditoria_id_recebimento_conta_nr_recebimento": "A referencia ao recebimento e composta: as duas colunas vem juntas.",
+  "ck_auditoria_id_pagamento_conta_nr_pagamento": "A referencia ao pagamento e composta: as duas colunas vem juntas.",
+  "fk_auditoria_pratica": "Chave estrangeira PRATICA: id_usuario precisa existir em usuario (RN40).",
+  "fk_auditoria_audita_contrato": "Chave estrangeira AUDITA CONTRATO: id_contrato precisa existir em contrato (RN40).",
+  "fk_auditoria_audita_proposta": "Chave estrangeira AUDITA PROPOSTA: id_proposta precisa existir em proposta (RN40).",
+  "fk_auditoria_audita_comissao": "Chave estrangeira AUDITA COMISSAO: id_comissao_contrato, id_comissao_corretor precisa existir em comissao (RN40).",
+  "fk_auditoria_audita_conta_receber": "Chave estrangeira AUDITA CONTA_RECEBER: id_conta_receber precisa existir em conta_receber (RN40).",
+  "fk_auditoria_audita_recebimento": "Chave estrangeira AUDITA RECEBIMENTO: id_recebimento_conta, nr_recebimento precisa existir em recebimento (RN40).",
+  "fk_auditoria_audita_conta_pagar": "Chave estrangeira AUDITA CONTA_PAGAR: id_conta_pagar precisa existir em conta_pagar (RN40).",
+  "fk_auditoria_audita_pagamento": "Chave estrangeira AUDITA PAGAMENTO: id_pagamento_conta, nr_pagamento precisa existir em pagamento (RN40).",
+  "fk_auditoria_campo_detalha": "Chave estrangeira DETALHA: id_auditoria precisa existir em auditoria (RN40).",
+  "pk_administrador": "Chave primaria de administrador: (id_usuario) nao pode se repetir.",
+  "pk_auditoria": "Chave primaria de auditoria: (id_auditoria) nao pode se repetir.",
+  "pk_auditoria_campo": "Chave primaria de auditoria_campo: (id_auditoria, nm_campo) nao pode se repetir.",
+  "pk_automacao_execucao": "Chave primaria de automacao_execucao: (id_conversa, nr_execucao) nao pode se repetir.",
+  "uk_automacao_execucao_id_conversa_cd_demanda": "Valor unico: ja existe automacao_execucao com o mesmo id_conversa, cd_demanda.",
+  "pk_automacao_log": "Chave primaria de automacao_log: (id_conversa, nr_execucao, nr_log) nao pode se repetir.",
+  "pk_bairro": "Chave primaria de bairro: (id_bairro) nao pode se repetir.",
+  "uk_bairro_id_cidade_nm_bairro": "Valor unico: ja existe bairro com o mesmo id_cidade, nm_bairro.",
+  "pk_caracteristica": "Chave primaria de caracteristica: (id_caracteristica) nao pode se repetir.",
+  "uk_caracteristica_nm_caracteristica": "Valor unico: ja existe caracteristica com o mesmo nm_caracteristica.",
+  "pk_categoria_financeira": "Chave primaria de categoria_financeira: (id_categoria) nao pode se repetir.",
+  "uk_categoria_financeira_cd_categoria": "Valor unico: ja existe categoria_financeira com o mesmo cd_categoria.",
+  "uk_categoria_financeira_nm_categoria": "Valor unico: ja existe categoria_financeira com o mesmo nm_categoria.",
+  "pk_cep": "Chave primaria de cep: (nr_cep) nao pode se repetir.",
+  "pk_cidade": "Chave primaria de cidade: (id_cidade) nao pode se repetir.",
+  "uk_cidade_nm_cidade_sg_uf": "Valor unico: ja existe cidade com o mesmo nm_cidade, sg_uf.",
+  "pk_cliente": "Chave primaria de cliente: (id_usuario) nao pode se repetir.",
+  "pk_comissao": "Chave primaria de comissao: (id_contrato, id_corretor) nao pode se repetir.",
+  "uk_comissao_id_conta_pagar": "Valor unico: ja existe comissao com o mesmo id_conta_pagar.",
+  "pk_conta_bancaria": "Chave primaria de conta_bancaria: (id_conta) nao pode se repetir.",
+  "uk_conta_bancaria_nm_apelido": "Valor unico: ja existe conta_bancaria com o mesmo nm_apelido.",
+  "pk_conta_pagar": "Chave primaria de conta_pagar: (id_conta_pagar) nao pode se repetir.",
+  "uk_conta_pagar_id_conta_receber_origem_nr_recebimento_origem": "Valor unico: ja existe conta_pagar com o mesmo id_conta_receber_origem, nr_recebimento_origem.",
+  "pk_conta_receber": "Chave primaria de conta_receber: (id_conta_receber) nao pode se repetir.",
+  "pk_contrato": "Chave primaria de contrato: (id_contrato) nao pode se repetir.",
+  "uk_contrato_id_proposta": "Valor unico: ja existe contrato com o mesmo id_proposta.",
+  "pk_conversa": "Chave primaria de conversa: (id_conversa) nao pode se repetir.",
+  "pk_conversa_imovel": "Chave primaria de conversa_imovel: (id_imovel, id_conversa) nao pode se repetir.",
+  "pk_conversa_tag": "Chave primaria de conversa_tag: (id_conversa, id_tag) nao pode se repetir.",
+  "pk_corretor": "Chave primaria de corretor: (id_usuario) nao pode se repetir.",
+  "uk_corretor_nr_creci": "Valor unico: ja existe corretor com o mesmo nr_creci.",
+  "pk_documento": "Chave primaria de documento: (id_contrato, nr_documento) nao pode se repetir.",
+  "pk_financeiro": "Chave primaria de financeiro: (id_usuario) nao pode se repetir.",
+  "pk_financiamento": "Chave primaria de financiamento: (id_contrato) nao pode se repetir.",
+  "pk_forma_pagamento": "Chave primaria de forma_pagamento: (id_forma_pagamento) nao pode se repetir.",
+  "uk_forma_pagamento_nm_forma_pagamento": "Valor unico: ja existe forma_pagamento com o mesmo nm_forma_pagamento.",
+  "pk_fornecedor": "Chave primaria de fornecedor: (id_usuario) nao pode se repetir.",
+  "pk_foto": "Chave primaria de foto: (id_imovel, nr_foto) nao pode se repetir.",
+  "pk_funil_estagio": "Chave primaria de funil_estagio: (id_estagio) nao pode se repetir.",
+  "uk_funil_estagio_nm_estagio": "Valor unico: ja existe funil_estagio com o mesmo nm_estagio.",
+  "uk_funil_estagio_nr_ordem": "Valor unico: ja existe funil_estagio com o mesmo nr_ordem.",
+  "pk_historico_estagio": "Chave primaria de historico_estagio: (id_conversa, dt_alteracao) nao pode se repetir.",
+  "pk_imovel": "Chave primaria de imovel: (id_imovel) nao pode se repetir.",
+  "uk_imovel_cd_imobizi": "Valor unico: ja existe imovel com o mesmo cd_imobizi.",
+  "pk_imovel_caracteristica": "Chave primaria de imovel_caracteristica: (id_caracteristica, id_imovel) nao pode se repetir.",
+  "pk_inquilino": "Chave primaria de inquilino: (id_usuario) nao pode se repetir.",
+  "pk_instituicao_financeira": "Chave primaria de instituicao_financeira: (id_usuario) nao pode se repetir.",
+  "pk_mensagem": "Chave primaria de mensagem: (id_conversa, nr_mensagem) nao pode se repetir.",
+  "uk_mensagem_id_conversa_cd_externo": "Valor unico: ja existe mensagem com o mesmo id_conversa, cd_externo.",
+  "pk_movimento_bancario": "Chave primaria de movimento_bancario: (id_conta, nr_movimento) nao pode se repetir.",
+  "uk_movimento_bancario_id_conta_cd_transacao_banco": "Valor unico: ja existe movimento_bancario com o mesmo id_conta, cd_transacao_banco.",
+  "pk_origem_contato": "Chave primaria de origem_contato: (id_origem) nao pode se repetir.",
+  "uk_origem_contato_nm_origem": "Valor unico: ja existe origem_contato com o mesmo nm_origem.",
+  "pk_pagamento": "Chave primaria de pagamento: (id_conta_pagar, nr_pagamento) nao pode se repetir.",
+  "pk_perfil_interesse": "Chave primaria de perfil_interesse: (id_usuario, nr_perfil) nao pode se repetir.",
+  "pk_perfil_interesse_bairro": "Chave primaria de perfil_interesse_bairro: (id_usuario, nr_perfil, id_bairro) nao pode se repetir.",
+  "pk_perfil_interesse_tipo": "Chave primaria de perfil_interesse_tipo: (id_usuario, nr_perfil, id_tipo_imovel) nao pode se repetir.",
+  "pk_proposta": "Chave primaria de proposta: (id_proposta) nao pode se repetir.",
+  "uk_proposta_id_proposta_respondida": "Valor unico: ja existe proposta com o mesmo id_proposta_respondida.",
+  "pk_proprietario": "Chave primaria de proprietario: (id_usuario) nao pode se repetir.",
+  "pk_recebimento": "Chave primaria de recebimento: (id_conta_receber, nr_recebimento) nao pode se repetir.",
+  "pk_tag": "Chave primaria de tag: (id_tag) nao pode se repetir.",
+  "uk_tag_nm_tag": "Valor unico: ja existe tag com o mesmo nm_tag.",
+  "pk_tarefa": "Chave primaria de tarefa: (id_tarefa) nao pode se repetir.",
+  "pk_telefone": "Chave primaria de telefone: (id_usuario, nr_sequencia) nao pode se repetir.",
+  "uk_telefone_id_usuario_nr_telefone": "Valor unico: ja existe telefone com o mesmo id_usuario, nr_telefone.",
+  "pk_tipo_documento": "Chave primaria de tipo_documento: (id_tipo_documento) nao pode se repetir.",
+  "uk_tipo_documento_nm_tipo_documento": "Valor unico: ja existe tipo_documento com o mesmo nm_tipo_documento.",
+  "pk_tipo_imovel": "Chave primaria de tipo_imovel: (id_tipo_imovel) nao pode se repetir.",
+  "uk_tipo_imovel_nm_tipo_imovel": "Valor unico: ja existe tipo_imovel com o mesmo nm_tipo_imovel.",
+  "pk_uf": "Chave primaria de uf: (sg_uf) nao pode se repetir.",
+  "uk_uf_nm_uf": "Valor unico: ja existe uf com o mesmo nm_uf.",
+  "pk_usuario": "Chave primaria de usuario: (id_usuario) nao pode se repetir.",
+  "uk_usuario_nr_cpf_cnpj": "Valor unico: ja existe usuario com o mesmo nr_cpf_cnpj.",
+  "uk_usuario_ds_email": "Valor unico: ja existe usuario com o mesmo ds_email.",
+  "pk_visita": "Chave primaria de visita: (id_visita) nao pode se repetir.",
+  "uk_visita_id_imovel_id_cliente_dt_visita": "Valor unico: ja existe visita com o mesmo id_imovel, id_cliente, dt_visita.",
+  "ux_telefone_titular": "RN03: no maximo um titular por numero.",
+  "ux_telefone_principal": "Cada pessoa tem no maximo um telefone principal."
+ },
+ "folhas": [
+  "Pessoas, papeis, localizacao e perfil de interesse",
+  "Imoveis, integracao N8N e auditoria",
+  "Funil / CRM e regras garantidas no banco",
+  "Negociacao",
+  "Contas a receber, conciliacao, contas a pagar e repasses"
+ ],
+ "alteracoes": [
+  {
+   "fase": "origem",
+   "item": "Papeis da pessoa",
+   "antes": "conversations.kind (Cliente, Corretor, Proprietario) e colunas “Corretores” e “Proprietarios” no kanban, misturadas com as etapas",
+   "depois": "USUARIO com 8 subtipos (especializacao total e compartilhada)",
+   "porque": "Uma pessoa pode ter varios papeis ao mesmo tempo; a coluna do kanban e etapa do funil, nao papel; e o banco passa a exigir o papel em cada relacionamento (devolutiva, ponto 1)."
+  },
+  {
+   "fase": "origem",
+   "item": "Pessoa × atendimento",
+   "antes": "conversations guardava nome e telefone da pessoa junto com o atendimento",
+   "depois": "USUARIO (pessoa), TELEFONE e CONVERSA (atendimento) separados",
+   "porque": "O mesmo cliente tem varias conversas ao longo do tempo (RN11); nome e telefone dependiam da pessoa, e nao da conversa (3FN)."
+  },
+  {
+   "fase": "origem",
+   "item": "Imoveis de interesse da conversa",
+   "antes": "property_codes: texto com varios codigos de imovel no mesmo campo",
+   "depois": "CONVERSA_IMOVEL (N:N, com dt_interesse)",
+   "porque": "Lista dentro de um campo viola a 1FN e impede saber com seguranca quais imoveis a conversa quer."
+  },
+  {
+   "fase": "origem",
+   "item": "Corretor responsavel",
+   "antes": "owner: nome digitado em texto livre",
+   "depois": "FK id_corretor → CORRETOR (ATENDE)",
+   "porque": "Um nome digitado nao garante que a pessoa exista nem que seja corretor."
+  },
+  {
+   "fase": "origem",
+   "item": "Imoveis",
+   "antes": "So na planilha exportada do Imobzi (nenhuma tabela)",
+   "depois": "IMOVEL, FOTO, CARACTERISTICA, CEP e CIDADE; cd_imobizi guarda o codigo do Imobzi",
+   "porque": "Sem tabela nao ha integridade entre imovel, visita, proposta e contrato."
+  },
+  {
+   "fase": "origem",
+   "item": "Etapa do funil",
+   "antes": "stages.id em texto ('ativo') e conversations.stage sem chave estrangeira",
+   "depois": "FUNIL_ESTAGIO + HISTORICO_ESTAGIO (MOVE)",
+   "porque": "Guarda a ordem das etapas e o historico de cada mudanca (RN13, RN14)."
+  },
+  {
+   "fase": "origem",
+   "item": "Mensagens",
+   "antes": "messages(direction 'note'/'in'/'out')",
+   "depois": "MENSAGEM fraca de CONVERSA, com canal, direcao e cd_externo unico",
+   "porque": "A mesma mensagem do WhatsApp nao e gravada duas vezes (RN31)."
+  },
+  {
+   "fase": "origem",
+   "item": "Automacao N8N",
+   "antes": "automation_runs e automation_logs, log com conversa opcional",
+   "depois": "AUTOMACAO_EXECUCAO (fraca da conversa) e AUTOMACAO_LOG (fraca da execucao)",
+   "porque": "Mantida a ideia do app (nao reprocessar a mesma demanda); o log passa a pertencer a uma execucao."
+  },
+  {
+   "fase": "1a entrega",
+   "item": "Negociacao e financeiro",
+   "antes": "Inexistentes no app original",
+   "depois": "VISITA, PROPOSTA, CONTRATO, COMISSAO, FINANCIAMENTO, contas a receber e a pagar com baixas",
+   "porque": "Os problemas levantados na empresa (secao 4 do README) exigiam controlar o negocio do primeiro contato ao pagamento."
+  },
+  {
+   "fase": "normalizacao",
+   "item": "Cidade e UF do imovel",
+   "antes": "Colunas nm_cidade e sg_uf no imovel e no perfil",
+   "depois": "CEP → CIDADE (AGRUPA, LOCALIZA, PREFERE)",
+   "porque": "Cidade e UF dependiam do CEP, e nao da chave do imovel (3FN)."
+  },
+  {
+   "fase": "normalizacao",
+   "item": "Conta a receber × financiamento",
+   "antes": "Relacionamento LIBERA",
+   "depois": "Removido: o financiamento e encontrado pelo contrato da conta",
+   "porque": "A FK repetia o contrato e podia contradize-lo (3FN)."
+  },
+  {
+   "fase": "normalizacao",
+   "item": "Valores alterados na auditoria",
+   "antes": "ds_valores com todos os campos num texto",
+   "depois": "AUDITORIA_CAMPO (um registro por campo)",
+   "porque": "Varios valores num campo (1FN)."
+  },
+  {
+   "fase": "normalizacao",
+   "item": "Endereco do imovel",
+   "antes": "Atributo composto",
+   "depois": "Colunas atomicas: logradouro, numero, complemento e bairro",
+   "porque": "Busca por bairro sem recortar texto (1FN)."
+  },
+  {
+   "fase": "devolutiva",
+   "item": "Telefone",
+   "antes": "1 telefone pertence a 1 usuario",
+   "depois": "USUARIO (0,n) — POSSUI — (1,n) TELEFONE, com um titular por numero",
+   "porque": "Numeros compartilhados (casal, socios) contradiziam a regra (ponto 2)."
+  },
+  {
+   "fase": "devolutiva",
+   "item": "Repasse do aluguel",
+   "antes": "Um repasse depois do aluguel quitado",
+   "depois": "Um repasse para cada recebimento, inclusive parcial (REPASSA)",
+   "porque": "Pagamento parcial do inquilino (ponto 3)."
+  },
+  {
+   "fase": "devolutiva",
+   "item": "Termino do contrato",
+   "antes": "dt_cancelamento e ds_motivo_cancelamento",
+   "depois": "st_contrato com 5 situacoes, dt_termino, ds_motivo_termino, tp_iniciativa_rescisao",
+   "porque": "Cancelamento, rescisao e encerramento tem efeitos diferentes (ponto 4)."
+  },
+  {
+   "fase": "devolutiva",
+   "item": "Conciliacao bancaria",
+   "antes": "Inexistente",
+   "depois": "MOVIMENTO_BANCARIO (fraca da conta), CONCILIA e CONFERE",
+   "porque": "Conferir os lancamentos com o extrato (ponto 5)."
+  },
+  {
+   "fase": "devolutiva",
+   "item": "Referencia da auditoria",
+   "antes": "nm_entidade + cd_registro (texto)",
+   "depois": "Sete FKs (AUDITA …) com CHECK de exatamente uma",
+   "porque": "Integridade da referencia (ponto 6)."
+  },
+  {
+   "fase": "devolutiva",
+   "item": "Soma das comissoes",
+   "antes": "Sem controle",
+   "depois": "Gatilho que soma as comissoes com o contrato bloqueado",
+   "porque": "Impedir mais de 100% (ponto 7)."
+  },
+  {
+   "fase": "entrega final",
+   "item": "Exclusao de registro referenciado",
+   "antes": "Comportamento padrao do banco, sem decisao registrada",
+   "depois": "Politica explicita em cada FK: RESTRICT, CASCADE ou SET NULL",
+   "porque": "Integridade referencial pedida no manual: cada FK diz o que acontece quando o registro referenciado e excluido (secao 7)."
+  },
+  {
+   "fase": "entrega final",
+   "item": "Indices das chaves estrangeiras",
+   "antes": "Nenhum (o PostgreSQL nao cria sozinho)",
+   "depois": "54 indices",
+   "porque": "Desempenho das juncoes das consultas gerenciais e da conferencia das FKs."
+  },
+  {
+   "fase": "entrega final",
+   "item": "Dicionario de dados",
+   "antes": "Documento separado do banco",
+   "depois": "COMMENT ON TABLE/COLUMN e dicionario gerado do catalogo do banco",
+   "porque": "O dicionario passa a representar o banco implementado (Etapa 13)."
+  },
+  {
+   "fase": "entrega final",
+   "item": "Criacao do banco",
+   "antes": "O script comecava pelas tabelas",
+   "depois": "00_criar_banco.sql + scripts numerados por etapa",
+   "porque": "Executar do banco vazio ate as consultas (Etapas 14 e 15)."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Telefone",
+   "antes": "Entidade TELEFONE com chave propria (id_telefone), numero UNIQUE e ligacao N:N USUARIO_TELEFONE",
+   "depois": "TELEFONE entidade fraca de USUARIO: chave (id_usuario, nr_sequencia); o mesmo numero pode estar em mais de uma pessoa, com um titular",
+   "porque": "O numero de telefone nao identifica nada no negocio: muda de dono, e cada pessoa tem os seus. O telefone passou a ser dado da pessoa, e o compartilhamento continua garantido pelo titular unico por numero (RN03)."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Tipo de imovel",
+   "antes": "tp_imovel com CHECK de 5 valores fixos, repetido em IMOVEL e em PERFIL_INTERESSE",
+   "depois": "Tabela TIPO_IMOVEL (relacionamento TIPIFICA), com 10 tipos",
+   "porque": "A lista e mantida pela imobiliaria e cresce (cobertura, kitnet, galpao...): com tabela, um tipo novo e so um cadastro, e imovel e perfil usam o mesmo vocabulario (RN48)."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Tipos aceitos pelo perfil",
+   "antes": "Um unico tp_imovel por perfil",
+   "depois": "N:N DESEJA: tabela perfil_interesse_tipo",
+   "porque": "O cliente que aceita apartamento ou cobertura precisaria de dois perfis iguais; guardar varios tipos num campo violaria a 1FN (RN47)."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Origem do contato",
+   "antes": "tp_origem com CHECK em USUARIO",
+   "depois": "Tabela ORIGEM_CONTATO (relacionamento CAPTA)",
+   "porque": "Os canais de captacao mudam (redes sociais, portais, placa no imovel): a tabela permite cadastrar um canal novo sem alterar a estrutura e e a base do relatorio de captacao (G02, RN49)."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Forma de pagamento",
+   "antes": "tp_forma_pagamento com o mesmo CHECK repetido em RECEBIMENTO e PAGAMENTO",
+   "depois": "Tabela FORMA_PAGAMENTO (RECEBIDO VIA e PAGO VIA)",
+   "porque": "Uma lista so para as duas baixas, que cresce sem alterar a estrutura (RN50)."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Natureza do lancamento",
+   "antes": "A conta guardava a categoria e tambem tp_origem_receita ou tp_despesa, que dependiam da categoria",
+   "depois": "So a categoria; CATEGORIA_FINANCEIRA ganhou o codigo (cd_categoria) usado pelas regras",
+   "porque": "id_categoria → tipo e uma dependencia transitiva (3FN) e permitia contradicao, como categoria Imposto com tipo repasse. A RN26 (categoria compativel com a conta), que nao estava garantida, passou a ser conferida por gatilho."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Condicao de pagamento do contrato",
+   "antes": "contrato.tp_forma_pagamento",
+   "depois": "contrato.tp_condicao_pagamento",
+   "porque": "O mesmo nome servia para dois dominios diferentes (a vista ou financiado × Pix ou boleto); o nome novo evita a confusao com FORMA_PAGAMENTO."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Bairro",
+   "antes": "nm_bairro digitado no IMOVEL e no PERFIL_INTERESSE",
+   "depois": "Tabela BAIRRO, da cidade (DIVIDE); o imovel aponta para o bairro (SITUA)",
+   "porque": "O mesmo dado repetido em duas tabelas: Tatuape e Tatuape com acento viravam bairros diferentes, e a comparacao do perfil com o imovel falhava. O bairro tem de ser da cidade do CEP (RN51)."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Bairros aceitos pelo perfil",
+   "antes": "Um unico nm_bairro por perfil",
+   "depois": "N:N ABRANGE: tabela perfil_interesse_bairro",
+   "porque": "Como nos tipos: o cliente que aceita Tatuape ou Mooca precisaria de dois perfis iguais; varios bairros num campo violariam a 1FN. Os bairros sao da cidade do perfil (RN52)."
+  },
+  {
+   "fase": "revisao final",
+   "item": "UF",
+   "antes": "cidade.sg_uf aceitava qualquer sigla",
+   "depois": "Tabela UF com as 27 unidades federativas (COMPREENDE)",
+   "porque": "Uma sigla que nao existe (XX) era aceita; com a FK so entra UF valida, e os relatorios podem mostrar o nome do estado (RN41)."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Tipo de documento",
+   "antes": "nm_documento digitado em cada documento do contrato",
+   "depois": "Tabela TIPO_DOCUMENTO (QUALIFICA)",
+   "porque": "Os mesmos nomes se repetiam (contrato assinado, matricula, laudo de vistoria) e a lista cresce: como tabela, os nomes nao variam e um tipo novo e so um cadastro (RN53)."
+  },
+  {
+   "fase": "revisao final",
+   "item": "Acentuacao",
+   "antes": "Dados, comentarios, mensagens e documentos com acento",
+   "depois": "Todo o projeto sem acento",
+   "porque": "Evita erro de codificacao (UTF-8 × WIN1252) ao rodar os scripts no Windows e deixa os dados padronizados para busca e comparacao."
+  }
+ ]
+}

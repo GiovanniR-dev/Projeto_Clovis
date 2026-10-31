@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CRMoveis — prototipo</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%230f766e%22/%3E%3Ctext x=%2216%22 y=%2221%22 font-size=%2213%22 font-family=%22Arial%22 font-weight=%22700%22 fill=%22white%22 text-anchor=%22middle%22%3ECR%3C/text%3E%3C/svg%3E">
+  <!-- Layout e estilos baseados no SP Imoveis CRM (styles.css); os acrescimos do CRMoveis estao em crmoveis.css -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='crmoveis.css') }}">
+</head>
+<body>
+  <div class="app-shell drawer-collapsed" id="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">CR</div>
+        <div>
+          <strong>CRMoveis</strong>
+          <span>ERP + CRM / WhatsApp</span>
+        </div>
+      </div>
+      <nav class="nav" id="nav">
+        <button class="nav-button" data-view="painel">Painel</button>
+        <button class="nav-button" data-view="crm">CRM (funil)</button>
+        <button class="nav-button" data-view="pessoas">Pessoas e papeis</button>
+        <button class="nav-button" data-grupo="imoveis" data-view="imoveis">Imoveis</button>
+        <div class="subnav" data-subnav="imoveis">
+          <button class="subnav-button" data-view="imoveis">Buscar e cadastrar</button>
+          <button class="subnav-button" data-view="seletor">Seletor por perfil</button>
+        </div>
+        <button class="nav-button" data-grupo="negociacao" data-view="propostas">Negociacao</button>
+        <div class="subnav" data-subnav="negociacao">
+          <button class="subnav-button" data-view="visitas">Visitas</button>
+          <button class="subnav-button" data-view="propostas">Propostas</button>
+          <button class="subnav-button" data-view="contratos">Contratos e comissoes</button>
+        </div>
+        <button class="nav-button" data-grupo="financeiro" data-view="receber">Financeiro</button>
+        <div class="subnav" data-subnav="financeiro">
+          <button class="subnav-button" data-view="receber">Contas a receber</button>
+          <button class="subnav-button" data-view="pagar">Contas a pagar</button>
+          <button class="subnav-button" data-view="conciliacao">Conciliacao bancaria</button>
+        </div>
+        <button class="nav-button" data-view="automacao">Automacao N8N</button>
+        <button class="nav-button" data-view="auditoria">Auditoria</button>
+        <button class="nav-button" data-grupo="consultas" data-view="gerenciais">Consultas</button>
+        <div class="subnav" data-subnav="consultas">
+          <button class="subnav-button" data-view="gerenciais">Gerenciais</button>
+          <button class="subnav-button" data-view="verificacoes">De auditoria</button>
+        </div>
+        <button class="nav-button nav-modelo" data-grupo="modelo" data-view="modelo">Modelo logico</button>
+        <div class="subnav" data-subnav="modelo">
+          <button class="subnav-button" data-view="modelo">Tabelas</button>
+          <button class="subnav-button" data-view="diagramas">Diagramas e evolucao</button>
+          <button class="subnav-button" data-view="sql">Console SQL</button>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="health-status">Conectando ao banco…</span>
+        <small>Prototipo da entrega final · Grupo 4</small>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <h1 id="view-title">Painel</h1>
+          <p id="view-subtitle"></p>
+        </div>
+        <div class="topbar-actions">
+          <label class="acting-as" title="Quem esta usando o sistema. O banco grava esse usuario na auditoria (RN40) e confere as permissoes de pagamento (RN39, PO01).">
+            <span>Agindo como</span>
+            <select id="usuario-atual"></select>
+          </label>
+          <span id="view-actions" class="topbar-actions"></span>
+        </div>
+      </header>
+
+      <section class="view" id="view-painel"></section>
+
+      <section class="view" id="view-crm">
+        <div class="toolbar">
+          <label class="field compact"><span>Buscar</span><input id="crm-busca" type="search" placeholder="Nome, telefone, nota"></label>
+          <label class="field"><span>Corretor</span><select id="crm-corretor"></select></label>
+          <label class="field"><span>Etiqueta</span><select id="crm-tag"></select></label>
+          <label class="field"><span>Situacao</span>
+            <select id="crm-situacao"><option value="aberta">Abertas</option><option value="encerrada">Encerradas</option><option value="todas">Todas</option></select>
+          </label>
+          <p class="hint">Arraste um card para outra coluna: o banco grava o novo estagio e o historico na mesma transacao (RN14).</p>
+        </div>
+        <div class="board" id="crm-board"></div>
+      </section>
+
+      <section class="view" id="view-pessoas">
+        <div class="toolbar">
+          <label class="field compact"><span>Buscar</span><input id="pessoas-busca" type="search" placeholder="Nome, CPF/CNPJ, e-mail"></label>
+          <label class="field"><span>Papel</span><select id="pessoas-papel"></select></label>
+          <p class="hint">Especializacao total e compartilhada: a mesma pessoa pode ter varios papeis (RN01, RN02).</p>
+        </div>
+        <div class="panel"><div class="table-wrap tall" id="pessoas-tabela"></div></div>
+      </section>
+
+      <section class="view" id="view-imoveis">
+        <div class="toolbar">
+          <label class="field compact"><span>Buscar</span><input id="imoveis-busca" type="search" placeholder="Codigo, bairro, rua, proprietario"></label>
+          <label class="field"><span>Cidade</span><select id="imoveis-cidade"></select></label>
+          <label class="field"><span>Bairro</span><select id="imoveis-bairro"><option value="">Todos</option></select></label>
+          <label class="field"><span>Finalidade</span><select id="imoveis-finalidade"><option value="">Todas</option><option value="venda">Venda</option><option value="locacao">Locacao</option></select></label>
+          <label class="field"><span>Tipo</span><select id="imoveis-tipo"><option value="">Todos</option></select></label>
+          <label class="field"><span>Situacao</span><select id="imoveis-situacao"><option value="">Todas</option><option>disponivel</option><option>reservado</option><option>alugado</option><option>vendido</option><option>inativo</option></select></label>
+          <label class="field"><span>Quartos (min.)</span><input id="imoveis-quartos" type="number" min="0" style="width:90px"></label>
+        </div>
+        <div class="imovel-grid" id="imoveis-grid"></div>
+      </section>
+
+      <section class="view" id="view-seletor">
+        <div class="toolbar">
+          <label class="field compact wide"><span>Perfil de interesse do cliente</span><select id="seletor-perfil"></select></label>
+          <p class="hint">E a “Selecao Interna” do app original, agora sobre o banco: os imoveis disponiveis sao pontuados pelo perfil (cidade, bairro, tipo, faixa de valor e quartos). E tambem o que a API do N8N usa.</p>
+        </div>
+        <div id="seletor-resultado"></div>
+      </section>
+
+      <section class="view" id="view-visitas">
+        <div class="toolbar">
+          <label class="field"><span>Situacao</span><select id="visitas-situacao"><option value="">Todas</option><option>agendada</option><option>realizada</option><option>cancelada</option></select></label>
+        </div>
+        <div class="panel"><div class="table-wrap tall" id="visitas-tabela"></div></div>
+      </section>
+
+      <section class="view" id="view-propostas">
+        <div class="toolbar">
+          <label class="field"><span>Situacao</span><select id="propostas-situacao"><option value="">Todas</option><option>pendente</option><option>aceita</option><option>recusada</option><option>substituida</option></select></label>
+          <p class="hint">Desconto acima de 10% do valor anunciado so com autorizacao do administrador (PO03, CHECK no banco). Contraproposta aponta para a proposta que responde (RESPONDE).</p>
+        </div>
+        <div class="panel"><div class="table-wrap tall" id="propostas-tabela"></div></div>
+      </section>
+
+      <section class="view" id="view-contratos">
+        <div class="panel"><div class="table-wrap tall" id="contratos-tabela"></div></div>
+      </section>
+
+      <section class="view" id="view-receber">
+        <div class="toolbar">
+          <label class="field compact"><span>Buscar</span><input id="receber-busca" type="search" placeholder="Pagador ou descricao"></label>
+          <label class="field"><span>Situacao</span><select id="receber-situacao"><option value="">Todas</option><option>prevista</option><option>parcial</option><option>atrasada</option><option>quitada</option><option>cancelada</option></select></label>
+          <p class="hint">A situacao nao e gravada: e calculada pela visao vw_conta_receber a partir das baixas (atributo derivado).</p>
+        </div>
+        <div class="panel"><div class="table-wrap tall" id="receber-tabela"></div></div>
+      </section>
+
+      <section class="view" id="view-pagar">
+        <div class="toolbar">
+          <label class="field compact"><span>Buscar</span><input id="pagar-busca" type="search" placeholder="Favorecido ou descricao"></label>
+          <label class="field"><span>Categoria</span><select id="pagar-tipo"><option value="">Todas</option></select></label>
+          <label class="field"><span>Situacao</span><select id="pagar-situacao"><option value="">Todas</option><option>prevista</option><option>parcial</option><option>atrasada</option><option>paga</option><option>cancelada</option></select></label>
+        </div>
+        <div class="panel"><div class="table-wrap tall" id="pagar-tabela"></div></div>
+      </section>
+
+      <section class="view" id="view-conciliacao">
+        <div class="toolbar" id="conciliacao-contas"></div>
+        <div class="two-cols">
+          <section class="panel"><div class="panel-head"><h2>Extrato do banco (movimento_bancario)</h2><span class="muted">situacao calculada em vw_movimento_bancario</span></div><div class="table-wrap tall" id="conciliacao-movimentos"></div></section>
+          <section class="panel"><div class="panel-head"><h2>Baixas lancadas nesta conta</h2><span class="muted">recebimentos e pagamentos</span></div><div class="table-wrap tall" id="conciliacao-baixas"></div></section>
+        </div>
+      </section>
+
+      <section class="view" id="view-automacao"></section>
+      <section class="view" id="view-auditoria">
+        <div class="toolbar">
+          <label class="field"><span>Tabela</span><select id="aud-tabela"><option value="">Todas</option><option>contrato</option><option>proposta</option><option>comissao</option><option>conta_receber</option><option>recebimento</option><option>conta_pagar</option><option>pagamento</option></select></label>
+          <label class="field"><span>Acao</span><select id="aud-acao"><option value="">Todas</option><option>criacao</option><option>alteracao</option><option>cancelamento</option></select></label>
+          <label class="field"><span>Usuario</span><select id="aud-usuario"></select></label>
+          <p class="hint">Gravada pelos gatilhos, nunca pela aplicacao (RN40). Nao pode ser alterada nem excluida (RNF04).</p>
+        </div>
+        <div class="panel"><div class="table-wrap tall" id="aud-tabela-lista"></div></div>
+      </section>
+
+      <section class="view" id="view-gerenciais"><div class="consultas" id="gerenciais-lista"></div></section>
+      <section class="view" id="view-verificacoes"><div class="consultas" id="verificacoes-lista"></div></section>
+
+      <section class="view" id="view-modelo">
+        <div class="modelo-layout">
+          <aside class="panel modelo-indice" id="modelo-indice"></aside>
+          <section class="panel modelo-detalhe" id="modelo-detalhe"></section>
+        </div>
+      </section>
+      <section class="view" id="view-diagramas"></section>
+      <section class="view" id="view-sql">
+        <section class="panel">
+          <div class="panel-head"><h2>Console SQL (somente leitura)</h2><span class="muted">A transacao e READ ONLY: INSERT, UPDATE e DELETE sao recusados pelo proprio PostgreSQL.</span></div>
+          <textarea id="sql-texto" class="sql-editor" spellcheck="false">SELECT fe.nm_estagio, count(*) AS conversas
+  FROM conversa cv JOIN funil_estagio fe USING (id_estagio)
+ GROUP BY fe.nm_estagio, fe.nr_ordem
+ ORDER BY fe.nr_ordem;</textarea>
+          <div class="button-row"><button class="primary-button" id="sql-rodar">Executar (Ctrl+Enter)</button><span class="muted" id="sql-info"></span></div>
+          <div class="sql-exemplos" id="sql-exemplos"></div>
+          <div class="table-wrap tall" id="sql-resultado"></div>
+        </section>
+      </section>
+    </main>
+
+    <aside class="conversation-drawer" id="drawer">
+      <div class="drawer-head">
+        <div><h2 id="drawer-titulo">Detalhes</h2><span id="drawer-subtitulo"></span></div>
+        <button class="ghost-button small" id="drawer-fechar">Fechar</button>
+      </div>
+      <div id="drawer-corpo"></div>
+    </aside>
+  </div>
+
+  <div class="modal" id="modal" hidden>
+    <form class="modal-card" id="modal-form">
+      <div class="panel-head"><h2 id="modal-titulo"></h2><button type="button" class="ghost-button small" id="modal-fechar">Fechar</button></div>
+      <p class="muted" id="modal-ajuda"></p>
+      <div class="form-grid two" id="modal-campos"></div>
+      <div class="modal-erro" id="modal-erro" hidden></div>
+      <div class="button-row end"><button type="submit" class="primary-button" id="modal-enviar">Salvar</button></div>
+    </form>
+  </div>
+
+  <div id="toast"></div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
