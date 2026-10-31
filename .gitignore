@@ -1,0 +1,8 @@
+# Configuracao local do prototipo: contem a senha do PostgreSQL de quem rodou. Nunca enviar ao GitHub.
+prototipo/.env
+# Ambiente Python criado pelo INICIAR_PROTOTIPO na primeira execucao
+prototipo/.venv/
+__pycache__/
+*.pyc
+# Registro do prototipo quando ele roda sem janela (inicializacao automatica com o Windows)
+prototipo/prototipo.log
