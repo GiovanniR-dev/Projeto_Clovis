@@ -1,0 +1,717 @@
+// CRMoveis — modelo logico da entrega final (3FN), igual ao banco instalado
+// Cole em https://dbdiagram.io · Gatilhos, procedimentos e visoes estao em sql/ddl/04 e 05 (o DBML descreve a estrutura).
+
+Table usuario {
+  id_usuario integer [pk, increment, not null, note: 'Identificador do usuario']
+  nm_usuario varchar(150) [not null, note: 'Nome completo ou razao social']
+  nr_cpf_cnpj varchar(14) [unique, note: 'CPF ou CNPJ']
+  ds_email varchar(150) [unique, note: 'E-mail de contato e de acesso']
+  ds_senha_hash varchar(255) [note: 'Senha de acesso, guardada como hash']
+  id_origem integer [note: 'Referencia a origem_contato']
+  fl_ativo boolean [not null, default: true, note: 'Indica se o cadastro esta ativo']
+  dt_cadastro timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Data do cadastro']
+  dt_anonimizacao timestamp [note: 'Data em que os dados pessoais foram anonimizados']
+
+  Note: 'Entidade USUARIO (forte) | Supertipo da especializacao dos papeis. | Gatilhos e indices: Todo usuario precisa estar em pelo menos um subtipo ao fim da transacao (especializacao total, RN01): gatilho de restricao adiado'
+}
+
+Table origem_contato {
+  id_origem integer [pk, increment, not null, note: 'Identificador da origem']
+  nm_origem varchar(40) [unique, not null, note: 'Canal pelo qual o contato chegou (site, indicacao, portal, Instagram, WhatsApp...)']
+
+  Note: 'Entidade ORIGEM_CONTATO (forte) | Dominio: canais de captacao (antes um CHECK em usuario.tp_origem).'
+}
+
+Table cliente {
+  id_usuario integer [pk, not null, note: 'Referencia a usuario']
+  dt_inicio date [not null, default: `CURRENT_DATE`, note: 'Data em que a pessoa passou a ser cliente']
+  dt_fim date [note: 'Data em que deixou de ser cliente']
+
+  Note: 'Entidade CLIENTE (subtipo) | Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02). | CHECK: dt_fim IS NULL OR dt_fim >= dt_inicio'
+}
+
+Table proprietario {
+  id_usuario integer [pk, not null, note: 'Referencia a usuario']
+  dt_inicio date [not null, default: `CURRENT_DATE`, note: 'Data em que a pessoa passou a ser proprietario']
+  dt_fim date [note: 'Data em que deixou de ser proprietario']
+
+  Note: 'Entidade PROPRIETARIO (subtipo) | Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02). | CHECK: dt_fim IS NULL OR dt_fim >= dt_inicio'
+}
+
+Table inquilino {
+  id_usuario integer [pk, not null, note: 'Referencia a usuario']
+  dt_inicio date [not null, default: `CURRENT_DATE`, note: 'Data em que a pessoa passou a ser inquilino']
+  dt_fim date [note: 'Data em que deixou de ser inquilino']
+
+  Note: 'Entidade INQUILINO (subtipo) | Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02). | CHECK: dt_fim IS NULL OR dt_fim >= dt_inicio'
+}
+
+Table corretor {
+  id_usuario integer [pk, not null, note: 'Referencia a usuario']
+  nr_creci varchar(20) [unique, not null, note: 'Registro do corretor no CRECI']
+  dt_inicio date [not null, default: `CURRENT_DATE`, note: 'Data em que a pessoa passou a ser corretor']
+  dt_fim date [note: 'Data em que deixou de ser corretor']
+
+  Note: 'Entidade CORRETOR (subtipo) | Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02). | CHECK: dt_fim IS NULL OR dt_fim >= dt_inicio'
+}
+
+Table financeiro {
+  id_usuario integer [pk, not null, note: 'Referencia a usuario']
+  dt_inicio date [not null, default: `CURRENT_DATE`, note: 'Data em que a pessoa passou a ser financeiro']
+  dt_fim date [note: 'Data em que deixou de ser financeiro']
+
+  Note: 'Entidade FINANCEIRO (subtipo) | Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02). | CHECK: dt_fim IS NULL OR dt_fim >= dt_inicio'
+}
+
+Table fornecedor {
+  id_usuario integer [pk, not null, note: 'Referencia a usuario']
+  dt_inicio date [not null, default: `CURRENT_DATE`, note: 'Data em que a pessoa passou a ser fornecedor']
+  dt_fim date [note: 'Data em que deixou de ser fornecedor']
+
+  Note: 'Entidade FORNECEDOR (subtipo) | Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02). | CHECK: dt_fim IS NULL OR dt_fim >= dt_inicio'
+}
+
+Table administrador {
+  id_usuario integer [pk, not null, note: 'Referencia a usuario']
+  dt_inicio date [not null, default: `CURRENT_DATE`, note: 'Data em que a pessoa passou a ser administrador']
+  dt_fim date [note: 'Data em que deixou de ser administrador']
+
+  Note: 'Entidade ADMINISTRADOR (subtipo) | Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02). | CHECK: dt_fim IS NULL OR dt_fim >= dt_inicio'
+}
+
+Table instituicao_financeira {
+  id_usuario integer [pk, not null, note: 'Referencia a usuario']
+  dt_inicio date [not null, default: `CURRENT_DATE`, note: 'Data em que a pessoa passou a ser instituicao financeira']
+  dt_fim date [note: 'Data em que deixou de ser instituicao financeira']
+
+  Note: 'Entidade INSTITUICAO_FINANCEIRA (subtipo) | Subtipo de USUARIO (especializacao total e compartilhada). Um registro por pessoa que exerce o papel; nunca e apagado, recebe dt_fim (RN02). | CHECK: dt_fim IS NULL OR dt_fim >= dt_inicio'
+}
+
+Table telefone {
+  id_usuario integer [not null, note: 'Referencia a usuario']
+  nr_sequencia smallint [not null, note: 'Numero do telefone dentro do cadastro da pessoa (1, 2, 3...)']
+  nr_telefone varchar(13) [not null, note: 'Numero com DDD, so digitos']
+  fl_principal boolean [not null, default: false, note: 'Indica o telefone principal da pessoa']
+  fl_titular boolean [not null, default: false, note: 'Indica se a pessoa e a titular do numero']
+
+  indexes {
+    (id_usuario, nr_sequencia) [pk]
+    (id_usuario, nr_telefone) [unique]
+  }
+
+  Note: 'Entidade TELEFONE (fraca) | Entidade fraca de USUARIO: o numero nao e chave; um numero compartilhado aparece uma vez para cada pessoa, com um unico titular (RN03). | CHECK: nr_telefone ~ \'^[0-9]{10,13}$\' | Gatilhos e indices: Indice unico parcial: um titular por numero (nr_telefone WHERE fl_titular); Indice unico parcial: um principal por usuario (id_usuario WHERE fl_principal); Todo numero cadastrado tem um titular ao fim da transacao: gatilho de restricao adiado (RN03)'
+}
+
+Table uf {
+  sg_uf char(2) [pk, not null, note: 'Sigla da unidade federativa (SP, RJ, MG...)']
+  nm_uf varchar(30) [unique, not null, note: 'Nome da unidade federativa']
+
+  Note: 'Entidade UF (forte) | Dominio: as 27 unidades federativas (antes a sigla era texto livre em cidade). | CHECK: sg_uf ~ \'^[A-Z]{2}$\''
+}
+
+Table cidade {
+  id_cidade integer [pk, increment, not null, note: 'Identificador da cidade']
+  nm_cidade varchar(100) [not null, note: 'Nome da cidade']
+  sg_uf char(2) [not null, note: 'Sigla da UF (referencia a uf)']
+
+  indexes {
+    (nm_cidade, sg_uf) [unique]
+  }
+
+  Note: 'Entidade CIDADE (forte) | 3FN: cidade e UF ficam aqui, e nao no imovel.'
+}
+
+Table cep {
+  nr_cep char(8) [pk, not null, note: 'CEP com 8 digitos']
+  id_cidade integer [not null, note: 'Referencia a cidade']
+  tp_cep varchar(15) [not null, note: 'Abrangencia do CEP']
+
+  Note: 'Entidade CEP (forte) | 3FN: CEP → cidade e UF. | CHECK: tp_cep IN (\'geral\', \'logradouro\') | Gatilhos e indices: A cidade do CEP nao muda enquanto houver imovel no CEP: gatilho (RN51)'
+}
+
+Table bairro {
+  id_bairro integer [pk, increment, not null, note: 'Identificador do bairro']
+  id_cidade integer [not null, note: 'Referencia a cidade']
+  nm_bairro varchar(100) [not null, note: 'Nome do bairro']
+
+  indexes {
+    (id_cidade, nm_bairro) [unique]
+  }
+
+  Note: 'Entidade BAIRRO (forte) | Dominio: bairros de cada cidade (antes um texto repetido em imovel e em perfil_interesse) (RN51). | Gatilhos e indices: A cidade do bairro nao muda enquanto houver imovel ou perfil no bairro: gatilho (RN51, RN52)'
+}
+
+Table perfil_interesse {
+  id_usuario integer [not null, note: 'Referencia a cliente']
+  nr_perfil smallint [not null, note: 'Numero do perfil dentro do cliente']
+  id_cidade integer [note: 'Referencia a cidade']
+  tp_finalidade varchar(10) [not null, note: 'Venda ou locacao']
+  vl_minimo numeric(12,2) [note: 'Valor minimo aceito']
+  vl_maximo numeric(12,2) [note: 'Valor maximo aceito']
+  qt_quartos_min smallint [note: 'Quantidade minima de quartos']
+
+  indexes {
+    (id_usuario, nr_perfil) [pk]
+  }
+
+  Note: 'Entidade PERFIL_INTERESSE (fraca) | Entidade fraca do CLIENTE. | CHECK: tp_finalidade IN (\'venda\', \'locacao\'); vl_minimo IS NULL OR vl_maximo IS NULL OR vl_minimo <= vl_maximo | Gatilhos e indices: A cidade do perfil nao muda enquanto houver bairros aceitos de outra cidade: gatilho (RN52)'
+}
+
+Table perfil_interesse_tipo {
+  id_usuario integer [not null, note: 'Referencia a perfil_interesse']
+  nr_perfil smallint [not null, note: 'Referencia a perfil_interesse']
+  id_tipo_imovel integer [not null, note: 'Referencia a tipo_imovel']
+
+  indexes {
+    (id_usuario, nr_perfil, id_tipo_imovel) [pk]
+  }
+
+  Note: 'Relacionamento N:N DESEJA | Relacionamento N:N DESEJA: os tipos de imovel aceitos pelo perfil; perfil sem tipo aceita qualquer tipo (RN47).'
+}
+
+Table perfil_interesse_bairro {
+  id_usuario integer [not null, note: 'Referencia a perfil_interesse']
+  nr_perfil smallint [not null, note: 'Referencia a perfil_interesse']
+  id_bairro integer [not null, note: 'Referencia a bairro']
+
+  indexes {
+    (id_usuario, nr_perfil, id_bairro) [pk]
+  }
+
+  Note: 'Relacionamento N:N ABRANGE | Relacionamento N:N ABRANGE: os bairros aceitos pelo perfil, todos da cidade do perfil; perfil sem bairro aceita qualquer bairro (RN52). | Gatilhos e indices: O bairro aceito e da cidade do perfil: gatilho (RN52)'
+}
+
+Table tipo_imovel {
+  id_tipo_imovel integer [pk, increment, not null, note: 'Identificador do tipo']
+  nm_tipo_imovel varchar(40) [unique, not null, note: 'Nome do tipo (apartamento, casa, cobertura, terreno, sala comercial...)']
+
+  Note: 'Entidade TIPO_IMOVEL (forte) | Dominio: tipos de imovel (antes um CHECK repetido em imovel e em perfil_interesse) (RN48).'
+}
+
+Table imovel {
+  id_imovel integer [pk, increment, not null, note: 'Identificador do imovel']
+  cd_imobizi varchar(30) [unique, note: 'Codigo do imovel no IMOBIZI']
+  id_proprietario integer [not null, note: 'Referencia a proprietario']
+  id_corretor_responsavel integer [note: 'Referencia a corretor']
+  nr_cep char(8) [not null, note: 'Referencia a cep']
+  id_tipo_imovel integer [not null, note: 'Referencia a tipo_imovel']
+  tp_finalidade varchar(10) [not null, note: 'Venda, locacao ou ambas']
+  nm_logradouro varchar(150) [not null, note: 'Logradouro (rua, avenida etc.)']
+  nr_endereco varchar(10) [not null, note: 'Numero do endereco']
+  ds_complemento varchar(60) [note: 'Complemento (apartamento, bloco, sala)']
+  id_bairro integer [not null, note: 'Bairro onde o imovel fica (referencia a bairro)']
+  vl_area_util numeric(10,2) [note: 'Area util em m2']
+  vl_area_total numeric(10,2) [note: 'Area total em m2']
+  qt_quartos smallint [note: 'Quantidade de quartos']
+  qt_banheiros smallint [note: 'Quantidade de banheiros']
+  qt_vagas_garagem smallint [note: 'Quantidade de vagas de garagem']
+  vl_venda numeric(12,2) [note: 'Preco de venda']
+  vl_aluguel numeric(12,2) [note: 'Aluguel mensal pedido']
+  st_imovel varchar(15) [not null, default: 'disponivel', note: 'Situacao do imovel']
+  ds_anuncio text [note: 'Texto do anuncio']
+  dt_cadastro timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Data do cadastro']
+
+  Note: 'Entidade IMOVEL (forte) | 1FN: endereco em colunas atomicas. 3FN: cidade e UF vem do CEP. | CHECK: tp_finalidade IN (\'venda\', \'locacao\', \'ambas\'); st_imovel IN (\'disponivel\', \'reservado\', \'vendido\', \'alugado\', \'inativo\'); tp_finalidade = \'locacao\' OR vl_venda IS NOT NULL; tp_finalidade = \'venda\' OR vl_aluguel IS NOT NULL | Gatilhos e indices: O bairro do imovel e da cidade do CEP: gatilho (RN51)'
+}
+
+Table foto {
+  id_imovel integer [not null, note: 'Referencia a imovel']
+  nr_foto smallint [not null, note: 'Numero da foto dentro do imovel']
+  nr_ordem smallint [not null, note: 'Posicao da foto na galeria']
+  ds_url varchar(500) [not null, note: 'Endereco do arquivo da foto']
+
+  indexes {
+    (id_imovel, nr_foto) [pk]
+  }
+
+  Note: 'Entidade FOTO (fraca)'
+}
+
+Table caracteristica {
+  id_caracteristica integer [pk, increment, not null, note: 'Identificador da caracteristica']
+  nm_caracteristica varchar(60) [unique, not null, note: 'Nome (piscina, elevador, aceita pet…)']
+
+  Note: 'Entidade CARACTERISTICA (forte)'
+}
+
+Table imovel_caracteristica {
+  id_caracteristica integer [not null, note: 'Referencia a caracteristica']
+  id_imovel integer [not null, note: 'Referencia a imovel']
+
+  indexes {
+    (id_caracteristica, id_imovel) [pk]
+  }
+
+  Note: 'Relacionamento N:N APRESENTA | Relacionamento N:N APRESENTA.'
+}
+
+Table funil_estagio {
+  id_estagio integer [pk, increment, not null, note: 'Identificador do estagio']
+  nm_estagio varchar(40) [unique, not null, note: 'Nome do estagio']
+  nr_ordem smallint [unique, not null, note: 'Posicao do estagio no funil']
+  ds_cor char(7) [note: 'Cor usada no quadro do funil']
+
+  Note: 'Entidade FUNIL_ESTAGIO (forte)'
+}
+
+Table conversa {
+  id_conversa integer [pk, increment, not null, note: 'Identificador da conversa']
+  id_cliente integer [not null, note: 'Referencia a cliente']
+  id_corretor integer [note: 'Referencia a corretor']
+  id_estagio integer [not null, note: 'Referencia a funil_estagio']
+  st_conversa varchar(10) [not null, default: 'aberta', note: 'Situacao da conversa']
+  ds_notas text [note: 'Anotacoes do corretor sobre o atendimento']
+  dt_inicio timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Data de abertura da conversa']
+
+  Note: 'Entidade CONVERSA (forte) | dt_atualizacao e derivada e nao e armazenada. | CHECK: st_conversa IN (\'aberta\', \'encerrada\')'
+}
+
+Table conversa_imovel {
+  id_imovel integer [not null, note: 'Referencia a imovel']
+  id_conversa integer [not null, note: 'Referencia a conversa']
+  dt_interesse timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Quando o imovel passou a interessar na conversa']
+
+  indexes {
+    (id_imovel, id_conversa) [pk]
+  }
+
+  Note: 'Entidade CONVERSA_IMOVEL (associativa) | Entidade associativa CONVERSA_IMOVEL (INTERESSA).'
+}
+
+Table mensagem {
+  id_conversa integer [not null, note: 'Referencia a conversa']
+  nr_mensagem integer [not null, note: 'Numero da mensagem dentro da conversa']
+  cd_externo varchar(64) [note: 'Codigo da mensagem no WhatsApp']
+  tp_direcao varchar(10) [note: 'Entrada (cliente) ou saida (imobiliaria)']
+  tp_canal varchar(15) [not null, note: 'Meio da mensagem']
+  ds_corpo text [not null, note: 'Conteudo da mensagem']
+  dt_mensagem timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Data e hora da mensagem']
+
+  indexes {
+    (id_conversa, nr_mensagem) [pk]
+    (id_conversa, cd_externo) [unique]
+  }
+
+  Note: 'Entidade MENSAGEM (fraca) | CHECK: tp_direcao IN (\'entrada\', \'saida\'); tp_canal IN (\'whatsapp\', \'email\', \'nota_interna\')'
+}
+
+Table historico_estagio {
+  id_conversa integer [not null, note: 'Referencia a conversa']
+  dt_alteracao timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Data e hora da mudanca de estagio']
+  id_estagio integer [not null, note: 'Referencia a funil_estagio']
+  id_usuario integer [note: 'Referencia a usuario']
+
+  indexes {
+    (id_conversa, dt_alteracao) [pk]
+  }
+
+  Note: 'Entidade HISTORICO_ESTAGIO (associativa) | Entidade associativa HISTORICO_ESTAGIO (MOVE).'
+}
+
+Table tarefa {
+  id_tarefa integer [pk, increment, not null, note: 'Identificador da tarefa']
+  id_conversa integer [note: 'Referencia a conversa']
+  id_corretor integer [not null, note: 'Referencia a corretor']
+  ds_titulo varchar(120) [not null, note: 'Resumo da tarefa']
+  ds_tarefa text [note: 'Detalhes']
+  dt_vencimento timestamp [not null, note: 'Prazo da tarefa']
+  st_tarefa varchar(15) [not null, default: 'pendente', note: 'Situacao']
+
+  Note: 'Entidade TAREFA (forte) | CHECK: st_tarefa IN (\'pendente\', \'concluida\', \'cancelada\')'
+}
+
+Table tag {
+  id_tag integer [pk, increment, not null, note: 'Identificador da tag']
+  nm_tag varchar(40) [unique, not null, note: 'Texto da etiqueta']
+
+  Note: 'Entidade TAG (forte)'
+}
+
+Table conversa_tag {
+  id_conversa integer [not null, note: 'Referencia a conversa']
+  id_tag integer [not null, note: 'Referencia a tag']
+
+  indexes {
+    (id_conversa, id_tag) [pk]
+  }
+
+  Note: 'Relacionamento N:N MARCA | Relacionamento N:N MARCA.'
+}
+
+Table visita {
+  id_visita integer [pk, increment, not null, note: 'Identificador da visita']
+  id_imovel integer [not null, note: 'Referencia a imovel']
+  id_cliente integer [not null, note: 'Referencia a cliente']
+  id_corretor integer [not null, note: 'Referencia a corretor']
+  dt_visita timestamp [not null, note: 'Data e hora da visita']
+  st_visita varchar(15) [not null, default: 'agendada', note: 'Situacao']
+  ds_feedback text [note: 'Impressao do cliente apos a visita']
+
+  indexes {
+    (id_imovel, id_cliente, dt_visita) [unique]
+  }
+
+  Note: 'Entidade VISITA (associativa) | Entidade associativa VISITA (CLIENTE × IMOVEL). | CHECK: st_visita IN (\'agendada\', \'realizada\', \'cancelada\')'
+}
+
+Table proposta {
+  id_proposta integer [pk, increment, not null, note: 'Identificador da proposta']
+  id_imovel integer [not null, note: 'Referencia a imovel']
+  id_cliente integer [not null, note: 'Referencia a cliente']
+  id_corretor integer [not null, note: 'Referencia a corretor']
+  id_autorizador integer [note: 'Referencia a administrador']
+  id_proposta_respondida integer [unique, note: 'Referencia a proposta']
+  id_visita integer [note: 'Referencia a visita']
+  vl_proposto numeric(12,2) [not null, note: 'Valor oferecido']
+  vl_anunciado numeric(12,2) [not null, note: 'Valor anunciado do imovel no momento da proposta']
+  ds_condicoes text [note: 'Forma de pagamento, prazos e financiamento']
+  st_proposta varchar(15) [not null, default: 'pendente', note: 'Situacao']
+  dt_proposta timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Data da proposta']
+  dt_autorizacao timestamp [note: 'Data da autorizacao do administrador']
+
+  Note: 'Entidade PROPOSTA (associativa) | Entidade associativa PROPOSTA (CLIENTE × IMOVEL). vl_anunciado e o valor congelado no momento da proposta. | CHECK: st_proposta IN (\'pendente\', \'aceita\', \'recusada\', \'substituida\'); vl_proposto > 0 AND vl_anunciado > 0; vl_proposto >= 0.9 * vl_anunciado OR (id_autorizador IS NOT NULL AND dt_autorizacao IS NOT NULL); id_proposta_respondida IS NULL OR id_proposta_respondida <> id_proposta'
+}
+
+Table contrato {
+  id_contrato integer [pk, increment, not null, note: 'Identificador do contrato']
+  id_proposta integer [unique, not null, note: 'Referencia a proposta']
+  tp_contrato varchar(10) [not null, note: 'Venda ou locacao']
+  tp_condicao_pagamento varchar(20) [not null, note: 'Condicao de pagamento do comprador']
+  vl_final numeric(12,2) [not null, note: 'Valor fechado; na locacao, o aluguel mensal']
+  pc_corretagem numeric(5,2) [not null, note: 'Percentual de corretagem sobre o valor final']
+  pc_administracao numeric(5,2) [note: 'Percentual retido do aluguel pela imobiliaria']
+  nr_dia_vencimento smallint [note: 'Dia do mes em que vence o aluguel']
+  dt_assinatura date [note: 'Data da assinatura']
+  dt_inicio date [note: 'Inicio da vigencia']
+  dt_fim date [note: 'Data prevista para o termino']
+  st_contrato varchar(12) [not null, default: 'rascunho', note: 'Situacao']
+  dt_termino date [note: 'Data em que o contrato terminou']
+  ds_motivo_termino text [note: 'Motivo do termino']
+  tp_iniciativa_rescisao varchar(15) [note: 'Quem pediu a rescisao']
+
+  Note: 'Entidade CONTRATO (forte) | vl_corretagem = vl_final × pc_corretagem e derivado e nao e armazenado. | CHECK: tp_contrato IN (\'venda\', \'locacao\'); tp_condicao_pagamento IN (\'a_vista\', \'financiado\', \'parcelado_direto\'); st_contrato IN (\'rascunho\', \'vigente\', \'encerrado\', \'rescindido\', \'cancelado\'); pc_corretagem >= 0 AND pc_corretagem <= 100; pc_administracao IS NULL OR (pc_administracao >= 0 AND pc_administracao <= 100); tp_contrato <> \'locacao\' OR (dt_inicio IS NOT NULL AND dt_fim IS NOT NULL AND pc_administracao IS NOT NULL AND nr_dia_vencimento IS NOT NULL); st_contrato NOT IN (\'vigente\', \'encerrado\', \'rescindido\') OR dt_assinatura IS NOT NULL; (st_contrato IN (\'encerrado\', \'rescindido\', \'cancelado\')) = (dt_termino IS NOT NULL); st_contrato NOT IN (\'rescindido\', \'cancelado\') OR ds_motivo_termino IS NOT NULL; (st_contrato = \'rescindido\') = (tp_iniciativa_rescisao IS NOT NULL); tp_iniciativa_rescisao IN (\'cliente\', \'proprietario\', \'comum_acordo\') | Gatilhos e indices: O termino e feito pelos procedimentos cancelar_contrato, rescindir_contrato e encerrar_contrato, que aplicam os efeitos da RN37, RN43 e RN44 numa unica transacao; Contrato nao e excluido (PO04): gatilho impede DELETE'
+}
+
+Table documento {
+  id_contrato integer [not null, note: 'Referencia a contrato']
+  nr_documento smallint [not null, note: 'Numero do documento dentro do contrato']
+  id_tipo_documento integer [not null, note: 'Tipo do documento (referencia a tipo_documento)']
+  ds_url varchar(500) [not null, note: 'Endereco do arquivo']
+
+  indexes {
+    (id_contrato, nr_documento) [pk]
+  }
+
+  Note: 'Entidade DOCUMENTO (fraca)'
+}
+
+Table tipo_documento {
+  id_tipo_documento integer [pk, increment, not null, note: 'Identificador do tipo de documento']
+  nm_tipo_documento varchar(60) [unique, not null, note: 'Nome do tipo (contrato assinado, documento do cliente, matricula do imovel, laudo de vistoria...)']
+
+  Note: 'Entidade TIPO_DOCUMENTO (forte) | Dominio: tipos de documento do contrato (antes o nome era digitado em cada documento) (RN53).'
+}
+
+Table comissao {
+  id_contrato integer [not null, note: 'Referencia a contrato']
+  id_corretor integer [not null, note: 'Referencia a corretor']
+  pc_comissao numeric(5,2) [not null, note: 'Percentual do corretor sobre a corretagem do contrato']
+  tp_regra_pagamento varchar(20) [not null, note: 'Quando a comissao pode ser paga']
+  st_comissao varchar(10) [not null, default: 'pendente', note: 'Situacao']
+  id_aprovador integer [note: 'Referencia a administrador']
+  dt_aprovacao timestamp [note: 'Data da aprovacao do administrador']
+  id_conta_pagar integer [unique, note: 'Referencia a conta_pagar']
+
+  indexes {
+    (id_contrato, id_corretor) [pk]
+  }
+
+  Note: 'Entidade COMISSAO (associativa) | Entidade associativa COMISSAO (RECEBE). vl_comissao e derivado e nao e armazenado. | CHECK: pc_comissao > 0 AND pc_comissao <= 100; tp_regra_pagamento IN (\'assinatura\', \'liberacao_credito\', \'recebimento\'); st_comissao IN (\'pendente\', \'liberada\', \'cancelada\'); (id_aprovador IS NULL) = (dt_aprovacao IS NULL) | Gatilhos e indices: A soma de pc_comissao do mesmo contrato nao passa de 100: gatilho com bloqueio do contrato (RN20)'
+}
+
+Table financiamento {
+  id_contrato integer [pk, not null, note: 'Referencia a contrato']
+  id_instituicao integer [not null, note: 'Referencia a instituicao_financeira']
+  vl_financiado numeric(12,2) [not null, note: 'Valor financiado']
+  vl_entrada numeric(12,2) [note: 'Valor de entrada']
+  nr_parcelas smallint [note: 'Quantidade de parcelas']
+  pc_juros_aa numeric(5,2) [note: 'Taxa de juros ao ano']
+  st_financiamento varchar(15) [not null, default: 'em_analise', note: 'Situacao']
+  dt_aprovacao date [note: 'Data da aprovacao do credito']
+  dt_liberacao date [note: 'Data em que o banco libera o credito']
+
+  Note: 'Entidade FINANCIAMENTO (fraca) | Identificado pelo proprio contrato (1:1). | CHECK: st_financiamento IN (\'em_analise\', \'aprovado\', \'reprovado\', \'liberado\', \'cancelado\'); st_financiamento <> \'liberado\' OR dt_liberacao IS NOT NULL'
+}
+
+Table categoria_financeira {
+  id_categoria integer [pk, increment, not null, note: 'Identificador da categoria']
+  cd_categoria varchar(30) [unique, not null, note: 'Codigo fixo da categoria (aluguel, repasse, comissao...)']
+  nm_categoria varchar(60) [unique, not null, note: 'Nome da categoria']
+  tp_categoria varchar(10) [not null, note: 'Receita ou despesa']
+
+  Note: 'Entidade CATEGORIA_FINANCEIRA (forte) | Plano de contas: a categoria define a natureza do lancamento; as regras a encontram pelo codigo (RN26). | CHECK: tp_categoria IN (\'receita\', \'despesa\'); cd_categoria ~ \'^[a-z_]+$\' | Gatilhos e indices: O codigo nao muda, e o tipo nao muda enquanto houver conta na categoria (gatilho, RN26)'
+}
+
+Table conta_bancaria {
+  id_conta integer [pk, increment, not null, note: 'Identificador da conta']
+  nm_apelido varchar(60) [unique, not null, note: 'Nome de referencia da conta']
+  nm_instituicao varchar(100) [note: 'Banco']
+  tp_conta_bancaria varchar(15) [not null, note: 'Tipo']
+  fl_ativa boolean [not null, default: true, note: 'Indica se a conta esta em uso']
+
+  Note: 'Entidade CONTA_BANCARIA (forte) | CHECK: tp_conta_bancaria IN (\'corrente\', \'poupanca\', \'caixa\')'
+}
+
+Table movimento_bancario {
+  id_conta integer [not null, note: 'Referencia a conta_bancaria']
+  nr_movimento integer [not null, note: 'Numero do movimento dentro da conta']
+  cd_transacao_banco varchar(60) [not null, note: 'Codigo da transacao informado pelo banco']
+  dt_movimento date [not null, note: 'Data do lancamento no banco']
+  vl_movimento numeric(12,2) [not null, note: 'Valor do lancamento']
+  tp_movimento varchar(10) [not null, note: 'Credito ou debito']
+  ds_historico varchar(200) [note: 'Historico do lancamento no extrato']
+  dt_importacao timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Data e hora da importacao']
+
+  indexes {
+    (id_conta, nr_movimento) [pk]
+    (id_conta, cd_transacao_banco) [unique]
+  }
+
+  Note: 'Entidade MOVIMENTO_BANCARIO (fraca) | Entidade fraca da conta bancaria: o extrato importado (RN45, RN46). st_conciliacao e derivado e nao e armazenado. | CHECK: vl_movimento > 0; tp_movimento IN (\'credito\', \'debito\')'
+}
+
+Table conta_receber {
+  id_conta_receber integer [pk, increment, not null, note: 'Identificador da conta a receber']
+  id_contrato integer [note: 'Referencia a contrato']
+  id_categoria integer [not null, note: 'Referencia a categoria_financeira']
+  id_pagador integer [not null, note: 'Referencia a usuario']
+  tp_papel_pagador varchar(25) [not null, note: 'Papel exercido por quem paga']
+  ds_conta varchar(200) [note: 'Descricao']
+  dt_competencia date [note: 'Mes de referencia']
+  vl_receber numeric(12,2) [not null, note: 'Valor a receber']
+  dt_vencimento date [not null, note: 'Data de vencimento']
+  fl_cancelada boolean [not null, default: false, note: 'Indica conta cancelada']
+
+  Note: 'Entidade CONTA_RECEBER (forte) | st_conta e derivada das baixas e do vencimento e nao e armazenada (RN38). | CHECK: tp_papel_pagador IN (\'cliente\', \'inquilino\', \'proprietario\', \'instituicao_financeira\'); vl_receber > 0 | Gatilhos e indices: O pagador precisa exercer o papel de tp_papel_pagador (gatilho, RN27, RN32); A categoria e de receita (gatilho, RN26)'
+}
+
+Table recebimento {
+  id_conta_receber integer [not null, note: 'Referencia a conta_receber']
+  nr_recebimento smallint [not null, note: 'Numero do recebimento dentro da conta']
+  id_conta integer [not null, note: 'Referencia a conta_bancaria e a movimento_bancario']
+  dt_recebimento date [not null, note: 'Data do recebimento']
+  vl_recebido numeric(12,2) [not null, note: 'Valor recebido']
+  id_forma_pagamento integer [not null, note: 'Referencia a forma_pagamento']
+  nr_movimento integer [note: 'Referencia a movimento_bancario']
+  dt_conciliacao date [note: 'Data em que a baixa foi conferida com o extrato']
+
+  indexes {
+    (id_conta_receber, nr_recebimento) [pk]
+  }
+
+  Note: 'Entidade RECEBIMENTO (fraca) | CHECK: vl_recebido > 0; (nr_movimento IS NULL) = (dt_conciliacao IS NULL) | Gatilhos e indices: Soma das baixas ≤ vl_receber (gatilho, RN29); O movimento ligado e um credito e a soma das baixas ligadas a ele nao passa do seu valor (gatilho, RN45); A FK composta (id_conta, nr_movimento) garante que o movimento e da mesma conta bancaria do recebimento; Na locacao, cada recebimento de aluguel gera a conta a pagar do repasse (gatilho, RN30)'
+}
+
+Table conta_pagar {
+  id_conta_pagar integer [pk, increment, not null, note: 'Identificador da conta a pagar']
+  id_contrato integer [note: 'Referencia a contrato']
+  id_categoria integer [not null, note: 'Referencia a categoria_financeira']
+  id_favorecido integer [note: 'Referencia a usuario']
+  id_custeador integer [note: 'Referencia a usuario']
+  id_conta_receber_origem integer [note: 'Referencia a recebimento']
+  nr_recebimento_origem smallint [note: 'Referencia a recebimento']
+  tp_papel_custeio varchar(15) [not null, note: 'Papel de quem arca com o custo final']
+  ds_conta varchar(200) [note: 'Descricao']
+  dt_competencia date [note: 'Mes de referencia']
+  vl_pagar numeric(12,2) [not null, note: 'Valor a pagar']
+  dt_vencimento date [not null, note: 'Data de vencimento']
+  fl_cancelada boolean [not null, default: false, note: 'Indica conta cancelada']
+
+  indexes {
+    (id_conta_receber_origem, nr_recebimento_origem) [unique]
+  }
+
+  Note: 'Entidade CONTA_PAGAR (forte) | st_conta e derivada e nao e armazenada (RN38). No repasse, vl_pagar e dt_vencimento sao calculados na geracao e ficam congelados. | CHECK: tp_papel_custeio IN (\'imobiliaria\', \'proprietario\', \'inquilino\'); (tp_papel_custeio = \'imobiliaria\') = (id_custeador IS NULL); vl_pagar > 0; (id_conta_receber_origem IS NULL) = (nr_recebimento_origem IS NULL) | Gatilhos e indices: Quem arca com o custo precisa exercer o papel de tp_papel_custeio (gatilho, RN28, RN32); A categoria e de despesa; a conta gerada por um recebimento usa a categoria de repasse (gatilho, RN26, RN30)'
+}
+
+Table pagamento {
+  id_conta_pagar integer [not null, note: 'Referencia a conta_pagar']
+  nr_pagamento smallint [not null, note: 'Numero do pagamento dentro da conta']
+  id_conta integer [not null, note: 'Referencia a conta_bancaria e a movimento_bancario']
+  id_usuario integer [not null, note: 'Referencia a usuario']
+  dt_pagamento date [not null, note: 'Data do pagamento']
+  vl_pago numeric(12,2) [not null, note: 'Valor pago']
+  id_forma_pagamento integer [not null, note: 'Referencia a forma_pagamento']
+  nr_movimento integer [note: 'Referencia a movimento_bancario']
+  dt_conciliacao date [note: 'Data em que a baixa foi conferida com o extrato']
+
+  indexes {
+    (id_conta_pagar, nr_pagamento) [pk]
+  }
+
+  Note: 'Entidade PAGAMENTO (fraca) | CHECK: vl_pago > 0; (nr_movimento IS NULL) = (dt_conciliacao IS NULL) | Gatilhos e indices: Soma das baixas ≤ vl_pagar (gatilho, RN29); Quem efetiva e administrador ou financeiro; comissao, so administrador (gatilho, RN39, PO01); O movimento ligado e um debito e a soma das baixas ligadas a ele nao passa do seu valor (gatilho, RN45)'
+}
+
+Table forma_pagamento {
+  id_forma_pagamento integer [pk, increment, not null, note: 'Identificador da forma de pagamento']
+  nm_forma_pagamento varchar(40) [unique, not null, note: 'Meio usado na baixa (Pix, TED, boleto, dinheiro, cartao...)']
+
+  Note: 'Entidade FORMA_PAGAMENTO (forte) | Dominio: meios de pagamento das baixas, o mesmo para recebimento e pagamento (antes um CHECK repetido nas duas tabelas) (RN50).'
+}
+
+Table automacao_execucao {
+  id_conversa integer [not null, note: 'Referencia a conversa']
+  nr_execucao integer [not null, note: 'Numero da execucao dentro da conversa']
+  cd_demanda varchar(64) [not null, note: 'Resumo que identifica a demanda']
+  st_execucao varchar(15) [not null, default: 'recebida', note: 'Situacao da execucao']
+  ds_demanda text [note: 'O que o cliente pediu, extraido da mensagem']
+  ds_criterios text [note: 'Criterios usados para escolher os imoveis']
+  ds_conteudo_enviado text [note: 'Conteudo enviado ao cliente']
+  ds_resumo text [note: 'Resumo da execucao']
+  ds_erro text [note: 'Erro ocorrido']
+  dt_execucao timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Data e hora da execucao']
+  dt_envio timestamp [note: 'Data e hora do envio ao cliente']
+
+  indexes {
+    (id_conversa, nr_execucao) [pk]
+    (id_conversa, cd_demanda) [unique]
+  }
+
+  Note: 'Entidade AUTOMACAO_EXECUCAO (fraca) | CHECK: st_execucao IN (\'recebida\', \'processada\', \'enviada\', \'erro\')'
+}
+
+Table automacao_log {
+  id_conversa integer [not null, note: 'Referencia a automacao_execucao']
+  nr_execucao integer [not null, note: 'Referencia a automacao_execucao']
+  nr_log integer [not null, note: 'Numero do evento dentro da execucao']
+  nm_evento varchar(60) [not null, note: 'Nome do evento']
+  ds_evento text [note: 'Descricao do evento']
+  ds_dados text [note: 'Dados tecnicos do evento']
+  dt_log timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Data e hora do evento']
+
+  indexes {
+    (id_conversa, nr_execucao, nr_log) [pk]
+  }
+
+  Note: 'Entidade AUTOMACAO_LOG (fraca)'
+}
+
+Table auditoria {
+  id_auditoria integer [pk, increment, not null, note: 'Identificador do registro de auditoria']
+  id_usuario integer [not null, note: 'Referencia a usuario']
+  tp_acao varchar(15) [not null, note: 'Acao praticada']
+  dt_acao timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'Data e hora da acao']
+  id_contrato integer [note: 'Referencia a contrato']
+  id_proposta integer [note: 'Referencia a proposta']
+  id_comissao_contrato integer [note: 'Referencia a comissao']
+  id_comissao_corretor integer [note: 'Referencia a comissao']
+  id_conta_receber integer [note: 'Referencia a conta_receber']
+  id_recebimento_conta integer [note: 'Referencia a recebimento']
+  nr_recebimento smallint [note: 'Referencia a recebimento']
+  id_conta_pagar integer [note: 'Referencia a conta_pagar']
+  id_pagamento_conta integer [note: 'Referencia a pagamento']
+  nr_pagamento smallint [note: 'Referencia a pagamento']
+
+  Note: 'Entidade AUDITORIA (forte) | Arco exclusivo: exatamente uma das sete referencias e preenchida (RN40). | CHECK: tp_acao IN (\'criacao\', \'alteracao\', \'cancelamento\'); num_nonnulls(id_contrato, id_proposta, id_comissao_contrato, id_conta_receber, id_recebimento_conta, id_conta_pagar, id_pagamento_conta) = 1; (id_comissao_contrato IS NULL) = (id_comissao_corretor IS NULL); (id_recebimento_conta IS NULL) = (nr_recebimento IS NULL); (id_pagamento_conta IS NULL) = (nr_pagamento IS NULL) | Gatilhos e indices: Registro imutavel: gatilho impede UPDATE e DELETE (RNF04); Os registros auditados nao podem ser excluidos: gatilho impede DELETE (RN40)'
+}
+
+Table auditoria_campo {
+  id_auditoria integer [not null, note: 'Referencia a auditoria']
+  nm_campo varchar(60) [not null, note: 'Nome do campo alterado']
+  ds_valor_anterior text [note: 'Valor do campo antes da acao']
+  ds_valor_novo text [note: 'Valor do campo depois da acao']
+
+  indexes {
+    (id_auditoria, nm_campo) [pk]
+  }
+
+  Note: 'Entidade AUDITORIA_CAMPO (fraca) | 1FN: um registro por campo alterado.'
+}
+
+Ref fk_usuario_capta: usuario.id_origem > origem_contato.id_origem [delete: restrict] // CAPTA
+Ref fk_cliente_usuario: cliente.id_usuario - usuario.id_usuario [delete: cascade] // especializacao de USUARIO
+Ref fk_proprietario_usuario: proprietario.id_usuario - usuario.id_usuario [delete: cascade] // especializacao de USUARIO
+Ref fk_inquilino_usuario: inquilino.id_usuario - usuario.id_usuario [delete: cascade] // especializacao de USUARIO
+Ref fk_corretor_usuario: corretor.id_usuario - usuario.id_usuario [delete: cascade] // especializacao de USUARIO
+Ref fk_financeiro_usuario: financeiro.id_usuario - usuario.id_usuario [delete: cascade] // especializacao de USUARIO
+Ref fk_fornecedor_usuario: fornecedor.id_usuario - usuario.id_usuario [delete: cascade] // especializacao de USUARIO
+Ref fk_administrador_usuario: administrador.id_usuario - usuario.id_usuario [delete: cascade] // especializacao de USUARIO
+Ref fk_instituicao_financeira_usuario: instituicao_financeira.id_usuario - usuario.id_usuario [delete: cascade] // especializacao de USUARIO
+Ref fk_telefone_possui: telefone.id_usuario > usuario.id_usuario [delete: cascade] // POSSUI
+Ref fk_cidade_compreende: cidade.sg_uf > uf.sg_uf [delete: restrict] // COMPREENDE
+Ref fk_cep_agrupa: cep.id_cidade > cidade.id_cidade [delete: restrict] // AGRUPA
+Ref fk_bairro_divide: bairro.id_cidade > cidade.id_cidade [delete: restrict] // DIVIDE
+Ref fk_perfil_interesse_busca: perfil_interesse.id_usuario > cliente.id_usuario [delete: cascade] // BUSCA
+Ref fk_perfil_interesse_prefere: perfil_interesse.id_cidade > cidade.id_cidade [delete: restrict] // PREFERE
+Ref fk_perfil_interesse_tipo_perfil_interesse: perfil_interesse_tipo.(id_usuario, nr_perfil) > perfil_interesse.(id_usuario, nr_perfil) [delete: cascade] // DESEJA
+Ref fk_perfil_interesse_tipo_tipo_imovel: perfil_interesse_tipo.id_tipo_imovel > tipo_imovel.id_tipo_imovel [delete: restrict] // DESEJA
+Ref fk_perfil_interesse_bairro_perfil_interesse: perfil_interesse_bairro.(id_usuario, nr_perfil) > perfil_interesse.(id_usuario, nr_perfil) [delete: cascade] // ABRANGE
+Ref fk_perfil_interesse_bairro_bairro: perfil_interesse_bairro.id_bairro > bairro.id_bairro [delete: restrict] // ABRANGE
+Ref fk_imovel_anuncia: imovel.id_proprietario > proprietario.id_usuario [delete: restrict] // ANUNCIA
+Ref fk_imovel_responsavel: imovel.id_corretor_responsavel > corretor.id_usuario [delete: restrict] // RESPONSAVEL
+Ref fk_imovel_localiza: imovel.nr_cep > cep.nr_cep [delete: restrict, update: cascade] // LOCALIZA
+Ref fk_imovel_tipifica: imovel.id_tipo_imovel > tipo_imovel.id_tipo_imovel [delete: restrict] // TIPIFICA
+Ref fk_imovel_situa: imovel.id_bairro > bairro.id_bairro [delete: restrict] // SITUA
+Ref fk_foto_tem: foto.id_imovel > imovel.id_imovel [delete: cascade] // TEM
+Ref fk_imovel_caracteristica_caracteristica: imovel_caracteristica.id_caracteristica > caracteristica.id_caracteristica [delete: restrict] // APRESENTA
+Ref fk_imovel_caracteristica_imovel: imovel_caracteristica.id_imovel > imovel.id_imovel [delete: cascade] // APRESENTA
+Ref fk_conversa_inicia: conversa.id_cliente > cliente.id_usuario [delete: restrict] // INICIA
+Ref fk_conversa_atende: conversa.id_corretor > corretor.id_usuario [delete: restrict] // ATENDE
+Ref fk_conversa_pertence_a: conversa.id_estagio > funil_estagio.id_estagio [delete: restrict] // PERTENCE A
+Ref fk_conversa_imovel_imovel: conversa_imovel.id_imovel > imovel.id_imovel [delete: restrict] // INTERESSA
+Ref fk_conversa_imovel_conversa: conversa_imovel.id_conversa > conversa.id_conversa [delete: cascade] // INTERESSA
+Ref fk_mensagem_contem: mensagem.id_conversa > conversa.id_conversa [delete: cascade] // CONTEM
+Ref fk_historico_estagio_conversa: historico_estagio.id_conversa > conversa.id_conversa [delete: cascade] // MOVE
+Ref fk_historico_estagio_funil_estagio: historico_estagio.id_estagio > funil_estagio.id_estagio [delete: restrict] // MOVE
+Ref fk_historico_estagio_registra: historico_estagio.id_usuario > usuario.id_usuario [delete: set null] // REGISTRA
+Ref fk_tarefa_gera_tarefa: tarefa.id_conversa > conversa.id_conversa [delete: set null] // GERA TAREFA
+Ref fk_tarefa_executa: tarefa.id_corretor > corretor.id_usuario [delete: restrict] // EXECUTA
+Ref fk_conversa_tag_conversa: conversa_tag.id_conversa > conversa.id_conversa [delete: cascade] // MARCA
+Ref fk_conversa_tag_tag: conversa_tag.id_tag > tag.id_tag [delete: cascade] // MARCA
+Ref fk_visita_imovel: visita.id_imovel > imovel.id_imovel [delete: restrict] // VISITA
+Ref fk_visita_cliente: visita.id_cliente > cliente.id_usuario [delete: restrict] // VISITA
+Ref fk_visita_acompanha: visita.id_corretor > corretor.id_usuario [delete: restrict] // ACOMPANHA
+Ref fk_proposta_imovel: proposta.id_imovel > imovel.id_imovel [delete: restrict] // PROPOE
+Ref fk_proposta_cliente: proposta.id_cliente > cliente.id_usuario [delete: restrict] // PROPOE
+Ref fk_proposta_negocia: proposta.id_corretor > corretor.id_usuario [delete: restrict] // NEGOCIA
+Ref fk_proposta_autoriza: proposta.id_autorizador > administrador.id_usuario [delete: restrict] // AUTORIZA
+Ref fk_proposta_responde: proposta.id_proposta_respondida - proposta.id_proposta [delete: restrict] // RESPONDE
+Ref fk_proposta_origina: proposta.id_visita > visita.id_visita [delete: restrict] // ORIGINA
+Ref fk_contrato_fecha: contrato.id_proposta - proposta.id_proposta [delete: restrict] // FECHA
+Ref fk_documento_anexa: documento.id_contrato > contrato.id_contrato [delete: restrict] // ANEXA
+Ref fk_documento_qualifica: documento.id_tipo_documento > tipo_documento.id_tipo_documento [delete: restrict] // QUALIFICA
+Ref fk_comissao_contrato: comissao.id_contrato > contrato.id_contrato [delete: restrict] // RECEBE
+Ref fk_comissao_corretor: comissao.id_corretor > corretor.id_usuario [delete: restrict] // RECEBE
+Ref fk_comissao_aprova: comissao.id_aprovador > administrador.id_usuario [delete: restrict] // APROVA
+Ref fk_comissao_lanca: comissao.id_conta_pagar - conta_pagar.id_conta_pagar [delete: restrict] // LANCA
+Ref fk_financiamento_financia: financiamento.id_contrato - contrato.id_contrato [delete: restrict] // FINANCIA
+Ref fk_financiamento_concede: financiamento.id_instituicao > instituicao_financeira.id_usuario [delete: restrict] // CONCEDE
+Ref fk_movimento_bancario_lista: movimento_bancario.id_conta > conta_bancaria.id_conta [delete: restrict] // LISTA
+Ref fk_conta_receber_gera_receita: conta_receber.id_contrato > contrato.id_contrato [delete: restrict] // GERA RECEITA
+Ref fk_conta_receber_classifica: conta_receber.id_categoria > categoria_financeira.id_categoria [delete: restrict] // CLASSIFICA
+Ref fk_conta_receber_paga: conta_receber.id_pagador > usuario.id_usuario [delete: restrict] // PAGA
+Ref fk_recebimento_quita: recebimento.id_conta_receber > conta_receber.id_conta_receber [delete: restrict] // QUITA
+Ref fk_recebimento_credita: recebimento.id_conta > conta_bancaria.id_conta [delete: restrict] // CREDITA
+Ref fk_recebimento_recebido_via: recebimento.id_forma_pagamento > forma_pagamento.id_forma_pagamento [delete: restrict] // RECEBIDO VIA
+Ref fk_recebimento_concilia: recebimento.(id_conta, nr_movimento) > movimento_bancario.(id_conta, nr_movimento) [delete: restrict] // CONCILIA
+Ref fk_conta_pagar_gera_despesa: conta_pagar.id_contrato > contrato.id_contrato [delete: restrict] // GERA DESPESA
+Ref fk_conta_pagar_categoriza: conta_pagar.id_categoria > categoria_financeira.id_categoria [delete: restrict] // CATEGORIZA
+Ref fk_conta_pagar_favorece: conta_pagar.id_favorecido > usuario.id_usuario [delete: restrict] // FAVORECE
+Ref fk_conta_pagar_custeia: conta_pagar.id_custeador > usuario.id_usuario [delete: restrict] // CUSTEIA
+Ref fk_conta_pagar_repassa: conta_pagar.(id_conta_receber_origem, nr_recebimento_origem) - recebimento.(id_conta_receber, nr_recebimento) [delete: restrict] // REPASSA
+Ref fk_pagamento_liquida: pagamento.id_conta_pagar > conta_pagar.id_conta_pagar [delete: restrict] // LIQUIDA
+Ref fk_pagamento_debita: pagamento.id_conta > conta_bancaria.id_conta [delete: restrict] // DEBITA
+Ref fk_pagamento_pago_via: pagamento.id_forma_pagamento > forma_pagamento.id_forma_pagamento [delete: restrict] // PAGO VIA
+Ref fk_pagamento_efetiva: pagamento.id_usuario > usuario.id_usuario [delete: restrict] // EFETIVA
+Ref fk_pagamento_confere: pagamento.(id_conta, nr_movimento) > movimento_bancario.(id_conta, nr_movimento) [delete: restrict] // CONFERE
+Ref fk_automacao_execucao_dispara: automacao_execucao.id_conversa > conversa.id_conversa [delete: cascade] // DISPARA
+Ref fk_automacao_log_grava: automacao_log.(id_conversa, nr_execucao) > automacao_execucao.(id_conversa, nr_execucao) [delete: cascade] // GRAVA
+Ref fk_auditoria_pratica: auditoria.id_usuario > usuario.id_usuario [delete: restrict] // PRATICA
+Ref fk_auditoria_audita_contrato: auditoria.id_contrato > contrato.id_contrato [delete: restrict] // AUDITA CONTRATO
+Ref fk_auditoria_audita_proposta: auditoria.id_proposta > proposta.id_proposta [delete: restrict] // AUDITA PROPOSTA
+Ref fk_auditoria_audita_comissao: auditoria.(id_comissao_contrato, id_comissao_corretor) > comissao.(id_contrato, id_corretor) [delete: restrict] // AUDITA COMISSAO
+Ref fk_auditoria_audita_conta_receber: auditoria.id_conta_receber > conta_receber.id_conta_receber [delete: restrict] // AUDITA CONTA_RECEBER
+Ref fk_auditoria_audita_recebimento: auditoria.(id_recebimento_conta, nr_recebimento) > recebimento.(id_conta_receber, nr_recebimento) [delete: restrict] // AUDITA RECEBIMENTO
+Ref fk_auditoria_audita_conta_pagar: auditoria.id_conta_pagar > conta_pagar.id_conta_pagar [delete: restrict] // AUDITA CONTA_PAGAR
+Ref fk_auditoria_audita_pagamento: auditoria.(id_pagamento_conta, nr_pagamento) > pagamento.(id_conta_pagar, nr_pagamento) [delete: restrict] // AUDITA PAGAMENTO
+Ref fk_auditoria_campo_detalha: auditoria_campo.id_auditoria > auditoria.id_auditoria [delete: restrict] // DETALHA
