@@ -1,0 +1,122 @@
+      conta      | nr_movimento |    data    |  tipo   |  valor  | conciliado | situacao |                 historico                 
+-----------------+--------------+------------+---------+---------+------------+----------+-------------------------------------------
+ Conta movimento |           19 | 02/03/2026 | debito  |   39.90 |          0 | pendente | TARIFA PACOTE DE SERVICOS
+ Conta movimento |           20 | 01/04/2026 | debito  |   39.90 |          0 | pendente | TARIFA PACOTE DE SERVICOS
+ Conta movimento |           21 | 01/05/2026 | debito  |   39.90 |          0 | pendente | TARIFA PACOTE DE SERVICOS
+ Conta movimento |           22 | 01/06/2026 | debito  |   39.90 |          0 | pendente | TARIFA PACOTE DE SERVICOS
+ Conta movimento |           23 | 01/07/2026 | debito  |   39.90 |          0 | pendente | TARIFA PACOTE DE SERVICOS
+ Conta movimento |           24 | 03/08/2026 | debito  |   39.90 |          0 | pendente | TARIFA PACOTE DE SERVICOS
+ Conta alugueis  |           21 | 24/08/2026 | credito |  800.00 |          0 | pendente | PIX/TED RECEBIDO DIEGO ALVES
+ Conta movimento |           25 | 01/09/2026 | debito  |   39.90 |          0 | pendente | TARIFA PACOTE DE SERVICOS
+ Conta movimento |           28 | 18/09/2026 | credito |  350.00 |          0 | pendente | TED RECEBIDA - REMETENTE NAO IDENTIFICADO
+ Conta movimento |           26 | 01/10/2026 | debito  |   39.90 |          0 | pendente | TARIFA PACOTE DE SERVICOS
+ Conta alugueis  |           56 | 06/10/2026 | credito | 1800.00 |          0 | pendente | PIX RECEBIDO DIEGO ALVES
+(11 rows)
+
+    baixa    | conta | numero | conta_bancaria |    data    |  valor  
+-------------+-------+--------+----------------+------------+---------
+ recebimento |    44 |      1 | Conta alugueis | 16/10/2026 | 4500.00
+ recebimento |    33 |      2 | Conta alugueis | 24/08/2026 |  800.00
+(2 rows)
+
+ id_conta_pagar | proprietario  |            conta            | vencimento |  saldo  | dias_de_atraso 
+----------------+---------------+-----------------------------+------------+---------+----------------
+             48 | Ricardo Pires | Repasse do recebimento 43/1 | 11/09/2026 | 4140.00 |             50
+             49 | Ricardo Pires | Repasse do recebimento 44/1 | 23/10/2026 | 4140.00 |              8
+(2 rows)
+
+ problema | contrato | corretor | conta_pagar 
+----------+----------+----------+-------------
+(0 rows)
+
+       situacao       | registro |     cliente      |   desde    | dias 
+----------------------+----------+------------------+------------+------
+ contrato em rascunho |        9 | Joao Pedro Silva | 29/09/2026 |   32
+(1 row)
+
+ id_conversa |     cliente      |    corretor    |    etapa     | ultima_mensagem | dias_sem_contato 
+-------------+------------------+----------------+--------------+-----------------+------------------
+          16 | Olivia Cardoso   | Paulo Nunes    | Visita       | 07/07/2026      |              116
+          23 | Vinicius Ramos   | Paulo Nunes    | Qualificacao | 11/08/2026      |               81
+          29 | Daniela Prates   | (sem corretor) | Novo contato | 02/10/2026      |               29
+          30 | Everton Silveira | Paulo Nunes    | Novo contato | 05/10/2026      |               26
+          45 | Caio Monteiro    | Paulo Nunes    | Novo contato | 08/10/2026      |               23
+          31 | Fernanda Viana   | (sem corretor) | Novo contato | 08/10/2026      |               23
+          32 | Gustavo Lacerda  | Lia Martins    | Novo contato | 11/10/2026      |               20
+          33 | Heloisa Brandao  | (sem corretor) | Novo contato | 14/10/2026      |               17
+          22 | Ursula Campos    | Lia Martins    | Qualificacao | 14/10/2026      |               17
+          11 | Karina Duarte    | Paulo Nunes    | Proposta     | 14/10/2026      |               17
+          27 | Amanda Freire    | Paulo Nunes    | Qualificacao | 14/10/2026      |               17
+          25 | Yasmin Correia   | Rui Almeida    | Qualificacao | 15/10/2026      |               16
+          28 | Caio Monteiro    | Bianca Freitas | Qualificacao | 15/10/2026      |               16
+          18 | Quiteria Martins | Rui Almeida    | Visita       | 15/10/2026      |               16
+          20 | Sabrina Lopes    | Paulo Nunes    | Visita       | 15/10/2026      |               16
+          21 | Thiago Ferreira  | Rui Almeida    | Qualificacao | 15/10/2026      |               16
+          24 | Wesley Pinto     | Bianca Freitas | Qualificacao | 16/10/2026      |               15
+          44 | Bruno Lima       | Rui Almeida    | Qualificacao | 16/10/2026      |               15
+           9 | Joao Pedro Silva | Lia Martins    | Contrato     | 16/10/2026      |               15
+          10 | Beatriz Antunes  | Lia Martins    | Proposta     | 18/10/2026      |               13
+          19 | Rafael Gomes     | Lia Martins    | Visita       | 18/10/2026      |               13
+          17 | Pedro Araujo     | Bianca Freitas | Visita       | 18/10/2026      |               13
+          34 | Igor Sampaio     | Bianca Freitas | Novo contato | 18/10/2026      |               13
+          15 | Nicolas Barbosa  | Lia Martins    | Visita       | 19/10/2026      |               12
+          13 | Ana Souza        | Lia Martins    | Visita       | 19/10/2026      |               12
+          14 | Mariana Oliveira | Rui Almeida    | Visita       | 19/10/2026      |               12
+(26 rows)
+
+    corretor    | tarefas_vencidas | mais_antiga |                                                                          tarefas                                                                           
+----------------+------------------+-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Paulo Nunes    |                4 | 2026-08-08  | Enviar opcoes do perfil (conversa 23); Enviar opcoes do perfil (conversa 27); Enviar opcoes do perfil (conversa 30); Enviar opcoes do perfil (conversa 45)
+ Bianca Freitas |                3 | 2026-08-16  | Enviar opcoes do perfil (conversa 24); Enviar opcoes do perfil (conversa 28); Enviar opcoes do perfil (conversa 34)
+ Rui Almeida    |                3 | 2026-07-23  | Enviar opcoes do perfil (conversa 21); Enviar opcoes do perfil (conversa 25); Enviar opcoes do perfil (conversa 44)
+ Lia Martins    |                2 | 2026-07-31  | Enviar opcoes do perfil (conversa 22); Enviar opcoes do perfil (conversa 32)
+(4 rows)
+
+  codigo  |  tipo   |         bairro         | sem_corretor | fotos | caracteristicas 
+----------+---------+------------------------+--------------+-------+-----------------
+ IMB-3517 | Terreno | Parque Rodrigo Barreto | f            |     2 |               0
+(1 row)
+
+  telefone   |  tipo   | pessoas |           titular           | tambem_usam  
+-------------+---------+---------+-----------------------------+--------------
+ 1130000061  | fixo    |       2 | Camila Rocha                | Diego Alves
+ 11900000059 | celular |       2 | Construtora Vale Verde Ltda | Eduardo Lima
+(2 rows)
+
+ situacao | pessoa | registro 
+----------+--------+----------
+(0 rows)
+
+ id_conversa | estagio_na_conversa | ultimo_no_historico 
+-------------+---------------------+---------------------
+(0 rows)
+
+ id_auditoria |      quando      |     quem     |     acao     |   registro   |                                                                                       campos                                                                                       
+--------------+------------------+--------------+--------------+--------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           26 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 1   | dt_assinatura: vazio -> 2025-09-22; st_contrato: rascunho -> vigente
+           27 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 2   | dt_assinatura: vazio -> 2026-02-20; st_contrato: rascunho -> vigente
+           28 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 3   | dt_assinatura: vazio -> 2026-03-30; st_contrato: rascunho -> vigente
+           29 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 4   | dt_assinatura: vazio -> 2026-03-09; st_contrato: rascunho -> vigente
+           30 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 5   | dt_assinatura: vazio -> 2026-06-24; st_contrato: rascunho -> vigente
+           31 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 6   | dt_assinatura: vazio -> 2026-05-20; st_contrato: rascunho -> vigente
+           32 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 7   | dt_assinatura: vazio -> 2026-06-30; st_contrato: rascunho -> vigente
+           33 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 8   | dt_assinatura: vazio -> 2026-08-25; st_contrato: rascunho -> vigente
+          178 | 31/10/2026 18:57 | Carla Mendes | alteracao    | comissao 1/4 | dt_aprovacao: vazio -> 2025-09-23T09:00:00; id_aprovador: vazio -> 1; id_conta_pagar: vazio -> 1; st_comissao: pendente -> liberada
+          179 | 31/10/2026 18:57 | Carla Mendes | alteracao    | comissao 2/5 | dt_aprovacao: vazio -> 2026-02-23T09:00:00; id_aprovador: vazio -> 1; id_conta_pagar: vazio -> 2; st_comissao: pendente -> liberada
+          180 | 31/10/2026 18:57 | Carla Mendes | alteracao    | comissao 3/6 | dt_aprovacao: vazio -> 2026-03-31T09:00:00; id_aprovador: vazio -> 1; id_conta_pagar: vazio -> 3; st_comissao: pendente -> liberada
+          181 | 31/10/2026 18:57 | Carla Mendes | alteracao    | comissao 4/8 | dt_aprovacao: vazio -> 2026-03-10T09:00:00; id_aprovador: vazio -> 1; id_conta_pagar: vazio -> 4; st_comissao: pendente -> liberada
+          182 | 31/10/2026 18:57 | Carla Mendes | alteracao    | comissao 5/7 | dt_aprovacao: vazio -> 2026-06-25T09:00:00; id_aprovador: vazio -> 1; id_conta_pagar: vazio -> 5; st_comissao: pendente -> liberada
+          183 | 31/10/2026 18:57 | Carla Mendes | alteracao    | comissao 6/4 | dt_aprovacao: vazio -> 2026-06-06T09:00:00; id_aprovador: vazio -> 1; id_conta_pagar: vazio -> 6; st_comissao: pendente -> liberada
+          184 | 31/10/2026 18:57 | Carla Mendes | alteracao    | comissao 6/5 | dt_aprovacao: vazio -> 2026-06-06T09:00:00; id_aprovador: vazio -> 1; id_conta_pagar: vazio -> 7; st_comissao: pendente -> liberada
+          185 | 31/10/2026 18:57 | Carla Mendes | alteracao    | comissao 7/6 | dt_aprovacao: vazio -> 2026-09-16T09:00:00; id_aprovador: vazio -> 1; id_conta_pagar: vazio -> 8; st_comissao: pendente -> liberada
+          233 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 4   | ds_motivo_termino: vazio -> Inquilina transferida para outra cidade; dt_termino: vazio -> 2026-07-31; st_contrato: vigente -> rescindido; tp_iniciativa_rescisao: vazio -> cliente
+          235 | 31/10/2026 18:57 | Carla Mendes | cancelamento | comissao 8/7 | st_comissao: pendente -> cancelada
+          237 | 31/10/2026 18:57 | Carla Mendes | cancelamento | contrato 8   | ds_motivo_termino: vazio -> Financiamento reprovado pelo Banco Litoral; dt_termino: vazio -> 2026-09-12; st_contrato: vigente -> cancelado
+          238 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 6   | dt_termino: vazio -> 2026-06-30; st_contrato: vigente -> encerrado
+          239 | 31/10/2026 18:57 | Carla Mendes | alteracao    | contrato 1   | dt_termino: vazio -> 2026-10-01; st_contrato: vigente -> encerrado
+(21 rows)
+
+ problema | conta 
+----------+-------
+(0 rows)
+

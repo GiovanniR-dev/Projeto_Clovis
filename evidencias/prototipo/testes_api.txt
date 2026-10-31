@@ -1,0 +1,100 @@
+Leitura: 167 de 167 enderecos responderam.
+OK [201] nova conversa com contato novo: {'id_conversa': 46}
+OK [200] mover etapa: {'mudou': True}
+OK [201] mensagem enviada: {'nr_mensagem': 2}
+OK [201] nota: {'nr_mensagem': 3}
+OK [201] etiqueta nova: {}
+OK [409] etiqueta repetida (PK): duplicate key value violates unique constraint "pk_conversa_tag"
+OK [201] imovel de interesse: {}
+OK [201] tarefa: {}
+OK [409] corretor que saiu (RN32): RN32: o usuario 8 nao exerce o papel corretor (ou o papel tem data de fim) em conversa.id_corretor
+OK [200] detalhe da conversa: {'conversa': {'id_conversa': 46, 'id_cliente': 56, 'id_corretor': 5, 'id_estagio': 2, 'st_conversa': 'aberta', 'ds_notas': None, 'dt_inicio': '2026-10-31 18:57'
+OK [400] pessoa corretor sem CRECI: Preencha: creci
+OK [201] pessoa cliente: {'id_usuario': 58}
+OK [201] vira proprietario tambem: {}
+OK [409] perfil com faixa invertida (CHECK): new row for relation "perfil_interesse" violates check constraint "ck_perfil_interesse_vl_minimo_vl_maximo"
+OK [201] perfil com dois tipos (N:N DESEJA): {'nr_perfil': 1}
+OK [409] perfil com tipo inexistente (FK): insert or update on table "perfil_interesse_tipo" violates foreign key constraint "fk_perfil_interesse_tipo_tipo_imovel"
+OK [201] perfil com dois bairros de Sao Paulo (N:N ABRANGE): {'nr_perfil': 2}
+OK [409] perfil de Sao Paulo com bairro de Guarulhos (gatilho, RN52): RN52: o bairro Centro nao e da cidade do perfil de interesse
+OK [409] perfil sem cidade com bairro (RN52): RN52: o bairro Tatuape nao e da cidade do perfil de interesse
+OK [409] perfil com bairro que nao existe (FK): insert or update on table "perfil_interesse_bairro" violates foreign key constraint "fk_perfil_interesse_bairro_bairro"
+OK perfis gravados: tipos Apartamento, Cobertura | bairros Mooca, Tatuape
+OK seletor pontua os bairros aceitos pela chave: [('IMB-3504', 'Mooca', 10), ('IMB-3525', 'Tatuape', 10), ('IMB-3501', 'Tatuape', 10)]
+OK [201] telefone de outra pessoa vira compartilhado (RN03): {'compartilhado': True}
+OK [409] mesmo numero de novo na mesma pessoa (UNIQUE): duplicate key value violates unique constraint "uk_telefone_id_usuario_nr_telefone"
+OK [409] telefone curto demais (CHECK): new row for relation "telefone" violates check constraint "ck_telefone_nr_telefone"
+OK [409] imovel com tipo que nao existe (FK, RN48): insert or update on table "imovel" violates foreign key constraint "fk_imovel_tipifica"
+OK [409] imovel de quem nao e proprietario (RN32): RN32: o usuario 24 nao exerce o papel proprietario (ou o papel tem data de fim) em imovel.id_proprietario
+OK [409] imovel a venda sem valor de venda (CHECK): new row for relation "imovel" violates check constraint "ck_imovel_tp_finalidade_vl_venda"
+OK [409] imovel com bairro de outra cidade: Tatuape (SP) com CEP de Guarulhos (gatilho, RN51): RN51: o bairro Tatuape fica em Sao Paulo, mas o CEP 07061000 e de Guarulhos
+OK [409] imovel com bairro que nao existe (FK SITUA): insert or update on table "imovel" violates foreign key constraint "fk_imovel_situa"
+OK [400] imovel sem bairro: Preencha: id_bairro
+OK [409] imovel em CEP novo de Sao Paulo com bairro de Guarulhos (RN51): RN51: o bairro Vila Galvao fica em Guarulhos, mas o CEP 07091000 e de Sao Paulo
+OK [201] cadastrar imovel novo (cobertura): {'id_imovel': 139}
+OK [409] cadastrar outro com o mesmo codigo Imobzi (UNIQUE): duplicate key value violates unique constraint "uk_imovel_cd_imobizi"
+OK [201] cadastrar imovel em CEP novo, com a cidade: {'id_imovel': 141}
+OK [201] imovel em CEP novo sem cidade: a cidade do CEP vem do bairro: {'id_imovel': 142}
+OK CEP novo gravado na cidade do bairro (Bosque Maia, Guarulhos)
+OK busca encontra o imovel novo pelo codigo e pelo tipo: [('IMB-9001', 'Cobertura')]
+OK imovel novo com 3 caracteristicas, bairro pela FK e cidade e UF pelo CEP: Vila Galvao, Guarulhos, Sao Paulo
+OK aba Dados: procurar o imovel pelo codigo -> 1 linha(s)
+OK aba Dados: imoveis do bairro Tatuape pela chave id_bairro -> 4 linha(s)
+OK aba Dados: locacao em Guarulhos ate R$ 2.000 -> 3 linha(s)
+OK aba Dados: texto com aspas e procurado como texto, nao vira SQL (parametro)
+OK aba Dados: procurar em usuario sem mostrar o hash da senha -> 2 linha(s)
+OK aba Dados: Centro existe em duas cidades (Guarulhos e Aruja) -> 2 linha(s)
+OK [200] trocar o tipo do imovel: {}
+OK [200] excluir papel proprietario (sobra cliente): {}
+OK [409] excluir o unico papel (RN01): RN01: o usuario 58 precisa exercer pelo menos um papel
+OK [409] visita com corretor que saiu (RN32): RN32: o usuario 8 nao exerce o papel corretor (ou o papel tem data de fim) em visita.id_corretor
+OK [201] visita ok: {'id_visita': 33}
+OK [409] proposta com 20% de desconto sem autorizacao (PO03): new row for relation "proposta" violates check constraint "ck_proposta_id_autorizador_vl_proposto"
+OK [409] autorizacao por corretor (RN32): RN32: o usuario 5 nao exerce o papel administrador (ou o papel tem data de fim) em proposta.id_autorizador
+OK [201] autorizacao pelo administrador: {'id_proposta': 19}
+OK [201] contraproposta: {'id_proposta': 20}
+OK [201] gerar contrato: {'id_contrato': 10}
+OK [409] segundo contrato da mesma proposta (UNIQUE): duplicate key value violates unique constraint "uk_contrato_id_proposta"
+OK [200] assinar: {}
+OK [201] comissao 60%: {}
+OK [409] comissao +50% (RN20): RN20: a soma das comissoes do contrato 10 ficaria em 110.00 % (limite: 100 %)
+OK [409] liberar comissao como corretor (RN32: aprovador admin): RN32: o usuario 5 nao exerce o papel administrador (ou o papel tem data de fim) em comissao.id_aprovador
+OK [200] liberar comissao como administrador: {'id_conta_pagar': 51}
+OK [409] pagar comissao como financeiro (PO01): PO01: o pagamento de comissao so pode ser efetivado pelo administrador
+OK [409] pagar comissao como corretor (RN39/PO01): PO01: o pagamento de comissao so pode ser efetivado pelo administrador
+OK [201] pagar comissao como administrador: {'nr_pagamento': 1}
+OK [200] detalhe conta pagar: {'conta': {'id_conta_pagar': 51, 'id_contrato': 10, 'id_categoria': 7, 'id_favorecido': 5, 'id_custeador': None, 'id_conta_receber_origem': None, 'nr_recebiment
+OK [409] recebimento acima do valor (RN29): RN29: os recebimentos da conta 46 somariam 29641.00, acima do valor da conta (29640.00)
+OK [409] recebimento com forma que nao existe (FK, RN50): insert or update on table "recebimento" violates foreign key constraint "fk_recebimento_recebido_via"
+OK [201] recebimento parcial por TED: {'nr_recebimento': 1, 'repasse': None}
+OK [409] encerrar venda com conta aberta (RN44): RN44: a venda so e encerrada com todas as contas do contrato quitadas
+OK [201] recebimento de aluguel gera repasse (RN30): {'nr_recebimento': 1, 'repasse': {'id_conta_pagar': 52, 'vl_pagar': 450.0, 'dt_vencimento': '2026-11-06'}}
+   repasse: {'id_conta_pagar': 52, 'vl_pagar': 450.0, 'dt_vencimento': '2026-11-06'}
+OK [409] conciliar recebimento com debito (RN45): RN45: recebimento so e conciliado com movimento de credito (o movimento 13 e debito)
+OK [409] conciliar com credito maior que o valor? (RN45 soma): RN45: as baixas ligadas ao movimento 28 somariam 1000.00, acima do valor do extrato (350.00)
+OK [409] encerrar locacao antes do termino (RN44): RN44: a locacao so e encerrada a partir da data de termino (2027-02-28); antes disso e rescisao
+OK [200] cancelar contrato rascunho 9: {}
+OK [409] cancelar de novo (RN37): RN37: so contrato em rascunho ou vigente pode ser cancelado (situacao atual: cancelado)
+OK [200] rescindir locacao 3 com multa: {}
+OK [400] aluguel em contrato rescindido: Aluguel so para locacao vigente
+OK [201] lancar aluguel locacao 2: {'id_conta_receber': 48}
+OK [409] despesa custeada pelo inquilino sem pessoa (RN28): RN32: quem arca com o custo (<NULL>) nao exerce o papel inquilino
+OK [409] despesa custeada pelo proprietario errado (RN32): RN32: quem arca com o custo (16) nao exerce o papel inquilino
+OK [201] despesa ok: {'id_conta_pagar': 55}
+OK [409] despesa numa categoria de receita (RN26): RN26: conta_pagar precisa de uma categoria de despesa, mas a categoria aluguel e de receita
+OK [201] n8n resultado: {'nr_execucao': 1, 'cd_demanda': 'c8b0bcdb34ded0fd'}
+OK [409] n8n mesma demanda (RN31): duplicate key value violates unique constraint "uk_automacao_execucao_id_conversa_cd_demanda"
+OK [201] n8n log: {'nr_log': 2}
+OK [201] whatsapp msg: {'nr_mensagem': 5}
+OK [409] whatsapp mesmo wamid (RN31): duplicate key value violates unique constraint "uk_mensagem_id_conversa_cd_externo"
+OK [200] seletor por lead: {'filtros_usados': {'tp_finalidade': 'locacao', 'id_cidade': 2, 'tipos': [1, 5], 'nm_tipos': 'Apartamento, Kitnet', 'bairros': [7, 12], 'nm_bairros': 'Centro, G
+OK [200] anonimizar: {}
+OK anonimizado sem telefones (dado pessoal, PO07)
+OK [200] anonimizar a titular de um numero compartilhado (Camila): {}
+OK a titularidade do fixo do casal passou para o Diego (RN03)
+OK [409] imovel a venda sem valor (CHECK): new row for relation "imovel" violates check constraint "ck_imovel_tp_finalidade_vl_venda"
+OK [200] auditoria do contrato: {'contrato': {'id_contrato': 10, 'id_proposta': 20, 'tp_contrato': 'venda', 'tp_condicao_pagamento': 'a_vista', 'vl_final': 494000.0, 'pc_corretagem': 6.0, 'pc_
+OK documentos do contrato com o nome do tipo (tipo_documento): Contrato assinado, Documento do cliente, Laudo de vistoria
+OK listas do cadastro: 15 bairros, 27 UFs, 6 tipos de documento
+Gravacao: 97 de 97 cenarios como esperado.
+TOTAL: 264 de 264

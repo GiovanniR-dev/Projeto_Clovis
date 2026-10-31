@@ -1,0 +1,104 @@
+  codigo  |    tipo     |   bairro    |  cidade   |  estado   | quartos | aluguel 
+----------+-------------+-------------+-----------+-----------+---------+---------
+ IMB-3516 | Apartamento | Gopouva     | Guarulhos | Sao Paulo |       2 | 1600.00
+ IMB-3522 | Apartamento | Bosque Maia | Guarulhos | Sao Paulo |       2 | 1900.00
+(2 rows)
+
+        tipo        | cadastrados | disponiveis 
+--------------------+-------------+-------------
+ Apartamento        |          15 |          13
+ Casa               |           8 |           6
+ Casa em condominio |           1 |           1
+ Cobertura          |           1 |           1
+ Galpao             |           1 |           0
+ Kitnet             |           1 |           1
+ Loja               |           1 |           1
+ Sala comercial     |           1 |           0
+ Terreno            |           1 |           1
+ Chacara            |           0 |           0
+(10 rows)
+
+ id_imovel |  codigo  |   tipo    |   bairro    |  cidade   |   venda   
+-----------+----------+-----------+-------------+-----------+-----------
+       131 | IMB-3531 | Cobertura | Vila Galvao | Guarulhos | 980000.00
+(1 row)
+
+psql:sql/consultas/20_select_join_update_delete.sql:69: NOTICE:  Recusado pelo banco: RN51: o bairro Tatuape fica em Sao Paulo, mas o CEP 07061000 e de Guarulhos
+ contrato |  tipo   |  situacao  |     cliente      |  imovel  |        proprietario         |    corretor    |   valor   | corretagem 
+----------+---------+------------+------------------+----------+-----------------------------+----------------+-----------+------------
+        1 | locacao | encerrado  | Bruno Lima       | IMB-3501 | Marta Rocha                 | Rui Almeida    |   2800.00 |    2800.00
+        2 | locacao | vigente    | Camila Rocha     | IMB-3502 | Otavio Prado                | Lia Martins    |   2200.00 |    2200.00
+        3 | locacao | vigente    | Diego Alves      | IMB-3503 | Helena Castro               | Paulo Nunes    |   1800.00 |    1800.00
+        4 | locacao | rescindido | Elisa Moura      | IMB-3504 | Jorge Matos                 | Sergio Dias    |   2500.00 |    2500.00
+        5 | locacao | vigente    | Felipe Santos    | IMB-3505 | Ricardo Pires               | Bianca Freitas |   4500.00 |    4500.00
+        6 | venda   | encerrado  | Gabriela Nunes   | IMB-3506 | Ana Souza                   | Rui Almeida    | 620000.00 |   37200.00
+        7 | venda   | vigente    | Henrique Costa   | IMB-3507 | Construtora Vale Verde Ltda | Paulo Nunes    | 750000.00 |   37500.00
+        8 | venda   | cancelado  | Isabela Ribeiro  | IMB-3508 | Eduardo Lima                | Bianca Freitas | 520000.00 |   26000.00
+        9 | locacao | rascunho   | Joao Pedro Silva | IMB-3509 | Lucia Fernandes             | Lia Martins    |   3900.00 |    3900.00
+(9 rows)
+
+    corretor    |       creci       | conversas_abertas 
+----------------+-------------------+-------------------
+ Paulo Nunes    | CRECI-SP 303030-F |                 7
+ Lia Martins    | CRECI-SP 202020-F |                 7
+ Rui Almeida    | CRECI-SP 101010-F |                 5
+ Bianca Freitas | CRECI-SP 404040-F |                 4
+ Sergio Dias    | CRECI-SP 505050-F |                 0
+(5 rows)
+
+      cliente      | perfil | finalidade |  cidade   |      tipos_aceitos       |     bairros_aceitos     
+-------------------+--------+------------+-----------+--------------------------+-------------------------
+ Amanda Freire     |      1 | venda      | Guarulhos | Casa, Casa em condominio | Centro, Gopouva
+ Bruno Lima        |      2 | venda      | Sao Paulo | Apartamento, Cobertura   | Mooca, Tatuape
+ Bruno Lima        |      1 | locacao    | Sao Paulo | Apartamento, Kitnet      | Mooca, Tatuape
+ Henrique Costa    |      1 | venda      | Sao Paulo | Apartamento, Cobertura   | Mooca, Tatuape
+ Thiago Ferreira   |      1 | locacao    | Guarulhos | Apartamento, Kitnet      | Centro, Gopouva
+ Ana Souza         |      1 | locacao    | Sao Paulo | Kitnet                   | Pinheiros, Vila Mariana
+ Diego Alves       |      1 | locacao    | Guarulhos | Apartamento, Kitnet      | Vila Galvao
+ Elisa Moura       |      1 | locacao    | Sao Paulo | Apartamento              | Mooca, Tatuape
+ Felipe Santos     |      1 | locacao    | Guarulhos | Loja, Sala comercial     | Centro
+ Joao Pedro Silva  |      1 | locacao    | Sao Paulo | Apartamento, Kitnet      | Pinheiros
+ Karina Duarte     |      1 | venda      | Guarulhos | Apartamento              | Centro, Macedo
+ Leonardo Teixeira |      1 | locacao    | Guarulhos | Casa, Casa em condominio | Picanco
+(12 rows)
+
+ id_usuario |     pessoa      |        papeis         
+------------+-----------------+-----------------------
+         15 | Ana Souza       | cliente, proprietario
+         19 | Beatriz Antunes | cliente, proprietario
+         24 | Bruno Lima      | cliente, inquilino
+         25 | Camila Rocha    | cliente, inquilino
+         26 | Diego Alves     | cliente, inquilino
+         27 | Elisa Moura     | cliente, inquilino
+         28 | Felipe Santos   | cliente, inquilino
+(7 rows)
+
+ id_conversa | etapa_atual | registros_no_historico 
+-------------+-------------+------------------------
+          21 | Visita      |                      3
+(1 row)
+
+  tp_acao  |   nm_campo   | ds_valor_anterior |               ds_valor_novo                
+-----------+--------------+-------------------+--------------------------------------------
+ alteracao | ds_condicoes | A vista           | A vista; cliente aceita assinar em 30 dias
+(1 row)
+
+psql:sql/consultas/20_select_join_update_delete.sql:168: NOTICE:  Recusado pelo banco: RN20: a soma das comissoes do contrato 5 ficaria em 105.00 % (limite: 100 %)
+ etiquetas_restantes_na_conversa_6 
+-----------------------------------
+                                 1
+(1 row)
+
+ papel_cliente | telefones | perfis | tipos_do_perfil 
+---------------+-----------+--------+-----------------
+             0 |         0 |      0 |               0
+(1 row)
+
+ id_tarefa | id_conversa |      ds_titulo       
+-----------+-------------+----------------------
+       900 |             | Ligar para o cliente
+(1 row)
+
+psql:sql/consultas/20_select_join_update_delete.sql:215: NOTICE:  Contrato: recusado pelo banco: PO04/RN40: registros de contrato nao sao excluidos; use o cancelamento
+psql:sql/consultas/20_select_join_update_delete.sql:222: NOTICE:  Imovel com historico (interesses, visitas, propostas): recusado pelo banco: update or delete on table "imovel" violates foreign key constraint "fk_conversa_imovel_imovel" on table "conversa_imovel"
+psql:sql/consultas/20_select_join_update_delete.sql:229: NOTICE:  Tipo de imovel em uso (RN48, RESTRICT): recusado pelo banco: update or delete on table "tipo_imovel" violates foreign key constraint "fk_perfil_interesse_tipo_tipo_imovel" on table "perfil_interesse_tipo"

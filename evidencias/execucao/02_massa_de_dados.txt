@@ -1,0 +1,134 @@
+ setval 
+--------
+     15
+(1 row)
+
+ setval 
+--------
+     44
+(1 row)
+
+ setval 
+--------
+     55
+(1 row)
+
+ setval 
+--------
+      3
+(1 row)
+
+ setval 
+--------
+     15
+(1 row)
+
+ setval 
+--------
+    130
+(1 row)
+
+ setval 
+--------
+     15
+(1 row)
+
+ setval 
+--------
+     45
+(1 row)
+
+ setval 
+--------
+    104
+(1 row)
+
+ setval 
+--------
+      8
+(1 row)
+
+ setval 
+--------
+     31
+(1 row)
+
+ setval 
+--------
+     16
+(1 row)
+
+ setval 
+--------
+      9
+(1 row)
+
+ setval 
+--------
+      3
+(1 row)
+
+ setval 
+--------
+     45
+(1 row)
+
+ setval 
+--------
+     49
+(1 row)
+
+         tabela          | linhas 
+-------------------------+--------
+ administrador           |      1
+ auditoria               |    312
+ auditoria_campo         |    208
+ automacao_execucao      |     34
+ automacao_log           |    128
+ bairro                  |     15
+ caracteristica          |     15
+ categoria_financeira    |     10
+ cep                     |     15
+ cidade                  |      3
+ cliente                 |     34
+ comissao                |     10
+ conta_bancaria          |      3
+ conta_pagar             |     49
+ conta_receber           |     45
+ contrato                |      9
+ conversa                |     45
+ conversa_imovel         |     86
+ conversa_tag            |     46
+ corretor                |      5
+ documento               |     24
+ financeiro              |      2
+ financiamento           |      2
+ forma_pagamento         |      5
+ fornecedor              |      3
+ foto                    |    168
+ funil_estagio           |      7
+ historico_estagio       |    139
+ imovel                  |     30
+ imovel_caracteristica   |    121
+ inquilino               |      5
+ instituicao_financeira  |      2
+ mensagem                |    353
+ movimento_bancario      |     84
+ origem_contato          |      7
+ pagamento               |     45
+ perfil_interesse        |     30
+ perfil_interesse_bairro |     40
+ perfil_interesse_tipo   |     42
+ proposta                |     16
+ proprietario            |     10
+ recebimento             |     42
+ tag                     |      8
+ tarefa                  |    104
+ telefone                |     62
+ tipo_documento          |      6
+ tipo_imovel             |     10
+ uf                      |     27
+ usuario                 |     55
+ visita                  |     31
+(50 rows)
+

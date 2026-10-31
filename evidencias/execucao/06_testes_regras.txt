@@ -1,0 +1,170 @@
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+ setval 
+--------
+   1000
+(1 row)
+
+  id  |                                      cenario                                      |                           esperado                           |                                                                                                                obtido                                                                                                                 | resultado 
+------+-----------------------------------------------------------------------------------+--------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------
+ 1.1  | Cadastrar uma pessoa com dois papeis ao mesmo tempo (cliente e fornecedora)       | aceito                                                       | aceito: usuaria 11 gravada como cliente e fornecedora                                                                                                                                                                                 | OK
+ 1.2  | Cadastrar um usuario sem nenhum papel                                             | recusado (RN01)                                              | recusado: RN01: o usuario 12 precisa exercer pelo menos um papel                                                                                                                                                                      | OK
+ 1.3  | Anunciar um imovel em nome de quem nao e proprietario (Bruno e so cliente)        | recusado (RN32)                                              | recusado: RN32: o usuario 6 nao exerce o papel proprietario (ou o papel tem data de fim) em imovel.id_proprietario                                                                                                                    | OK
+ 1.4  | Atribuir uma conversa nova a um corretor cujo papel ja terminou (Sergio)          | recusado (RN32)                                              | recusado: RN32: o usuario 10 nao exerce o papel corretor (ou o papel tem data de fim) em conversa.id_corretor                                                                                                                         | OK
+ 1.5  | Lancar conta a receber com Ana como inquilina (ela e cliente e proprietaria)      | recusado (RN32)                                              | recusado: RN32: o pagador 5 nao exerce o papel inquilino                                                                                                                                                                              | OK
+ 1.6  | Cobrar do banco uma conta de contrato que ele nao financiou                       | recusado (RN27)                                              | recusado: RN27: o banco 7 nao financiou o contrato 201                                                                                                                                                                                | OK
+ 1.7  | Pagamento de comissao efetivado pelo financeiro (Fabio)                           | recusado (PO01)                                              | recusado: PO01: o pagamento de comissao so pode ser efetivado pelo administrador                                                                                                                                                      | OK
+ 1.8  | Pagamento da mesma comissao efetivado pela administradora (Carla)                 | aceito                                                       | aceito: conta 300 paga                                                                                                                                                                                                                | OK
+ 2.1  | Numero de WhatsApp compartilhado por Ana (titular) e Bruno                        | aceito                                                       | aceito: 2 pessoas com o numero, 1 titular                                                                                                                                                                                             | OK
+ 2.2  | Marcar Bruno como segundo titular do mesmo numero                                 | recusado (ux_telefone_titular)                               | recusado: duplicate key value violates unique constraint "ux_telefone_titular"                                                                                                                                                        | OK
+ 2.3  | Cadastrar um numero sem titular                                                   | recusado (RN03)                                              | recusado: RN03: o numero 11955554444 precisa ter exatamente um titular                                                                                                                                                                | OK
+ 2.4  | Repetir o mesmo numero no cadastro da mesma pessoa                                | recusado (uk_telefone_id_usuario_nr_telefone)                | recusado: duplicate key value violates unique constraint "uk_telefone_id_usuario_nr_telefone"                                                                                                                                         | OK
+ 2.5  | Passar a titularidade do fixo do casal de Ana para Bruno (em dois passos)         | aceito                                                       | aceito: titular do fixo agora e o Bruno; o banco so confere no fim da transacao                                                                                                                                                       | OK
+ 2.6  | Gravar um telefone com letras e simbolos                                          | recusado (ck_telefone_nr_telefone)                           | recusado: new row for relation "telefone" violates check constraint "ck_telefone_nr_telefone"                                                                                                                                         | OK
+ 2.7  | Tirar o numero do cadastro do titular (Bruno) sem passar a titularidade a Ana     | recusado (RN03)                                              | recusado: RN03: o numero 1133334444 precisa ter exatamente um titular                                                                                                                                                                 | OK
+ 3.1  | Inquilino paga R$ 1.200,00 do aluguel de R$ 2.000,00 (domingo, 05/04)             | aceito                                                       | aceito: repasse de R$ 1.080,00 a Marta, vencendo em 10/04/2026; aluguel com R$ 1.200,00 recebidos de R$ 2.000,00                                                                                                                      | OK
+ 3.2  | Inquilino paga os R$ 800,00 restantes (segunda, 20/04)                            | aceito                                                       | aceito: repasse de R$ 720,00, vencendo em 27/04/2026; aluguel quitado; repasses somam R$ 1.800,00                                                                                                                                     | OK
+ 3.3  | Receber mais R$ 10,00 no aluguel ja quitado                                       | recusado (RN29)                                              | recusado: RN29: os recebimentos da conta 400 somariam 2010.00, acima do valor da conta (2000.00)                                                                                                                                      | OK
+ 3.4  | Alterar o valor de um recebimento que ja gerou repasse                            | recusado (RN30)                                              | recusado: RN30: o recebimento 400/1 ja gerou repasse e nao pode mudar de valor                                                                                                                                                        | OK
+ 4.1  | Encerrar a locacao antes da data de termino (15/06/2026)                          | recusado (RN44)                                              | recusado: RN44: a locacao so e encerrada a partir da data de termino (2027-02-28); antes disso e rescisao                                                                                                                             | OK
+ 4.2  | Rescindir a locacao em 15/06/2026 a pedido do inquilino, com multa de R$ 4.000,00 | aceito                                                       | aceito: canceladas as contas de julho e agosto; maio e junho continuam devidas; multa de R$ 4.000,00 lancada; comissao pendente cancelada e liberada mantida; repasses mantidos; imovel disponivel; papel de inquilino ate 15/06/2026 | OK
+ 4.3  | Cancelar o contrato ja rescindido                                                 | recusado (RN37)                                              | recusado: RN37: so contrato em rascunho ou vigente pode ser cancelado (situacao atual: rescindido)                                                                                                                                    | OK
+ 4.4  | Cancelar a venda 202 porque o banco reprovou o financiamento                      | aceito                                                       | aceito: contrato cancelado; corretagem sem baixa cancelada; comissao cancelada; imovel disponivel                                                                                                                                     | OK
+ 4.5  | Encerrar a venda 201 com a corretagem ainda em aberto                             | recusado (RN44)                                              | recusado: RN44: a venda so e encerrada com todas as contas do contrato quitadas                                                                                                                                                       | OK
+ 4.6  | Receber a corretagem da venda 201 e encerrar o contrato                           | aceito                                                       | aceito: contrato encerrado; nenhum lancamento cancelado; imovel vendido                                                                                                                                                               | OK
+ 5.1  | Importar o extrato de abril (4 movimentos)                                        | aceito                                                       | aceito: 4 movimentos importados, todos pendentes                                                                                                                                                                                      | OK
+ 5.2  | Importar de novo a mesma transacao do banco                                       | recusado (uk_movimento_bancario_id_conta_cd_transacao_banco) | recusado: duplicate key value violates unique constraint "uk_movimento_bancario_id_conta_cd_transacao_banco"                                                                                                                          | OK
+ 5.3  | Conciliar o recebimento de R$ 1.200,00 com o credito de R$ 1.200,00               | aceito                                                       | aceito: movimento 1 conciliado                                                                                                                                                                                                        | OK
+ 5.4  | Conferir o pagamento do repasse com um movimento de credito                       | recusado (RN45)                                              | recusado: RN45: pagamento so e conciliado com movimento de debito (o movimento 1 e credito)                                                                                                                                           | OK
+ 5.5  | Pagar o repasse de R$ 1.080,00 e conferir com o debito do extrato                 | aceito                                                       | aceito: repasse pago pelo financeiro; movimento 3 conciliado                                                                                                                                                                          | OK
+ 5.6  | Conciliar o recebimento de R$ 800,00 com um credito de R$ 350,00                  | recusado (RN45)                                              | recusado: RN45: as baixas ligadas ao movimento 4 somariam 800.00, acima do valor do extrato (350.00)                                                                                                                                  | OK
+ 5.7  | Conciliar os R$ 800,00 com o credito certo; o credito de R$ 350,00 fica pendente  | aceito                                                       | aceito: mov. 1: conciliado; mov. 2: conciliado; mov. 3: conciliado; mov. 4: pendente                                                                                                                                                  | OK
+ 6.1  | Conferir a trilha de auditoria gravada pela rescisao do contrato 200              | aceito                                                       | aceito: 39 registros de auditoria, todos com exatamente uma referencia; st_contrato: vigente -> rescindido                                                                                                                            | OK
+ 6.2  | Gravar auditoria apontando para dois registros (contrato e proposta)              | recusado (ck_auditoria_arco_exclusivo)                       | recusado: new row for relation "auditoria" violates check constraint "ck_auditoria_arco_exclusivo"                                                                                                                                    | OK
+ 6.3  | Gravar auditoria sem apontar para nenhum registro                                 | recusado (ck_auditoria_arco_exclusivo)                       | recusado: new row for relation "auditoria" violates check constraint "ck_auditoria_arco_exclusivo"                                                                                                                                    | OK
+ 6.4  | Gravar auditoria de um contrato que nao existe                                    | recusado (fk_auditoria_audita_contrato)                      | recusado: insert or update on table "auditoria" violates foreign key constraint "fk_auditoria_audita_contrato"                                                                                                                        | OK
+ 6.5  | Alterar um registro de auditoria                                                  | recusado (RNF04)                                             | recusado: RNF04: registros de auditoria nao podem ser alterados nem excluidos                                                                                                                                                         | OK
+ 6.6  | Excluir um contrato auditado                                                      | recusado (PO04)                                              | recusado: PO04/RN40: registros de contrato nao sao excluidos; use o cancelamento                                                                                                                                                      | OK
+ 6.7  | Lancar uma conta sem informar o usuario responsavel                               | recusado (RN40)                                              | recusado: RN40: informe o usuario responsavel (SET LOCAL crmoveis.id_usuario) antes de gravar em conta_receber                                                                                                                        | OK
+ 7.1  | Dividir a comissao da venda 201: Rui 60% e Lia 40%                                | aceito                                                       | aceito: soma = 100%                                                                                                                                                                                                                   | OK
+ 7.2  | Incluir Paulo com 1% no mesmo contrato                                            | recusado (RN20)                                              | recusado: RN20: a soma das comissoes do contrato 201 ficaria em 101.00 % (limite: 100 %)                                                                                                                                              | OK
+ 7.3  | Aumentar a parte de Lia de 40% para 45%                                           | recusado (RN20)                                              | recusado: RN20: a soma das comissoes do contrato 201 ficaria em 105.00 % (limite: 100 %)                                                                                                                                              | OK
+ 7.4  | Gravar comissao com percentual 0                                                  | recusado (ck_comissao_pc_comissao)                           | recusado: new row for relation "comissao" violates check constraint "ck_comissao_pc_comissao"                                                                                                                                         | OK
+ 7.5  | Cancelar a comissao de Lia e incluir Paulo com 40%                                | aceito                                                       | aceito: soma das nao canceladas = 100%; comissao de Paulo = R$ 11.520,00                                                                                                                                                              | OK
+ 8.1  | Cadastrar um imovel com um tipo que nao existe na lista de tipos                  | recusado (fk_imovel_tipifica)                                | recusado: insert or update on table "imovel" violates foreign key constraint "fk_imovel_tipifica"                                                                                                                                     | OK
+ 8.2  | Perfil de Bruno aceitando apartamento e cobertura                                 | aceito                                                       | aceito: tipos do perfil: Apartamento e Cobertura                                                                                                                                                                                      | OK
+ 8.3  | Repetir o mesmo tipo no mesmo perfil                                              | recusado (pk_perfil_interesse_tipo)                          | recusado: duplicate key value violates unique constraint "pk_perfil_interesse_tipo"                                                                                                                                                   | OK
+ 8.4  | Excluir da lista o tipo Casa, que classifica um imovel                            | recusado (fk_imovel_tipifica)                                | recusado: update or delete on table "tipo_imovel" violates foreign key constraint "fk_imovel_tipifica" on table "imovel"                                                                                                              | OK
+ 8.5  | Lancar conta a receber numa categoria de despesa (Imposto)                        | recusado (RN26)                                              | recusado: RN26: conta_receber precisa de uma categoria de receita, mas a categoria imposto e de despesa                                                                                                                               | OK
+ 8.6  | Mudar o codigo da categoria de repasse, usada pelas regras                        | recusado (RN26)                                              | recusado: RN26: o codigo da categoria (repasse) nao muda; renomeie pelo nome (nm_categoria)                                                                                                                                           | OK
+ 8.7  | Registrar um recebimento com uma forma de pagamento que nao existe                | recusado (fk_recebimento_recebido_via)                       | recusado: insert or update on table "recebimento" violates foreign key constraint "fk_recebimento_recebido_via"                                                                                                                       | OK
+ 9.1  | Cadastrar um imovel no CEP de Sao Paulo com um bairro de Guarulhos                | recusado (RN51)                                              | recusado: RN51: o bairro Centro fica em Guarulhos, mas o CEP 01310100 e de Sao Paulo                                                                                                                                                  | OK
+ 9.2  | Cadastrar o bairro Centro tambem em Sao Paulo (ja existe em Guarulhos)            | aceito                                                       | aceito: Centro em Guarulhos e Sao Paulo                                                                                                                                                                                               | OK
+ 9.3  | Cadastrar de novo o bairro Bela Vista na mesma cidade                             | recusado (uk_bairro_id_cidade_nm_bairro)                     | recusado: duplicate key value violates unique constraint "uk_bairro_id_cidade_nm_bairro"                                                                                                                                              | OK
+ 9.4  | Perfil de Bruno (Sao Paulo) aceitando os bairros Bela Vista e Itaim Bibi          | aceito                                                       | aceito: bairros do perfil: Bela Vista e Itaim Bibi                                                                                                                                                                                    | OK
+ 9.5  | Perfil de Sao Paulo aceitando o Centro de Guarulhos                               | recusado (RN52)                                              | recusado: RN52: o bairro Centro nao e da cidade do perfil de interesse                                                                                                                                                                | OK
+ 9.6  | Trocar para Guarulhos a cidade do perfil que tem bairros de Sao Paulo             | recusado (RN52)                                              | recusado: RN52: tire os bairros aceitos antes de trocar a cidade do perfil                                                                                                                                                            | OK
+ 9.7  | Passar para Guarulhos o bairro Bela Vista, que ja tem imovel                      | recusado (RN51)                                              | recusado: RN51: o bairro Bela Vista tem imoveis ou perfis e nao pode mudar de cidade                                                                                                                                                  | OK
+ 9.8  | Cadastrar uma cidade com a UF XX, que nao existe                                  | recusado (fk_cidade_compreende)                              | recusado: insert or update on table "cidade" violates foreign key constraint "fk_cidade_compreende"                                                                                                                                   | OK
+ 9.9  | Anexar ao contrato um documento de um tipo que nao existe                         | recusado (fk_documento_qualifica)                            | recusado: insert or update on table "documento" violates foreign key constraint "fk_documento_qualifica"                                                                                                                              | OK
+ 9.10 | Anexar ao contrato a matricula do imovel, escolhida da lista de tipos             | aceito                                                       | aceito: documento: Matricula do imovel                                                                                                                                                                                                | OK
+(61 rows)
+
